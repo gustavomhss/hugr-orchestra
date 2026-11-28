@@ -1,0 +1,14 @@
+{
+  "prefix": ".orchestra/skills/execute-genesis",
+  "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "git_tree_sha": "fc9bfd981f526d75e7e185e2e5b9a31d5c5d396f",
+  "file_count": 21,
+  "total_bytes": 111465,
+  "git_blob_and_size_matches": 21,
+  "sha256_measured": 21,
+  "existing_file_inputs_verified": 5,
+  "membership_only_files": 16,
+  "content_semantically_read_by_agent": false,
+  "runtime_or_product_tests_run": false,
+  "membership_materializations_sha256": "7f94c762654cae3b1311935bcdba03ebff8059ae5465646409bac67613e6cfec"
+}

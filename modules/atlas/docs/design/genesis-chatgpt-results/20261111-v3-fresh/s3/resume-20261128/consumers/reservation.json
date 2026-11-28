@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-s3-consumer-reservation/v1",
+  "created_at": "2026-11-28T07:05:33.071624+00:00",
+  "state": "PREPARED_NOT_DISPATCHED",
+  "original_oracle_sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367",
+  "consumer_contexts": 7,
+  "reviewers": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "reserve": {
+    "consumer_requests": 51,
+    "index_calls": 26,
+    "read_calls": 25,
+    "body_bytes_total": 166000,
+    "review_rounds_initial": 2,
+    "correction_rounds_max_per_case": 1,
+    "automatic_retry": false
+  },
+  "tokens": "UNKNOWN",
+  "cost": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "preconditions": [
+    "S3 package11 actually published with two real bindings",
+    "Observed candidate and ownership manifest fixed before dispatch"
+  ],
+  "isolation": "fresh fork_turns none with instruction-only tools prohibition; literal native CLI bridge"
+}

@@ -1,0 +1,753 @@
+{
+  "schema": "s3-runtime-release-mechanical-verification/v1",
+  "status": "REFERENCES_VERIFIED",
+  "semantic_vote": "NONE",
+  "product_runtime_or_tests_executed": false,
+  "reviewed_new_content": false,
+  "seal": "e171783482d0a44974d6056cd9e144a7e33406a7",
+  "payload": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+  "runtime": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "harness": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "ci_run": 46114652347,
+  "release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+  "handoff_sha256": "9c66610362fcb806314c3f89958087ab7a2561e87573824d04d3c860ea6bffbf",
+  "acceptance_sha256": "ad16053eb6349988cfdfb208d68c20f66f072435a555ece7de7049455bf5f984",
+  "captured_files": [
+    {
+      "name": "release-at-payload",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/release-at-payload.json",
+      "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+      "byte_length": 19736,
+      "git_blob_sha": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+      "connector_git_blob_sha": "ac4f5f46ce2044ded044e4c9a4e35220558bae22"
+    },
+    {
+      "name": "handoff-at-seal",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/handoff.json",
+      "commit": "e171783482d0a44974d6056cd9e144a7e33406a7",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/handoff-at-seal.json",
+      "sha256": "9c66610362fcb806314c3f89958087ab7a2561e87573824d04d3c860ea6bffbf",
+      "byte_length": 34693,
+      "git_blob_sha": "d9cc3d678753ba573649544bce78c748d89df170",
+      "connector_git_blob_sha": "d9cc3d678753ba573649544bce78c748d89df170"
+    },
+    {
+      "name": "acceptance",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/acceptance.json",
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/acceptance.json",
+      "sha256": "ad16053eb6349988cfdfb208d68c20f66f072435a555ece7de7049455bf5f984",
+      "byte_length": 8826,
+      "git_blob_sha": "d6b7740a743255bbc8af54a0500050a198c5e205",
+      "connector_git_blob_sha": "d6b7740a743255bbc8af54a0500050a198c5e205"
+    },
+    {
+      "name": "j1-final-response",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-3.json",
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j1-final-response.json",
+      "sha256": "4d07f38e25d7143c9fa19fc26339bd70d119d94f9cac6e46d0a95e78b990e245",
+      "byte_length": 8356,
+      "git_blob_sha": "86a481edcca82836005c9f78558b64dfd57221b5",
+      "connector_git_blob_sha": "86a481edcca82836005c9f78558b64dfd57221b5"
+    },
+    {
+      "name": "j2-final-response",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-2.json",
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j2-final-response.json",
+      "sha256": "92d9894019ded32e9c23a9d8b8268bb4c2c525f042b387af7664a81d3c0bd187",
+      "byte_length": 9286,
+      "git_blob_sha": "1bb574e29935d4a5636df83835ebf1e7c63b0ef5",
+      "connector_git_blob_sha": "1bb574e29935d4a5636df83835ebf1e7c63b0ef5"
+    },
+    {
+      "name": "review-packet-final",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/review-packet-final.txt",
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/review-packet-final.txt",
+      "sha256": "087e9769c502d8a453db99f2ce417628cab7fe2a676835dd7b5fc35cdab4e6fa",
+      "byte_length": 61502,
+      "git_blob_sha": "28cda3980c0660bd1f7b2000251b4dd1318441bd",
+      "connector_git_blob_sha": "28cda3980c0660bd1f7b2000251b4dd1318441bd"
+    },
+    {
+      "name": "qualification-plan",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+      "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/qualification-plan.json",
+      "sha256": "d7c85c3bd8e2d15e7e5bf3d34a191d927891c53e8ca03676ff8c2c0d2e49f50c",
+      "byte_length": 5850,
+      "git_blob_sha": "82356462aac54c7e2936ff2429e63d605a235181",
+      "connector_git_blob_sha": "82356462aac54c7e2936ff2429e63d605a235181"
+    },
+    {
+      "name": "reviewed-readme",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/README.md",
+      "sha256": "959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6",
+      "byte_length": 10428,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/reviewed-readme.md",
+      "git_blob_sha": "cb1ca44f0346490854345a3e7e4d0648de5e6bb4",
+      "connector_git_blob_sha": "cb1ca44f0346490854345a3e7e4d0648de5e6bb4"
+    },
+    {
+      "name": "manifest-before-path-correction",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/manifest-before-path-correction.json",
+      "sha256": "6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854",
+      "byte_length": 19723,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/manifest-before-path-correction.json",
+      "git_blob_sha": "c762cd237c64dc5c09cc475b13b5337e414164b0",
+      "connector_git_blob_sha": "c762cd237c64dc5c09cc475b13b5337e414164b0"
+    },
+    {
+      "name": "j1-initial-hold",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-1.json",
+      "sha256": "4e2c3d9c80d2bb16ac4d0b6a33fa6ca963a363cd00f22add32da76bfe4f29ae4",
+      "byte_length": 10465,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j1-initial-hold.json",
+      "git_blob_sha": "e9a4cce9348f34f543905e9d91ac50054d13247e",
+      "connector_git_blob_sha": "e9a4cce9348f34f543905e9d91ac50054d13247e"
+    },
+    {
+      "name": "j1-reassessment-request",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-reassessment-request.txt",
+      "sha256": "394360d1590ecf650a12561c4f5e423d98a05dbfa83bbdd2ff98071326b745f6",
+      "byte_length": 1824,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j1-reassessment-request.txt",
+      "git_blob_sha": "a8346abbd50d346aaff56ff7ff5c53bc47e1ce68",
+      "connector_git_blob_sha": "a8346abbd50d346aaff56ff7ff5c53bc47e1ce68"
+    },
+    {
+      "name": "j1-full-reassessment",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-2.json",
+      "sha256": "07d83e8a02937d166907ff224fe6a12c266858210f3030362eb88310557ab6e5",
+      "byte_length": 11895,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j1-full-reassessment.json",
+      "git_blob_sha": "a281eaa330a76a6d6f46a21b7b715263a1077620",
+      "connector_git_blob_sha": "a281eaa330a76a6d6f46a21b7b715263a1077620"
+    },
+    {
+      "name": "j2-base-response",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-1.json",
+      "sha256": "9eabeda66824d74f0418db3a8b721c1cfdb812b8ce05047005dd4223fb074a04",
+      "byte_length": 13770,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/j2-base-response.json",
+      "git_blob_sha": "9c63416a685fc6a2ea9c91421768daf3fd9abbe7",
+      "connector_git_blob_sha": "9c63416a685fc6a2ea9c91421768daf3fd9abbe7"
+    },
+    {
+      "name": "qualification-summary",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/summary.json",
+      "sha256": "82a2c56fa7a5f9313b4be9da9636d423d9f83cc464a983b596ab0369a5cbc636",
+      "byte_length": 11310,
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "local_file": "/workspace/scratch/0666cc914bd1/s4-latest/acceptance-verification/files/qualification-summary.json",
+      "git_blob_sha": "236d86a2cd42be7352642b9a3411aee6e93fe98c",
+      "connector_git_blob_sha": "236d86a2cd42be7352642b9a3411aee6e93fe98c"
+    }
+  ],
+  "derived_packet_parts": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-1.txt",
+      "sha256": "9eac1831f8311d564a8d3ab96e9d02a6d0af50e24204273f34e04e172e69c0d4",
+      "byte_length": 19927,
+      "source": "byte slice of connector-captured final packet; individual file Git blob not separately fetched"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-2.txt",
+      "sha256": "9f691714ae3816a4d8ef09bcefef401bc770be0fe813cd7a358a8f5da3fe8ec9",
+      "byte_length": 10617,
+      "source": "byte slice of connector-captured final packet; individual file Git blob not separately fetched"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-3.txt",
+      "sha256": "6755643169b41fd3df56bce8db7cacc366d4192a13a80bd5a1f6ec58e9ebd441",
+      "byte_length": 28341,
+      "source": "byte slice of connector-captured final packet; individual file Git blob not separately fetched"
+    }
+  ],
+  "judgments_reported_by_preserved_files": [
+    {
+      "judge_id": "/root/s4_release_j1",
+      "reported_decision": "PASS",
+      "response_sha256": "4d07f38e25d7143c9fa19fc26339bd70d119d94f9cac6e46d0a95e78b990e245",
+      "criteria": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07"
+      ],
+      "host_message_id": "UNKNOWN"
+    },
+    {
+      "judge_id": "/root/s4_release_j2",
+      "reported_decision": "PASS",
+      "response_sha256": "92d9894019ded32e9c23a9d8b8268bb4c2c525f042b387af7664a81d3c0bd187",
+      "criteria": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07"
+      ],
+      "host_message_id": "UNKNOWN"
+    }
+  ],
+  "checks": [
+    {
+      "check": "release-at-payload: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "release-at-payload: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "release-at-payload: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "release-at-payload: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "release-at-payload: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff-at-seal: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff-at-seal: no self-referential payload pin is asserted",
+      "equal_or_present": true,
+      "detail": "Its Git blob and supplied local bytes are independently compared; raw SHA256 is measured here."
+    },
+    {
+      "check": "handoff-at-seal: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff-at-seal: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "review-packet-final: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "review-packet-final: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "review-packet-final: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "review-packet-final: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "review-packet-final: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-plan: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-plan: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-plan: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-plan: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-plan: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "reviewed-readme: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "reviewed-readme: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "reviewed-readme: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "reviewed-readme: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "reviewed-readme: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "manifest-before-path-correction: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "manifest-before-path-correction: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "manifest-before-path-correction: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "manifest-before-path-correction: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "manifest-before-path-correction: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-initial-hold: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-initial-hold: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-initial-hold: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-initial-hold: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-initial-hold: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-reassessment-request: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-reassessment-request: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-reassessment-request: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-reassessment-request: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-reassessment-request: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-summary: Git blob matches connector",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-summary: pinned SHA256 reference exists at the same commit",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-summary: all same-commit pinned SHA256 values match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-summary: all pinned lengths match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "qualification-summary: pinned Git blobs match",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "runtime-release.json: supplied local copy equals connector capture",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff.json: supplied local copy equals connector capture",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "release: runtime/tree/harness/source/protocol",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff: runtime/tree/harness/source/protocol",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: runtime/harness",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "handoff: payload and release link",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "same execution and release identity",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance: explicitly qualification, not domain binding",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "frozen criteria exactly Q01-Q07",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "acceptance candidate IDs match release",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: actual preserved record reports all Q01-Q07 PASS",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: same current pins and complete candidate IDs",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-final-response: acceptance and handoff preserve exact response/identity",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: actual preserved record reports all Q01-Q07 PASS",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: same current pins and complete candidate IDs",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-final-response: acceptance and handoff preserve exact response/identity",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "exactly two distinct preserved current reviewers",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "documentary correction changes only path_resolution",
+      "equal_or_present": true,
+      "detail": [
+        "path_resolution"
+      ]
+    },
+    {
+      "check": "single literal replacement reproduces exact final release bytes",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "base review packet exact hash and byte length",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "base packet contains exact original manifest",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "base packet contains exact reviewed README",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "request part 1: exact bytes/hash within published packet",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "request part separator 1",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "request part 2: exact bytes/hash within published packet",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "request part separator 2",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "request part 3: exact bytes/hash within published packet",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "three parts exhaust base packet",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "final packet is base plus two LF plus exact shared correction",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "historical initial J1 HOLD remains preserved",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j1-full-reassessment: same judge and old-manifest exact PASS recorded",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "j2-base-response: same judge and old-manifest exact PASS recorded",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "seal commit has exact payload parent",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "payload commit has exact harness parent/tree",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "runtime commit tree confirmed by GitHub",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "Actions run identity and completion",
+      "equal_or_present": true,
+      "detail": null
+    },
+    {
+      "check": "executed summary links runtime/tree/harness and run",
+      "equal_or_present": true,
+      "detail": null
+    }
+  ],
+  "mechanical_mismatches": [],
+  "limits": [
+    "No new semantic or procedural ruling; this verifies records/identities, not a third vote.",
+    "Host message IDs are UNKNOWN. Canonical agent IDs and no-tool declarations are preserved records, not cryptographic authentication or technically disabled tools.",
+    "J1 initial HOLD/no-tools deviation remains preserved. Same-J1 subsequent reassessment and both final decisions are the records counted by S4 acceptance.",
+    "Individual split request file Git blobs were not separately fetched; their exact bytes/hashes were verified as slices of the connector-captured published final packet.",
+    "Historical common CI archives expired and historical origin/dev SHA is unknown, as already limited in the release; they were not requalified here.",
+    "S3 needs its own complete membership-aware materialization, candidate, independent binding, governed isolated publication, consumers and domain maintenance. S4 acceptance is not any of those receipts."
+  ]
+}

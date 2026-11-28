@@ -1,0 +1,7 @@
+{
+  "t0Heuristic": {"keywords": ["auth", "payments", "secrets", "kms", "crypto", "billing"]},
+  "authz": {
+    "scopes": {"orchestra.s3.agents": ["/root"]},
+    "anchors": {".": "orchestra.s3.agents"}
+  }
+}

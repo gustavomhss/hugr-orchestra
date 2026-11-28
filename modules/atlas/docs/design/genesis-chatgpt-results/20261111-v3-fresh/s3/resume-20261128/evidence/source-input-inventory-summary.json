@@ -1,0 +1,36 @@
+{
+  "status": "PROVISIONAL_BASELINE_INPUT_LOCK",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_tree_sha": "a522a53e5f046f1758151b0f558531bbded04592",
+  "source_tree_capture": "Complete tree composed from root nonrecursive response plus all 19 direct subtrees recursively captured with truncated=false; every canonical tree hash was recomputed",
+  "root_recursive_api_attempts": "Both returned Transport closed; neither result was treated as absence or completeness",
+  "source_tree_entries": 16710,
+  "source_tree_types": {
+    "tree": 2268,
+    "blob": 14442
+  },
+  "source_tree_hash_checks": 2269,
+  "original_package_sha256": "cd19bf501df6ec40386b812725d38747707c00609afd612212e4b6c16feb5f4a",
+  "file_input_count": 4590,
+  "member_input_count": 45,
+  "effective_file_commits": {
+    "1cde2ff7a71bcf7aecb5d030917b577165135d38": 4577,
+    "ee2521a5b966bd505cc95bd1c733e09e12f33531": 5,
+    "19b909ef3bf27e0332f24fc30e3a5c471ea37d78": 8
+  },
+  "sha256_known": 272,
+  "sha256_to_measure_from_pinned_blob": 4318,
+  "missing_or_unresolved_files": [],
+  "nonregular_file_inputs": [],
+  "over_limit_file_inputs": [],
+  "source_ref_paths": 263,
+  "source_ref_conflicts": 0,
+  "member_effective_absences": [],
+  "members_absent_at_SOURCE": [
+    ".orchestra/skills/execute-genesis"
+  ],
+  "proposal_inventory_additions": [],
+  "proposal_inventory_removals": [],
+  "final_selected_package": "NOT_LOCKED; wait for root's selected body/adoption/review references and immutable payload commit",
+  "runtime_or_tests_run": false
+}
