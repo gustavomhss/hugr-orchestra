@@ -1,0 +1,182 @@
+import { cpSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
+import { createRequire } from "node:module"
+import { tmpdir } from "node:os"
+import { dirname, join } from "node:path"
+import { afterEach, describe, expect, it } from "vitest"
+import { id } from "@atlas/kernel"
+import { OWNERSHIP_ADMISSION_CRITERIA } from "@atlas/knowledge"
+import { composeRuntime } from "../src/compose.js"
+import { evaluationRuntimeIdentity } from "../src/evaluation-runtime-identity.js"
+import { admitEvaluation, prepareEvaluation } from "../src/genesis-evaluation.js"
+import { prepareNativePackage } from "../src/genesis-native.js"
+import { nativeBlobSha, nativeCasDirectory, nativeSha256 } from "../src/genesis-native-io.js"
+import type { NativePackage } from "../src/genesis-native-format.js"
+import { initializeEvaluationStore, loadEvaluationAccess } from "../src/ownership-evaluation-policy.js"
+import { createDiskStore } from "../src/store.js"
+import { ownershipFixture } from "./harness/ownership-fixture.js"
+
+// The standalone CI job sets this flag only in its own installed checkout.
+// The decision records in this fixture are synthetic.
+const prior = { actor: process.env.ATLAS_ACTOR, token: process.env.ATLAS_RATIFY_TOKEN }
+const cleanups: (() => void)[] = []
+afterEach(() => {
+  cleanups.splice(0).forEach((cleanup) => cleanup())
+  if (prior.actor === undefined) delete process.env.ATLAS_ACTOR
+  else process.env.ATLAS_ACTOR = prior.actor
+  if (prior.token === undefined) delete process.env.ATLAS_RATIFY_TOKEN
+  else process.env.ATLAS_RATIFY_TOKEN = prior.token
+})
+
+function fixture() {
+  process.env.ATLAS_ACTOR = "alice"
+  process.env.ATLAS_RATIFY_TOKEN = "explicit-synthetic-fixture-token"
+  const original = ownershipFixture()
+  cleanups.push(original.cleanup)
+  const writeOriginal = (path: string, value: string) => {
+    mkdirSync(dirname(join(original.repoPath, path)), { recursive: true })
+    writeFileSync(join(original.repoPath, path), value)
+  }
+  const originalRef = (path: string) => ({ payload_path: path, sha256: nativeSha256(readFileSync(join(original.repoPath, path))) })
+  for (const name of ["recipe", "protocol", "oracle", "request", "response", "semantic-a", "semantic-b"])
+    writeOriginal(`native/${name}.md`, `Synthetic noble-drift fixture: ${name}.\n`)
+  const body = "# Synthetic entry\nRead only this synthetic ownership body.\n"
+  writeOriginal("native/bodies/entry.md", body)
+  const source = readFileSync(join(original.repoPath, "src/util.ts"))
+  const pack: NativePackage = {
+    schema: "genesis-native-package/v1", campaign: "fixture", protocol_epoch: "fixture", results_epoch: "fixture", session: "S4",
+    source_revision: "1".repeat(40), protocol_ref: originalRef("native/protocol.md"), scope: "core", package_state: "IN_PROGRESS",
+    contract: { criteria: ["fixture-source-binding"], oracle_ref: originalRef("native/oracle.md") },
+    required_artifact_keys: ["entry"], roots: { entry: "entry" }, missing_required_artifact_keys: [], known_limits: ["Synthetic test data only"],
+    artifacts: [{
+      key: "entry", scope: "core", title: "Synthetic entry", layer: 4, need: "entry",
+      body: { path: "bodies/entry.md", encoding: "utf-8", byte_length: Buffer.byteLength(body), sha256: nativeSha256(Buffer.from(body)) },
+      authority: { scope: "core", basis: "Explicit synthetic test fixture" }, validity: "supported", gaps: [], evidence: ["synthetic-only"],
+      input_keys: ["file:src/util.ts", "file:native/recipe.md"],
+      source_refs: [{ commit: "1".repeat(40), path: "src/util.ts", git_blob_sha: nativeBlobSha(source), sha256: nativeSha256(source) }],
+      recipe_ref: originalRef("native/recipe.md"), build_dependencies: [], navigation: [],
+      producer_request_ref: originalRef("native/request.md"), producer_response_ref: originalRef("native/response.md"),
+      semantic_review_refs: [originalRef("native/semantic-a.md"), originalRef("native/semantic-b.md")], runtime_receipt_refs: [],
+    }],
+  }
+  writeOriginal("native/native-package.json", JSON.stringify(pack))
+  const origin = prepareNativePackage(original.repoPath, "native/native-package.json")
+  const root = mkdtempSync(join(tmpdir(), "atlas-noble-drift-"))
+  cleanups.push(() => rmSync(root, { recursive: true, force: true }))
+  for (const directory of ["src", "native"]) cpSync(join(original.repoPath, directory), join(root, directory), { recursive: true })
+  const write = (path: string, value: unknown) => writeFileSync(join(root, path), typeof value === "string" ? value : JSON.stringify(value))
+  const ref = (path: string) => ({ payload_path: path, sha256: nativeSha256(readFileSync(join(root, path))) })
+  write("native/original.json", origin)
+  write("native/obligations.json", {
+    schema: "genesis-obligation-set/v1", original_candidate: origin.candidate_id, original_contract: origin.candidate.contract,
+    criteria: origin.candidate.criteria, normative_refs: [ref("native/protocol.md")], oracle_refs: [ref("native/oracle.md")], status: "PENDING_FINAL_EVIDENCE",
+  })
+  write("native/evaluation-plan.json", {
+    schema: "genesis-evaluation-plan/v1", package_path: "native/native-package.json", original_prepared: ref("native/original.json"), obligations: ref("native/obligations.json"),
+    entries: origin.candidate.entries.map((entry) => ({ key: entry.key, semantic_refs: [ref("native/semantic-a.md"), ref("native/semantic-b.md")], applicability: "synthetic unit only", limits: "not campaign acceptance" })),
+    consumer_ids: ["noble-drift-case"], consumer_modes: { "noble-drift-case": "routine" },
+    read_limits: { routine: { index_calls: 6, read_calls: 6, body_bytes_total: 65536 } }, maintenance: { mode: "synthetic-not-run" },
+    implementation: { "native/recipe.md": ref("native/recipe.md").sha256 }, isolation: { root, original_root: original.repoPath },
+  })
+  const prepared = prepareEvaluation(root, "native/evaluation-plan.json")
+  const generation = id({ generation: "noble-drift-synthetic" })
+  initializeEvaluationStore(root, prepared.candidate_id, generation)
+  write(".atlas/policy.json", readFileSync(join(original.repoPath, ".atlas/policy.json"), "utf8"))
+  const policy = {
+    schema: "ownership-evaluation-policy/v1", root, evaluationPlan: prepared.candidate.evaluation.evaluationPlan,
+    obligationSet: prepared.candidate.evaluation.obligationSet, evaluationCandidate: prepared.candidate_id, generation, scope: "core", actor: "alice",
+  }
+  const operator = () => write(".atlas/evaluation-policy.json", { ...policy, operations: ["admit"], consumer: null })
+  const reader = () => write(".atlas/evaluation-policy.json", { ...policy, operations: ["index", "read"], consumer: { id: "noble-drift-case", mode: "routine" } })
+  operator()
+  write("native/admission-request.json", prepared)
+  const reviewers = ["synthetic-noble-a", "synthetic-noble-b"]
+  write("native/admission-approval.json", {
+    schema: "genesis-evaluation-binding/v1", purpose: "isolated-evaluation-admission", candidate_id: prepared.candidate_id, reviewers,
+    decisions: reviewers.map((reviewer, index) => {
+      write(`native/admission-response-${index}.txt`, `SYNTHETIC ONLY ${reviewer} ${prepared.candidate_id}`)
+      const response = ref(`native/admission-response-${index}.txt`)
+      return {
+        reviewer, decision_id: `sha256:${response.sha256}`, purpose: "isolated-evaluation-admission", candidate_id: prepared.candidate_id, verdict: "PASS",
+        entries: prepared.candidate.entries.map((entry) => ({ key: entry.key, contract: entry.contract, result: entry.artifact.result, inputs: entry.inputs_id,
+          criteria: OWNERSHIP_ADMISSION_CRITERIA.map((id) => ({ id, verdict: "PASS" })) })),
+        request_ref: ref("native/admission-request.json"), response_ref: response,
+      }
+    }),
+  })
+  return { root, prepared, body, operator, reader }
+}
+
+describe.runIf(process.env.ATLAS_ISOLATED_NOBLE_CONTROL === "1")("installed Noble runtime binding", () => {
+  it("binds installed noble bytes and refuses direct admission and composed readers after harmless physical drift", async () => {
+    const kernelManifest = new URL("../../kernel/package.json", import.meta.url)
+    const require = createRequire(kernelManifest)
+    const nobleRoot = dirname(require.resolve("@noble/hashes"))
+    const identity = evaluationRuntimeIdentity()
+    for (const file of ["package.json", "blake3.js", "esm/blake3.js", "utils.js", "esm/utils.js"])
+      expect(identity[`@noble/hashes/${file}`], `installed Noble bytes must be bound: ${file}`).toBe(
+        nativeSha256(readFileSync(join(nobleRoot, file))),
+      )
+    const files = [require.resolve("@noble/hashes/blake3"), join(nobleRoot, "esm/blake3.js")]
+    const originals = files.map((file) => {
+      const stat = lstatSync(file)
+      expect(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1).toBe(true)
+      return readFileSync(file)
+    })
+    const f = fixture()
+    expect(f.prepared.candidate.runtime_identity).toEqual(identity)
+    const hashProbe = id({ runtimeDependencyControl: "unchanged mathematical digest" })
+    const admitted = await admitEvaluation(f.root, f.prepared, "native/admission-approval.json")
+    expect(admitted).toMatchObject({ kind: "evaluation-admission-attempt", emission: { ok: true, data: { emitted: true } } })
+    f.reader()
+    const runtime = () => composeRuntime(f.root, loadEvaluationAccess(f.root))
+    expect(runtime().ownership.index("core", "entry").kind).toBe("index")
+    expect(runtime().ownership.read({ scope: "core", need: "entry", maxBytes: 4096 })).toMatchObject({ kind: "ready", body: f.body })
+    const projection = () => [...createDiskStore(nativeCasDirectory(f.root)).loadProjection()!.current.entries()]
+    const baselineProjection = projection()
+    const receipt: Record<string, unknown> = {
+      schema: "evaluation-noble-runtime-control/v1", synthetic_fixture_only: true,
+      runtime_commit: process.env.ATLAS_NOBLE_CONTROL_RUNTIME ?? null, runtime_versions: process.versions,
+      baseline_candidate: f.prepared.candidate_id, baseline_runtime_identity: identity, hash_probe: hashProbe,
+      dependency_files: files.map((file, index) => ({ file, original_sha256: nativeSha256(originals[index]!), original_bytes: originals[index]!.length })),
+    }
+    try {
+      files.forEach((file, index) => writeFileSync(file, Buffer.concat([originals[index]!, Buffer.from("\n// synthetic CI installed-byte drift; no executable change\n")])))
+      expect(id({ runtimeDependencyControl: "unchanged mathematical digest" })).toBe(hashProbe)
+      const changed = evaluationRuntimeIdentity()
+      expect(Object.keys(changed)).toEqual(Object.keys(identity))
+      expect(Object.keys(changed).filter((key) => changed[key] !== identity[key]).sort()).toEqual([
+        "@noble/hashes/blake3.js",
+        "@noble/hashes/esm/blake3.js",
+      ])
+      const fresh = prepareEvaluation(f.root, "native/evaluation-plan.json")
+      expect(fresh.candidate_id).not.toBe(f.prepared.candidate_id)
+      expect(fresh.candidate.runtime_identity).toEqual(changed)
+      expect(fresh.candidate.observations).toEqual(f.prepared.candidate.observations)
+      expect(fresh.candidate.entries).toEqual(f.prepared.candidate.entries)
+      f.operator()
+      await expect(admitEvaluation(f.root, f.prepared, "native/admission-approval.json")).rejects.toThrow("evaluation-candidate-drift")
+      expect(projection()).toEqual(baselineProjection)
+      f.reader()
+      const refusals = [runtime().ownership.index("core", "entry"), runtime().ownership.read({ scope: "core", need: "entry", maxBytes: 4096 })]
+      for (const result of refusals)
+        expect(result).toMatchObject({ kind: "hold", reason: "ownership-untrusted", evidence: ["evaluation-runtime-drift"] })
+      expect(projection()).toEqual(baselineProjection)
+      Object.assign(receipt, {
+        drift_candidate: fresh.candidate_id, drift_runtime_identity: changed,
+        mutated_files: files.map((file) => ({ file, sha256: nativeSha256(readFileSync(file)), bytes: readFileSync(file).length })),
+        direct_admission_refusal_asserted: "evaluation-candidate-drift", composed_refusals: refusals,
+        mathematical_hash_preserved: true, source_observations_and_entry_bindings_preserved: true, projection_preserved: true,
+      })
+    } finally {
+      files.forEach((file, index) => writeFileSync(file, originals[index]!))
+    }
+    files.forEach((file, index) => expect(readFileSync(file)).toEqual(originals[index]!))
+    expect(evaluationRuntimeIdentity()).toEqual(identity)
+    expect(prepareEvaluation(f.root, "native/evaluation-plan.json")).toEqual(f.prepared)
+    expect(runtime().ownership.index("core", "entry").kind).toBe("index")
+    expect(runtime().ownership.read({ scope: "core", need: "entry", maxBytes: 4096 })).toMatchObject({ kind: "ready", body: f.body })
+    Object.assign(receipt, { restored_runtime_identity: evaluationRuntimeIdentity(), restoration_and_original_candidate_reuse_asserted: true })
+    const evidencePath = process.env.ATLAS_NOBLE_CONTROL_RECEIPT
+    if (evidencePath) writeFileSync(evidencePath, JSON.stringify(receipt, null, 2) + "\n")
+  })
+})
