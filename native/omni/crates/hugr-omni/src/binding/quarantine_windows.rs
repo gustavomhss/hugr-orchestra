@@ -112,6 +112,18 @@ fn open_optional(
     missing_ok: bool,
     additional_access: u32,
 ) -> Result<Option<Owned>, String> {
+    open_with_share(parent, name, directory, removable, missing_ok, additional_access, 3)
+}
+
+fn open_with_share(
+    parent: Handle,
+    name: &str,
+    directory: bool,
+    removable: bool,
+    missing_ok: bool,
+    additional_access: u32,
+    share: u32,
+) -> Result<Option<Owned>, String> {
     let text: Vec<u16> = std::ffi::OsStr::new(name).encode_wide().collect();
     if text.is_empty() || text.len() > 32767 || text.contains(&0) {
         return Err("invalid component".into());
@@ -148,7 +160,7 @@ fn open_optional(
             &mut io,
             null(),
             0,
-            3,
+            share,
             1,
             0x20 | 0x200000 | if directory { 1 } else { 0 },
             null(),
@@ -351,3 +363,6 @@ pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
     drop(source);
     Ok(())
 }
+
+mod batch;
+pub use batch::dispose_batch;
