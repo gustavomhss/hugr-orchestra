@@ -116,7 +116,10 @@ NoNewPrivileges=yes
 Environment=HUGR_OMNI_ISOLATION_ROOT=/sys/fs/cgroup/orchestra-omni-1000
 Environment=HUGR_OMNI_ISOLATION_UID=62000
 Environment=HUGR_OMNI_ISOLATION_GID=62001
+Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
 ```
+
+The supervisor accepts requests only from the configured desktop UID. Processes under that account can request these approved executables with arguments and a working directory. Authorize only commands safe to expose under the dedicated workload identity. The supervisor's list is colon-separated and accepts root-owned executable paths with protected directories and no symlinks. The supervisor starts commands with a fixed `PATH` and `LANG`.
 
 Use a root-owned `/run/orchestra/omni` directory with mode `0755`, then start the socket unit. Launch the packaged Desktop with `ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES` set to a JSON array of exact absolute executable paths. Use the spelling passed in the command, for example `["/usr/bin/cat"]`. The setting applies to direct standard commands admitted by the owned sidecar's Omni spawner. The selected commands require the authenticated supervisor and fail if it is unavailable. An empty array leaves the profile unused.
 

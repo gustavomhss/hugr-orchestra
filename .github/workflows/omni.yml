@@ -146,10 +146,14 @@ jobs:
           Environment=HUGR_OMNI_ISOLATION_ROOT=$cg
           Environment=HUGR_OMNI_ISOLATION_UID=62000
           Environment=HUGR_OMNI_ISOLATION_GID=62001
+          Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
           EOF
           sudo systemctl daemon-reload
           sudo systemctl start "$unit.socket"
           test -S "$socket"
+      - name: Verify the supervisor's independent executable policy
+        working-directory: apps/desktop
+        run: bun test ./test/activity-isolated-supervisor.hosted.ts
       - name: Exercise the Desktop confirmation and member controls
         working-directory: apps/desktop
         run: xvfb-run -a bun test ./test/activity-freeze-sidecar-e2e.hosted.ts
