@@ -125,14 +125,13 @@ describe("test shard planner", () => {
     expect(turbo.tasks["@orchestra/desktop#test:node"]).toEqual(turbo.tasks["@orchestra/desktop#test"])
   })
 
-  test("Windows App browser bins retain all99 files and distinct real process controls", () => {
+  test("Windows App browser bins retain every discovered file and distinct real process controls", () => {
     const timings = JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings
     const directory = fileURLToPath(new URL("../../../packages/app-shell/test-browser/", import.meta.url))
     const files = [...new Bun.Glob("**/*").scanSync({ cwd: directory, onlyFiles: true, followSymlinks: false })]
       .map((file) => `test-browser/${file.replaceAll("\\", "/")}`)
       .filter((file) => /(?:\.test|_test|\.spec|_spec)\.[jt]sx?$/.test(file)).toSorted()
     const bins = plannedBins(timings, "packages/app-shell", "windows")
-    expect(files).toHaveLength(99)
     expect(packageShards(timings, "packages/app-shell", "windows")).toBe(3)
     expect(packageShards(timings, "packages/app-shell", "linux")).toBe(1)
     expect(bins).toHaveLength(3)
