@@ -2,6 +2,10 @@ export * as ActivityPrivateChannel from "./activity-private-channel"
 
 export const option = "activity-approval-stdin"
 export const path = "/_orchestra-activity/v1/probe"
+export const mount = "/_orchestra-activity/v1"
+export const previewPath = `${mount}/arm-preview`
+export const confirmPath = `${mount}/arm-confirm`
+export const maxBodyBytes = 32 * 1024
 export const nonceHeader = "x-orchestra-activity-nonce"
 export const macHeader = "x-orchestra-activity-mac"
 
@@ -29,11 +33,15 @@ export function nonce() {
 }
 
 type Direction = "probe-request" | "probe-response"
+export type ArmDirection = "arm-request" | "arm-response"
+export type ArmPath = typeof previewPath | typeof confirmPath
 
 export async function signer(secret: Uint8Array) {
   if (secret.length !== keyBytes) throw new Error("Invalid activity channel key length")
   const key = await crypto.subtle.importKey("raw", new Uint8Array(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign", "verify"])
   const message = (direction: Direction, nonce: string) => encoder.encode(JSON.stringify([path, direction, nonce]))
+  const armMessage = (direction: ArmDirection, endpoint: ArmPath, nonce: string, body: string) =>
+    encoder.encode(JSON.stringify([endpoint, direction, nonce, body]))
   return {
     async sign(direction: Direction, nonce: string) {
       if (!hex256.test(nonce)) throw new Error("Invalid activity channel nonce")
@@ -43,6 +51,15 @@ export async function signer(secret: Uint8Array) {
       if (!nonce || !mac || !hex256.test(nonce) || !hex256.test(mac)) return false
       const bytes = Uint8Array.from({ length: keyBytes }, (_value, index) => Number.parseInt(mac.slice(index * 2, index * 2 + 2), 16))
       return crypto.subtle.verify("HMAC", key, new Uint8Array(bytes), message(direction, nonce))
+    },
+    async signArm(direction: ArmDirection, endpoint: ArmPath, nonce: string, body: string) {
+      if (!hex256.test(nonce)) throw new Error("Invalid activity channel nonce")
+      return hex(new Uint8Array(await crypto.subtle.sign("HMAC", key, armMessage(direction, endpoint, nonce, body))))
+    },
+    async verifyArm(direction: ArmDirection, endpoint: ArmPath, nonce: string | null, mac: string | null, body: string) {
+      if (!nonce || !mac || !hex256.test(nonce) || !hex256.test(mac)) return false
+      const bytes = Uint8Array.from({ length: keyBytes }, (_value, index) => Number.parseInt(mac.slice(index * 2, index * 2 + 2), 16))
+      return crypto.subtle.verify("HMAC", key, new Uint8Array(bytes), armMessage(direction, endpoint, nonce, body))
     },
   }
 }
