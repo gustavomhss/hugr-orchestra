@@ -82,7 +82,7 @@ export async function acquire(input: Readable, signal: AbortSignal, arm?: Activi
         ? Effect.runPromise(arm.preview(decoded.value), { signal: request.signal })
         : Effect.runPromise(arm.confirm(decoded.value), { signal: request.signal })).catch(() => undefined)
       if (!result) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
-      const receipt = endpoint === ActivityPrivateChannel.previewPath
+      const receipt: Option.Option<ActivityArm.Preview | ActivityArm.Receipt> = endpoint === ActivityPrivateChannel.previewPath
         ? ActivityArm.decodePreview(result)
         : ActivityArm.decodeReceipt(result)
       if (Option.isNone(receipt)) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
