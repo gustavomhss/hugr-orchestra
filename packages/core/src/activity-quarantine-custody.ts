@@ -48,6 +48,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
               originalPath: lease.originalPath,
             }))) return "Refused"
 
+            // A failed admission has not called the native move and does not require preserving the source.
             const inserted = await Effect.runPromise(database.db.transaction((tx) => Effect.gen(function* () {
               const active = yield* tx.select({ phase: ActivityQuarantineCustodyTable.phase })
                 .from(ActivityQuarantineCustodyTable)
@@ -66,18 +67,20 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
                 phase: "moving",
                 reservation_id: null,
               }).onConflictDoNothing().returning({ targetID: ActivityQuarantineCustodyTable.target_id }).get()
-            }), { behavior: "immediate" }))
+            }), { behavior: "immediate" })).catch(() => undefined)
             if (!inserted) return "Refused"
 
+            // Keep the producer reservation until the native result is durably recorded.
+            const outcome = await ActivityQuarantineNative.execute(async () => ({
+              ...lease,
+              release: async () => {},
+            }), target, "apply").catch(() => "Unknown" as const)
+            if (outcome === "Refused") {
+              await removeMoving(database, target).catch(() => undefined)
+              return outcome
+            }
             try {
-              // Keep the producer reservation until the native result is durably recorded.
-              const outcome = await ActivityQuarantineNative.execute(async () => ({
-                ...lease,
-                release: async () => {},
-              }), target, "apply")
-              if (outcome === "Verified") await setPhase(database, target, "moving", "ready")
-              if (outcome === "Unknown") await setPhase(database, target, "moving", "unknown")
-              if (outcome === "Refused") await removeMoving(database, target)
+              await setPhase(database, target, "moving", outcome === "Verified" ? "ready" : "unknown")
               return outcome
             } catch {
               await setPhase(database, target, "moving", "unknown").catch(() => undefined)

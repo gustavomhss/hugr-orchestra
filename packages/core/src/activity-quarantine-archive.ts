@@ -39,17 +39,16 @@ export async function capture(file: string) {
   return { binding, native, file, identity }
 }
 
-/** The installer calls this after extraction and layout, before it removes its private unpack directory. */
+/** The installer calls this after publishing the install, before it removes its private unpack directory. */
 export async function handoff(
   captured: NonNullable<Awaited<ReturnType<typeof capture>>>,
-  staging: string,
+  parent: string,
   label: string,
 ) {
   if (custody !== captured.binding) return
   const stat = await lstat(captured.file).catch(() => undefined)
   if (!stat?.isFile() || stat.nlink !== 1 || stat.size > MAX_BYTES ||
     await captured.native.quarantineInspect(captured.file).catch(() => undefined) !== captured.identity) return
-  const parent = path.dirname(staging)
   const directories = captured.binding.directories
   const pending = directories.get(parent) ?? mkdtemp(path.join(parent, ".quarantine-"))
   directories.set(parent, pending)
