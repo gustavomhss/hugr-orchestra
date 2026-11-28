@@ -155,7 +155,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
   test("requires durable matching completion and a continuous complete tree series", async () => {
     expectSpawn(import.meta.path)
     const binding = await Omni.load()
-    await using child = binding.spawn(process.execPath, ["-e", "process.stdin.resume()"], { stdin: "pipe" })
+    // Root exit clears the footprint series. A stdin-only process ends when the pipe closes,
+    // which on Linux lands in the middle of the series and leaves the hypothesis insufficient.
+    await using child = binding.spawn(process.execPath, ["-e", "setInterval(() => {}, 1 << 30)"], { stdin: "pipe" })
     Omni.count("spawns")
     const sample = { identity: "tree-a", bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
     const observed = new Proxy(child, {
@@ -186,7 +188,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
       sample.bytes = bytes
       await monitor.inspect(id)
     }
-    expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
+    const current = row()
+    if (current?.footprint?.hypothesis !== "compatible-with-logical-leak")
+      throw new Error(`footprint ${JSON.stringify({ footprint: current?.footprint, state: current?.state })}`)
     const previous = row()?.footprint
     if (!previous) throw new Error("Missing complete footprint before the invalid sample")
     sample.bytes = NaN
