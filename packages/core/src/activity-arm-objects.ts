@@ -4,7 +4,7 @@ import { createHash } from "node:crypto"
 import { lstat, realpath } from "node:fs/promises"
 import path from "node:path"
 import { and, eq, sql } from "drizzle-orm"
-import { Effect, Semaphore } from "effect"
+import { Effect, Option, Semaphore } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { ActivityActionLedger } from "./activity-action-ledger"
 import { ActivityActionLedgerTable } from "./activity-action-ledger.sql"
@@ -72,7 +72,9 @@ export function make(database: Database.Interface, processService: AppProcess.In
     if (before?.exitCode !== 0) return { observation, partial: true }
     if (before.stdout.length) return { observation: { ...observation, dirty: true }, partial: false }
 
-    const proof = yield* Effect.promise((signal) => ActivityArmProof.inspect(candidate, signal))
+    const proof = yield* Effect.promise((signal) => ActivityArmProof.inspect({
+      worktree: candidate.directory, name: candidate.name,
+    }, signal))
       .pipe(Effect.timeoutOption("4 seconds"))
     const after = yield* dirt()
     const final = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
@@ -93,6 +95,7 @@ export function make(database: Database.Interface, processService: AppProcess.In
 
   return {
     inspect: () => lock.withPermit(Effect.gen(function* () {
+      const deadline = performance.now() + 18_000
       const rows = yield* registrations().where(gitWorktree).orderBy(ProjectDirectoryTable.registration_id).limit(maxWorktrees + 1).all()
       const previous = yield* database.db.select().from(ActivityActionLedgerTable).where(sql`
         ${ActivityActionLedgerTable.target_id} LIKE 'arm-worktree:%'
@@ -101,10 +104,20 @@ export function make(database: Database.Interface, processService: AppProcess.In
       const recorded = new Set<string>()
       let partial = rows.length > maxWorktrees
       const ledger = yield* actions
-      for (const row of rows.slice(0, maxWorktrees)) {
+      scan: for (const row of rows.slice(0, maxWorktrees)) {
         for (const name of names) {
           const candidate = { ...row, name }
-          const result = yield* sample(candidate)
+          const remaining = deadline - performance.now()
+          if (remaining <= 0) {
+            partial = true
+            break scan
+          }
+          const observed = yield* sample(candidate).pipe(Effect.timeoutOption(remaining))
+          if (Option.isNone(observed)) {
+            partial = true
+            break scan
+          }
+          const result = observed.value
           if (result.partial) partial = true
           const target = result.observation
           if (!target.identity && !previous.some((item) => item.target_id === target.targetID)) continue
