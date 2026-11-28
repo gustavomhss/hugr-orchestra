@@ -8,6 +8,7 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import { DateTime, Effect, Layer, Stream } from "effect"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost } from "../src/v2/host"
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 
 test("settles authorized built-ins exactly once with Claude Code's real callback response", async () => {
   const settled: { id: string; outcome: ToolSafety.HostedOutcome }[] = []
@@ -89,6 +90,7 @@ test("settles authorized built-ins exactly once with Claude Code's real callback
     ClaudeCodeHost.make.pipe(
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
     ),
   )
