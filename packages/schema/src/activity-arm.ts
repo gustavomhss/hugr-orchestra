@@ -47,3 +47,4 @@ export const decodeRequest = Schema.decodeUnknownOption(Request, { onExcessPrope
 export const decodeConfirm = Schema.decodeUnknownOption(Confirm, { onExcessProperty: "error" })
 export const decodePreview = Schema.decodeUnknownOption(Preview, { onExcessProperty: "error" })
 export const decodeReceipt = Schema.decodeUnknownOption(Receipt, { onExcessProperty: "error" })
+export const decodePlanSnapshot = Schema.decodeUnknownOption(PlanSnapshot, { onExcessProperty: "error" })

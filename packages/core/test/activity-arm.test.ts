@@ -78,20 +78,23 @@ test("refuses the whole selection when any generation changed after preview", as
 test("consumes a preview and refuses every receipt when live verification fails for one object", async () => {
   await using directory = await tmpdir()
   const verified: ActivityActionLedger.Target[] = []
+  const unavailable = new Set<string>()
   await Effect.runPromise(withLedgers(path.join(directory.path, "activity.sqlite"), ({ actions, arms, database }) =>
     Effect.gen(function* () {
       const first = yield* actions.record(observation("object-a"))
       const second = yield* actions.record(observation("object-b"))
       const preview = yield* arms.preview({ targets: [first, second].map(({ targetID, generation }) => ({ targetID, generation })) })
       if (!preview) throw new Error("expected preview")
+      unavailable.add(second.targetID)
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
-      expect(verified).toEqual([first, second])
+      expect(yield* arms.preview({ targets: [second] })).toBeUndefined()
+      expect(verified).toEqual([first, second, first, second, second])
       expect(yield* ActivityArmLedger.list(database)).toEqual([])
     }), {
       verify: (target) => Effect.sync(() => {
         verified.push(target)
-        return target.targetID === "object-a"
+        return !unavailable.has(target.targetID)
       }),
     },
   ))

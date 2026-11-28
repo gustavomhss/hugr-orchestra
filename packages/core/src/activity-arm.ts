@@ -9,12 +9,14 @@ import { ActivityActionLedgerTable } from "./activity-action-ledger.sql"
 import { ActivityArmTable } from "./activity-arm.sql"
 
 export interface Interface {
+  readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   readonly preview: (request: ActivityArm.Request) => Effect.Effect<ActivityArm.Preview | undefined, unknown>
   readonly confirm: (request: ActivityArm.Confirm) => Effect.Effect<ActivityArm.Receipt | undefined, unknown>
 }
 
 type Options = {
   readonly now?: () => number
+  readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   /** Checks current identity and eligibility through the authority for this exact object. */
   readonly verify?: (target: ActivityActionLedger.Target) => Effect.Effect<boolean, unknown>
 }
@@ -25,6 +27,7 @@ export function make(database: Database.Interface, options?: Options): Interface
   const verify = options?.verify
   const previews = new Map<string, { expiresAt: number; targets: ActivityActionLedger.Target[]; preview: ActivityArm.Preview }>()
   return {
+    inspect: options?.inspect,
     preview(request) {
       return Effect.gen(function* () {
         if (!verify) return undefined
@@ -40,6 +43,8 @@ export function make(database: Database.Interface, options?: Options): Interface
           return rows.flatMap((row) => row ? [{ ...row.observation, generation: row.generation }] : [])
         }), { behavior: "immediate" })
         if (!targets) return undefined
+        const verified = yield* Effect.forEach(targets, (target) => verify(structuredClone(target)))
+        if (verified.some((result) => result !== true)) return undefined
         const time = now()
         for (const [id, preview] of previews) if (preview.expiresAt <= time) previews.delete(id)
         if (previews.size >= 64) return undefined
