@@ -16,13 +16,13 @@ The private channel authenticates the peer for an instance. The dialog supplies 
 
 The owned Linux sidecar checks registered Git worktree copies through a signed, explicit IN/OUT inspection. The live verifier checks the candidate and registered Git worktree before the dialog and again before committing the receipt. An incomplete Linux process view refuses eligibility. These readings observe the running system and do not reserve the filesystem object for a later Apply.
 
-Arm and Apply are separate confirmations. Arm persists the selection and leaves the source in place. Apply consumes the exact confirmed binding and acquires a durable claim over the whole set before effects. A conflicting claim, changed evidence, expiry, or mismatched epoch refuses admission. An interrupted attempt that might have started an effect becomes Unknown. The executor will need restart and replay coverage before exposing either confirmation.
+Arm and Apply are separate confirmations. Arm persists the selection and leaves the source in place. Apply consumes a fresh native confirmation for one exact Arm receipt, target and generation. The server rechecks registration when reserving the attempt, revalidates the live object, and holds the authority's source lease through settlement. It stores the origin, destination and pinned native identity before calling the effect. A conflicting claim or changed evidence refuses the action. An interrupted or ambiguous attempt stays Unknown across restart and blocks another attempt against the same source.
 
 ## Filesystem effects
 
 The storage adapter must revalidate claimant and proof, root containment, source identity, and destination before effect. Quarantine uses same-volume, no-replace rename. Restore verifies the original path is free and verifies the same object at the original path afterward. An occupied original stays visible. Empty requires a separate confirmation of the complete quarantine selection. A refused or unknown active item blocks that selection, and move records stay outside it.
 
-IN/OUT marks Out only after a second authoritative read finds the expected identity at the destination and confirms source absence. Ambiguity stays Unknown with the existing data available for investigation. A directory rename primitive that protects the destination still needs a strategy for concurrent source replacement.
+IN/OUT marks Out only after a second authoritative read finds the expected identity at the destination and confirms source absence. Ambiguity stays Unknown with the existing data available for investigation. The Linux sidecar reports Apply as unavailable for its registered worktree directories. A no-replace rename protects the destination, while Linux's pathname-based source can be replaced between the identity check and the rename. The private Apply route requires an authority that can exclude source replacement and new claims through the effect. The successful hosted fixtures own their temporary objects and exercise the flow within that boundary.
 
 ## Omni effects
 
