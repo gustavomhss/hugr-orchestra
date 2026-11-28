@@ -1,0 +1,52 @@
+{
+  "reviewer": "J2",
+  "purpose": "Independent review of admission prerequisites for the corrected S2 isolated evaluation candidate",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "contract": "4a0fa61a7d144fc3a30b7f467b1145a692049322714de48cbd6f1f6a11e90e87",
+  "verdict": "HOLD",
+  "entry_vector_sha256": "d35e909988f7669c7d0081e234e34c654ac505cb60fb9deb1cb9e19925b65a38",
+  "covered_entries": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.app-session",
+    "s2.l4.entry"
+  ],
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "The packet reports a field-by-field comparison against guarded prepare-03 for every entry: full artifact and input values and order, graph including navigation and build, semantic evidence, and input/result IDs were identical; only each entry contract changed. Replay run 46158483047 is reported to reproduce prepared bytes with SHA-256 9570cd95aed8803e3198dd897f0c8845e84aa88d7c3d6cd7b9b107c6ec0accbd. This judgment relies on those supplied observations; I did not read the bytes or independently compute hashes."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "The packet pins the candidate, common contract, runtime, evidence revision, original source candidate and contract, and corpus root. It reports source re-observation refusal on changed captured versions, exact candidate equality at admission, and stored-versus-actual runtime identity checks on composed reads. Control 46157365177 reportedly demonstrates the correction for the previously missing installed Noble bytes and drift refusal in a synthetic fixture. I did not inspect the implementation, installed bytes, or actual S2 execution."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "HOLD",
+      "applies_to": "all 13 entries",
+      "rationale": "The historical decisions and unchanged semantic evidence support the explicitly limited orchestra.interfaces evaluation scope, but historical votes do not transfer. The packet does not provide two fresh exact-candidate decisions. This J2 judgment is one fresh decision and cannot establish the other."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "HOLD",
+      "applies_to": "all 13 entries",
+      "rationale": "The packet states that evaluation plan da5f06f6a2978cb641263900027b9d4770a607c22c6b422e04cb3490db817585 binds the scope, store root and supported paths, and describes publication rejection and composition checks. It does not specify the persistent authority mechanism or the finite evaluation boundary sufficiently to assess whether the selected operation can become ongoing operational publication."
+    }
+  },
+  "findings": [
+    "Provide the other fresh independent decision bound to this exact candidate and contract, covering all 13 entries and the four criteria; historical decisions do not substitute for it.",
+    "Provide the smallest plan or policy excerpt identifying the persistent authority, the evaluation's finite boundary or expiry, and the enforced mechanism preventing ongoing operational publication.",
+    "The old J2 veto remains bound to candidate d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30.",
+    "No marker, policies or admission were installed on the new candidate according to the packet. This judgment does not assert admission execution, ordinary publication, acceptance of the 14 consumers, or U1.",
+    "This review used only the supplied inline packet. I did not access files or the network, execute code, read candidate bytes, compute hashes, or contact J1."
+  ]
+}

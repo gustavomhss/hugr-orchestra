@@ -1,0 +1,50 @@
+{
+  "reviewer": "J2",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "contract": "4a0fa61a7d144fc3a30b7f467b1145a692049322714de48cbd6f1f6a11e90e87",
+  "verdict": "PASS",
+  "entry_vector_sha256": "d35e909988f7669c7d0081e234e34c654ac505cb60fb9deb1cb9e19925b65a38",
+  "covered_entries": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.app-session",
+    "s2.l4.entry"
+  ],
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "The supplied field-by-field comparison against guarded prepare-03 reports identical full artifact and input values and order, graph including navigation and build, semantic evidence, and input/result IDs for every entry, with only the entry contract changed. Replay run 46158483047 reportedly reproduced prepared bytes with SHA-256 9570cd95aed8803e3198dd897f0c8845e84aa88d7c3d6cd7b9b107c6ec0accbd."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "The packet pins the candidate, contract, runtime, evidence revision, original source candidate and contract, and corpus root. It reports source re-observation refusal on changed captured versions, exact candidate equality at admission, and stored-versus-actual runtime identity checks on composed reads. Control 46157365177 reportedly demonstrates inclusion of the previously missing installed Noble bytes and drift refusal in a focused synthetic fixture."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "Unchanged historical semantic evidence applies to the explicitly limited orchestra.interfaces evaluation; historical decisions do not transfer to this candidate. The supplied live binding validation requires two distinct reviewers and two passing decisions matching every entry and criterion. This is one independent decision; the aggregate pair remains a separate admission gate."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "applies_to": "all 13 entries",
+      "rationale": "Plan da5f06f6a2978cb641263900027b9d4770a607c22c6b422e04cb3490db817585 specifies finite consumers, cases, modes and persisted read budgets. The supplied enforcement binds the persistent marker and policy to the distinct CAS-only root, candidate, plan, obligations, generation and scope; validates actor and operation access; excludes evaluation from generic operational composition; and exposes no promotion operation. Initial admission grants only the isolated actor's admit operation, with consumer access separate. U1 and maintenance are excluded from the initial phase. The boundary is finite by operation, case and budget, not by wall-clock expiry."
+    }
+  },
+  "findings": [
+    "The old J2 veto remains bound to candidate d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30.",
+    "This is a single fresh disposition. It does not assert that the required independent decision pair exists or that admission, ordinary publication, the 14 consumer gates, or U1 has passed.",
+    "This review relied on the supplied inline packet and supplement. I did not use tools, contact the other reviewer, inspect implementation or installed bytes, execute code, or independently compute hashes."
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "reviewer": "J1",
+  "purpose": "Independent review of corrected S2 evaluation candidate admission prerequisites",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "contract": "4a0fa61a7d144fc3a30b7f467b1145a692049322714de48cbd6f1f6a11e90e87",
+  "verdict": "HOLD",
+  "entry_vector_sha256": "d35e909988f7669c7d0081e234e34c654ac505cb60fb9deb1cb9e19925b65a38",
+  "covered_entries": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.app-session",
+    "s2.l4.entry"
+  ],
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "rationale": "For all 13 listed entries, the packet reports field-by-field equality with old guarded prepare-03 for artifact and full input values/order, graph including navigation and build, semanticEvidence, and result/input IDs; the contract is the only differing entry field. I relied on this supplied comparison and the listed hashes; I did not read or hash the corpus or independently verify entry bodies."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "rationale": "The packet identifies unchanged pinned roots, required keys, transport, source revision, scope, and original candidate/contract; it also reports the corrected installed dependency assertion control passing 1/1, intrinsic identity including 247 Noble entries, direct-admit candidate drift refusal, composed runtime identity checks, and source re-observation drift refusal. This is supplied evidence, including a focused synthetic fixture; I did not inspect installed bytes, kernel hashes, or actual S2 execution."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "HOLD",
+      "rationale": "The packet preserves historical semantic evidence and explicitly limits scope to orchestra.interfaces, but says prior decisions do not transfer and requires two fresh exact decisions. This review supplies one decision only; I have no second fresh decision to assess. The old candidate's veto remains bound to that candidate."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "rationale": "The packet describes an evaluation-only plan recalculated for the corrected runtime and exact setup, a new operation bound to the explicit plan, scope, store root, and supported reader/writer paths, ordinary publish rejection of schema v2, evaluation filtering from operational projection, and an access-binding assertion. It also states no marker, policies, or admission were installed. I did not inspect the plan or execute admission."
+    }
+  },
+  "findings": [
+    {
+      "severity": "blocking",
+      "criterion": "ADMIT-SEMANTIC-SCOPE",
+      "finding": "The required pair of fresh exact decisions is incomplete in this review packet. The smallest decisive evidence is the second independent decision bound to this exact candidate ID, contract, entry-vector SHA, and evaluation plan."
+    },
+    {
+      "severity": "scope",
+      "finding": "This is a packet-based prerequisites judgment only. I did not read files, access the corpus, execute or admit the candidate, verify actual S2 use, or assess normal publication, the 14 consumers, U1, or other AC gates."
+    }
+  ]
+}

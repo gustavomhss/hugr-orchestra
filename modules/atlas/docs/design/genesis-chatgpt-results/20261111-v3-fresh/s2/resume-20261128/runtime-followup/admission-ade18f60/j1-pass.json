@@ -1,0 +1,47 @@
+{
+  "reviewer": "J1",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "contract": "4a0fa61a7d144fc3a30b7f467b1145a692049322714de48cbd6f1f6a11e90e87",
+  "verdict": "PASS",
+  "entry_vector_sha256": "d35e909988f7669c7d0081e234e34c654ac505cb60fb9deb1cb9e19925b65a38",
+  "covered_entries": [
+    "s2.l1.desktop-web",
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.desktop-web",
+    "s2.l2.app-session",
+    "s2.l2.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.design-tui",
+    "s2.l4.app-session",
+    "s2.l4.entry"
+  ],
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "rationale": "For all 13 listed entries, the packet reports field-by-field equality with old guarded prepare-03 for artifact and full input values/order, graph including navigation and build, semanticEvidence, and result/input IDs; the contract is the only differing entry field. I relied on this supplied comparison and listed hashes; I did not read or hash the corpus or independently verify entry bodies."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "rationale": "The packet identifies unchanged pinned roots, required keys, transport, source revision, scope, and original candidate/contract; it also reports the corrected installed dependency assertion control passing 1/1, intrinsic identity including 247 Noble entries, direct-admit candidate drift refusal, composed runtime identity checks, and source re-observation drift refusal. This is supplied evidence, including a focused synthetic fixture; I did not inspect installed bytes, kernel hashes, or actual S2 execution."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "PASS",
+      "rationale": "The supplied packet retains historical evidence (including the old candidate's 52/52 J1 and 39 J2 results and the old candidate's F02/M01 hold) while stating those decisions do not transfer. Applicability is explicitly limited to orchestra.interfaces and the corrected candidate's evaluation prerequisites. The clarification states the live path enforces two distinct reviewers and two decisions before admit, then validates each independent PASS against exact entries and criteria. This is one independent decision only; it does not establish an aggregate pair or admission."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "rationale": "The packet describes an evaluation-only plan recalculated for the corrected runtime and exact setup, a new operation bound to the explicit plan, scope, store root, and supported reader/writer paths, ordinary publish rejection of schema v2, evaluation filtering from operational projection, and an access-binding assertion. It also states no marker, policies, or admission were installed. I did not inspect the plan or execute admission."
+    }
+  },
+  "findings": [
+    {
+      "severity": "scope",
+      "finding": "This is a single independent decision on supplied evidence and admission prerequisites only. I did not read files, access the corpus, execute or admit the candidate, verify actual S2 use, or assess normal publication, the 14 consumers, U1, or other AC gates."
+    }
+  ]
+}

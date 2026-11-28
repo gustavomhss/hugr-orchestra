@@ -1,0 +1,51 @@
+{
+  "scope": "orchestra.interfaces",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "entry_vector_sha256": "d35e909988f7669c7d0081e234e34c654ac505cb60fb9deb1cb9e19925b65a38",
+  "preceding_candidate_hold": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "preceding_hold_status": "preserved for original identity",
+  "reviews": [
+    {
+      "reviewer": "/root/s2_admission_j1",
+      "request_ref": {
+        "payload_path": "s2-binding/j1-request.json",
+        "sha256": "39475e31cc020f08ac45dcfea0a65c45933e06a9b0332f93e6a73eab9ba1cfd4"
+      },
+      "initial_hold": {
+        "event_id": "amsg_01a222d2-aa8a-7ff3-801c-1b5e03c2a257",
+        "ref": {
+          "payload_path": "s2-binding/j1-hold.json",
+          "sha256": "cbe4572667fc483408f0e529b01cacc90684758059e3aad4f6ea7b26a3207217"
+        }
+      },
+      "final_pass": {
+        "event_id": "amsg_01a222d3-b5e1-74f3-b246-c3fad74269b8",
+        "ref": {
+          "payload_path": "s2-binding/j1-pass.json",
+          "sha256": "8e5281d24088cec2c6a4ad9caf5496d967f005aae61f2d48e267bd3b5d121ce2"
+        }
+      }
+    },
+    {
+      "reviewer": "/root/s2_admission_j2",
+      "request_ref": {
+        "payload_path": "s2-binding/j2-request.json",
+        "sha256": "7dd4dc154c5e332a03a4eb791680e59f0145273fb2ac4b0bb81f271d2a3d8cd4"
+      },
+      "initial_hold": {
+        "event_id": "amsg_01a222d3-6f02-7b23-8f2f-f6351f6989e0",
+        "ref": {
+          "payload_path": "s2-binding/j2-hold.json",
+          "sha256": "8af0f41a0af3919a06e1aab2be404f61dba74d631e52d23c5c2acc75ab616a78"
+        }
+      },
+      "final_pass": {
+        "event_id": "amsg_01a222d4-b1e6-7a13-8543-8c9fffa13fb2",
+        "ref": {
+          "payload_path": "s2-binding/j2-pass.json",
+          "sha256": "fcc2ca1d89bc8136d751a13dffe5f4f03f9401ef60305ce3599a3de77935e298"
+        }
+      }
+    }
+  ]
+}
