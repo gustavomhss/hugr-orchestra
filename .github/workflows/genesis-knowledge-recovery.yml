@@ -2,6 +2,11 @@ name: genesis-knowledge-recovery
 
 on:
   workflow_dispatch:
+    inputs:
+      publish_full15:
+        description: 'Publish the approved exact candidate in the disposable Actions corpus'
+        type: boolean
+        default: false
   push:
     branches: ["genesis-knowledge-resume"]
     paths:
@@ -80,6 +85,15 @@ jobs:
           python3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/prepare-full15.py \
             --repository "$GITHUB_WORKSPACE" --runtime-root "$RUNNER_TEMP/s4-runtime" --runtime-sha "$RUNTIME_SHA" \
             --source-root "$RUNNER_TEMP/s4-source" --output-dir "$RUNNER_TEMP/s4-evidence"
+      - name: Publish and verify the approved S4 candidate
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_full15
+        run: |
+          set -euo pipefail
+          S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
+          python3 "$S4_RUNTIME_DIR/publish-full15.py" \
+            --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
+            --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" \
+            --binding-directory "$S4_RUNTIME_DIR/binding-full15" --output "$RUNNER_TEMP/s4-publication"
       - name: Preserve evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -88,5 +102,16 @@ jobs:
           path: |
             ${{ runner.temp }}/s4-evidence
             ${{ runner.temp }}/s4-source/.atlas/cas
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve publication and reader receipts
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.publish_full15
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: s4-isolated-publication-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/s4-publication
+            ${{ runner.temp }}/s4-source/.atlas
+          include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
