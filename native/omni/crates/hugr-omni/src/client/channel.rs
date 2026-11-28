@@ -104,7 +104,7 @@ pub(super) enum Answer {
     Processes(Vec<ProcEntry>),
     ObservedTree(Vec<ProcEntry>, Option<u64>, Option<String>),
     ControlMembers(Vec<ControlMember>),
-    ControlResults(Vec<bool>),
+    ControlResults(Vec<crate::SelectiveStopOutcome>),
 }
 
 type Reply = Result<Answer, Error>;

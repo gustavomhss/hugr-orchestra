@@ -132,7 +132,7 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   /** Identity tokens for selective process control, supported by the Windows supervisor. */
   controlMembers(): Promise<string[]>;
   /** Stops selected identities; a timeout leaves the effect unknown. */
-  stopSelected(members: readonly string[]): Promise<boolean[]>;
+  stopSelected(members: readonly string[]): Promise<("exited" | "unknown")[]>;
   /** A membership sample whose deadline does not terminate the supervisor. */
   observeProcesses(): Promise<ProcessInfo[]>;
   observeTree?(): Promise<{ members: ProcessInfo[]; physicalFootprintBytes?: number; footprintIdentity?: string }>;

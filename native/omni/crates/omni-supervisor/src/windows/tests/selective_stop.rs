@@ -60,8 +60,8 @@ fn supervisor_control_targets_only_selected_job_member() {
     let member = members.into_iter().find(|member| member.pid == selected.id()).unwrap();
     let req = owner.request(|req| Msg::ControlStop { req, id: 42, members: vec![member] });
     let (_, reply) = owner.until(|msg| matches!(msg, Msg::ControlResults { req: r, .. } if *r == req));
-    let Msg::ControlResults { exited, .. } = reply else { unreachable!() };
-    assert_eq!(exited.len(), 1);
+    let Msg::ControlResults { outcomes, .. } = reply else { unreachable!() };
+    assert_eq!(outcomes.len(), 1);
     assert!(until(|| selected.try_wait().unwrap().is_some()));
     assert!(retained.try_wait().unwrap().is_none());
     retained.kill().unwrap();

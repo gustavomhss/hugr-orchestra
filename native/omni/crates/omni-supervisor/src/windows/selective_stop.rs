@@ -1,5 +1,5 @@
 //! Selective termination of identities captured by the supervisor from its own Job.
-//! This is an internal primitive; no protocol request accepts these identities yet.
+//! Requests are confined to identities pinned from the owning Job.
 
 use std::collections::HashSet;
 use std::io;
@@ -21,11 +21,7 @@ pub(super) struct Member {
     pub birth: u64,
 }
 
-#[derive(Debug, PartialEq, Eq)]
-pub(super) enum Outcome {
-    Exited,
-    Unknown,
-}
+use omni_proto::SelectiveStopOutcome;
 
 /// Read a complete bounded snapshot; any uninspectable or exiting member refuses the list.
 pub(super) fn list(job: &OwnedHandle) -> io::Result<Vec<Member>> {
@@ -46,7 +42,7 @@ pub(super) fn list(job: &OwnedHandle) -> io::Result<Vec<Member>> {
 
 /// All members are pinned and admitted before the first effect. A failed admission has no effects.
 /// An Unknown outcome must be reconciled by observation, never retried automatically.
-pub(super) fn stop(job: &OwnedHandle, selected: &[Member]) -> io::Result<Vec<Outcome>> {
+pub(super) fn stop(job: &OwnedHandle, selected: &[Member]) -> io::Result<Vec<SelectiveStopOutcome>> {
     if selected.is_empty() || selected.len() > 256 {
         return Err(io::Error::other("invalid selective stop size"));
     }
@@ -55,20 +51,20 @@ pub(super) fn stop(job: &OwnedHandle, selected: &[Member]) -> io::Result<Vec<Out
         return Err(io::Error::other("duplicate selective stop member"));
     }
     let held = selected.iter().map(|member| pin(job, member)).collect::<io::Result<Vec<_>>>()?;
-    Ok(held
-        .iter()
-        .map(|process| {
-            // SAFETY: the handle was opened with PROCESS_TERMINATE and remains held throughout this call.
-            if unsafe { TerminateProcess(process.as_raw_handle(), 1) } == 0 {
-                return Outcome::Unknown;
-            }
-            // TerminateProcess is asynchronous; an unsignalled handle is not proof of exit.
-            if unsafe { WaitForSingleObject(process.as_raw_handle(), 0) } == WAIT_OBJECT_0 {
-                return Outcome::Exited;
-            }
-            Outcome::Unknown
-        })
-        .collect())
+    // Issue the entire batch before observing any process. Waiting zero keeps the supervisor responsive;
+    // an unsignalled handle or a failed termination has an unknown outcome and must be reconciled.
+    let requested: Vec<_> = held.iter().map(|process| {
+        // SAFETY: every handle has PROCESS_TERMINATE and stays open through observation.
+        unsafe { TerminateProcess(process.as_raw_handle(), 1) != 0 }
+    }).collect();
+    Ok(held.iter().zip(requested).map(|(process, requested)| {
+        // SAFETY: the pinned handle has synchronize access and remains open.
+        if requested && unsafe { WaitForSingleObject(process.as_raw_handle(), 0) } == WAIT_OBJECT_0 {
+            SelectiveStopOutcome::Exited
+        } else {
+            SelectiveStopOutcome::Unknown
+        }
+    }).collect())
 }
 
 fn pin(job: &OwnedHandle, member: &Member) -> io::Result<OwnedHandle> {

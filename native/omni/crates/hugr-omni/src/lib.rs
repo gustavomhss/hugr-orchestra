@@ -41,5 +41,5 @@ mod spawn;
 mod types;
 
 pub use api::*;
-pub use omni_proto::ControlMember;
+pub use omni_proto::{ControlMember, SelectiveStopOutcome};
 pub use error::{Error, ErrorCode};

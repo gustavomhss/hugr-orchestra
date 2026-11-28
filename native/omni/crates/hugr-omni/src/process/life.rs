@@ -107,7 +107,7 @@ impl Life {
         self.tree.control_members().await
     }
 
-    pub(super) async fn stop_selected(&self, members: Vec<omni_proto::ControlMember>) -> Result<Vec<bool>, Error> {
+    pub(super) async fn stop_selected(&self, members: Vec<omni_proto::ControlMember>) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
         self.tree.stop_selected(members).await
     }
 

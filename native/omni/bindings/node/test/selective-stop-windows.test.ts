@@ -23,8 +23,15 @@ test.skipIf(process.platform !== "win32")("selective stop ends only the chosen l
   const selected = members.find((token) => token.startsWith(`${first}:`))
   expect(selected).toBeDefined()
   expect(members.some((token) => token.startsWith(`${second}:`))).toBe(true)
-  expect(await child.stopSelected([selected!])).toEqual([true])
-  const remaining = await child.controlMembers()
+  const [outcome] = await child.stopSelected([selected!])
+  expect(["exited", "unknown"]).toContain(outcome)
+  // Unknown means the asynchronous termination may still be settling.
+  const deadline = Date.now() + 5000
+  let remaining = await child.controlMembers()
+  while (remaining.some((token) => token.startsWith(`${first}:`)) && Date.now() < deadline) {
+    await Bun.sleep(10)
+    remaining = await child.controlMembers()
+  }
   expect(remaining.some((token) => token.startsWith(`${first}:`))).toBe(false)
   expect(remaining.some((token) => token.startsWith(`${second}:`))).toBe(true)
   expect(remaining.some((token) => token.startsWith(`${child.pid}:`))).toBe(true)

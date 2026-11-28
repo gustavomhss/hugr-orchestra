@@ -116,7 +116,7 @@ impl Child {
     }
 
     /// Stops selected members. A timeout means the effect is unknown; do not automatically retry.
-    pub async fn stop_selected(&self, members: Vec<crate::ControlMember>) -> Result<Vec<bool>, Error> {
+    pub async fn stop_selected(&self, members: Vec<crate::ControlMember>) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
         self.inner.life.stop_selected(members).await
     }
 

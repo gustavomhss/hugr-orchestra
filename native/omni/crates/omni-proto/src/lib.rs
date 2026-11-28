@@ -24,6 +24,15 @@ pub const INFO_FOOTPRINT: u32 = 8;
 /// `Ready.info` bit: selective stop by verified process birth identity is supported.
 pub const INFO_SELECTIVE_STOP: u32 = 16;
 
+/// Observed state after a selective termination request.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelectiveStopOutcome {
+    /// The pinned process handle was observed signalled.
+    Exited,
+    /// Exit was not confirmed; the request may still take effect.
+    Unknown,
+}
+
 /// A process identity used by selective stop.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ControlMember {
@@ -257,7 +266,7 @@ pub enum Msg {
     /// supervisor → host: process identities eligible for selective stop.
     ControlMembers { req: u64, id: u64, members: Vec<ControlMember> },
     /// supervisor → host: per-member termination outcome.
-    ControlResults { req: u64, id: u64, exited: Vec<bool> },
+    ControlResults { req: u64, id: u64, outcomes: Vec<SelectiveStopOutcome> },
     /// supervisor → host: reply without data.
     Ack {
         /// Request id.

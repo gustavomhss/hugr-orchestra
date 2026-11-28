@@ -18,7 +18,7 @@ impl Tree {
         }
     }
 
-    pub(crate) async fn stop_selected(&self, members: Vec<ControlMember>) -> Result<Vec<bool>, Error> {
+    pub(crate) async fn stop_selected(&self, members: Vec<ControlMember>) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
         self.sup.home()?;
         let id = self.id;
         let want = Want::ControlStop { count: members.len() };

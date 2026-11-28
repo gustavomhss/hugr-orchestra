@@ -284,7 +284,7 @@ impl Supervisor {
                     Some(Err(_)) => Msg::Ack { req, id, result: Ack::Error },
                     Some(Ok(outcomes)) => Msg::ControlResults {
                         req, id,
-                        exited: outcomes.into_iter().map(|outcome| outcome == selective_stop::Outcome::Exited).collect(),
+                        outcomes,
                     },
                 }
             }

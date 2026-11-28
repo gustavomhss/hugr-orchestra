@@ -46,7 +46,7 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x86 | `Processes` | req u64 · id u64 · list<(pid u32 · ppid u32, 0 = parent not in list · name bytes)> |
 | 0x88 | `ObservedTree` | req u64 · id u64 · footprint present bool · footprint u64 (0 when absent) · identity bytes (empty when absent) · list<(pid u32 · ppid u32 · name bytes)> |
 | 0x89 | `ControlMembers` | req u64 · id u64 · members list<(pid u32 · birth u64)> (0..=256 entries) |
-| 0x8a | `ControlResults` | req u64 · id u64 · exited list<bool> (1..=256 entries; aligned to requested members) |
+| 0x8a | `ControlResults` | req u64 · id u64 · outcomes list<u8> (1..=256 entries; 0 unknown, 1 exited; aligned to requested members) |
 | 0x87 | `Ack` | req u64 · id u64 · result u8 (0 ok, 2 unknown, 3 error, 4 closed; 1 is reserved) |
 
 **Verbatim command line (v2, Windows).** With `verbatim` = 1, `argv` holds `argv[0]` alone, and the root's command line
@@ -92,4 +92,4 @@ the parent is listed. On host death every tree gets a `Stop` with its own `grace
 
 The optional footprint is the sum of macOS `ri_phys_footprint` values for a verified, stable live session, not RSS or PSS. An incomplete aggregate carries neither a value nor an identity; membership remains available. The identity describes the sorted PID and native start identities and changes when membership changes. Old v2 peers omit bit 3 and never receive the new request.
 
-Selective control uses the native process birth identity alongside each PID so a PID reused between inventory and stop cannot target a different process. `ControlStop` and `ControlResults` must contain 1..=256 entries; `ControlMembers` may be empty. The codec rejects a count over 256 before allocating the list. `ControlResults.exited` is positional and reports whether the corresponding process exited.
+Selective control uses the native process birth identity alongside each PID so a PID reused between inventory and stop cannot target a different process. `ControlStop` and `ControlResults` must contain 1..=256 entries; `ControlMembers` may be empty. The codec rejects a count over 256 before allocating the list. `ControlResults.outcomes` is positional. Exited means the pinned process was observed exited; unknown means exit was not confirmed and the request may still take effect. Reconcile unknown outcomes by observation, never automatic retry.

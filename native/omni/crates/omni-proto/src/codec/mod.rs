@@ -5,7 +5,7 @@ mod wire;
 #[cfg(test)]
 mod tests;
 
-use crate::{Ack, ControlMember, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, Slot, Spawn};
+use crate::{Ack, ControlMember, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, SelectiveStopOutcome, Slot, Spawn};
 use wire::{Reader, Writer};
 
 const SPAWN: u8 = 0x01;
@@ -139,10 +139,10 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
             w.u8(CONTROL_MEMBERS).u64(*req).u64(*id).u32(len(members.len())?);
             for member in members { w.u32(member.pid).u64(member.birth); }
         }
-        Msg::ControlResults { req, id, exited } => {
-            validate_members(exited.len())?;
-            w.u8(CONTROL_RESULTS).u64(*req).u64(*id).u32(len(exited.len())?);
-            for result in exited { w.bool(*result); }
+        Msg::ControlResults { req, id, outcomes } => {
+            validate_members(outcomes.len())?;
+            w.u8(CONTROL_RESULTS).u64(*req).u64(*id).u32(len(outcomes.len())?);
+            for result in outcomes { w.bool(*result == SelectiveStopOutcome::Exited); }
         }
         Msg::Ack { req, id, result } => _ = w.u8(ACK).u64(*req).u64(*id).u8(ack(*result)),
     }
@@ -197,7 +197,7 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
         CONTROL_LIST => Msg::ControlList { req: r.u64()?, id: r.u64()? },
         CONTROL_STOP => {
             let (req, id) = (r.u64()?, r.u64()?);
-            let count = control_count(&mut r, true)?;
+            let count = control_count(&mut r, true, 12)?;
             let mut members = Vec::with_capacity(count);
             for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
             Msg::ControlStop { req, id, members }
@@ -290,17 +290,19 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
         }
         CONTROL_MEMBERS => {
             let (req, id) = (r.u64()?, r.u64()?);
-            let count = control_count(&mut r, false)?;
+            let count = control_count(&mut r, false, 12)?;
             let mut members = Vec::with_capacity(count);
             for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
             Msg::ControlMembers { req, id, members }
         }
         CONTROL_RESULTS => {
             let (req, id) = (r.u64()?, r.u64()?);
-            let count = control_count(&mut r, true)?;
-            let mut exited = Vec::with_capacity(count);
-            for _ in 0..count { exited.push(r.bool()?); }
-            Msg::ControlResults { req, id, exited }
+            let count = control_count(&mut r, true, 1)?;
+            let mut outcomes = Vec::with_capacity(count);
+            for _ in 0..count {
+                outcomes.push(if r.bool()? { SelectiveStopOutcome::Exited } else { SelectiveStopOutcome::Unknown });
+            }
+            Msg::ControlResults { req, id, outcomes }
         }
         ACK => Msg::Ack {
             req: r.u64()?,
@@ -374,12 +376,12 @@ fn validate_members(count: usize) -> Result<(), ProtoError> {
     Ok(())
 }
 
-fn control_count(r: &mut Reader<'_>, nonempty: bool) -> Result<usize, ProtoError> {
+fn control_count(r: &mut Reader<'_>, nonempty: bool, entry_size: usize) -> Result<usize, ProtoError> {
     let count = r.u32()? as usize;
     if count > MAX_CONTROL_MEMBERS || (nonempty && count == 0) {
         return Err(ProtoError(format!("invalid control member count {count}")));
     }
-    if count.saturating_mul(12) > r.remaining() {
+    if count.saturating_mul(entry_size) > r.remaining() {
         return Err(ProtoError("control member list cannot fit in frame".into()));
     }
     Ok(count)

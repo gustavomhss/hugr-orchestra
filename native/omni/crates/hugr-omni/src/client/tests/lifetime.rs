@@ -303,3 +303,36 @@ fn death_mid_flight_fails_every_call_and_the_next_spawn_restarts() {
     peer.spawned(7); // the first frame of generation 2 is this Spawn: nothing of the old tree reached it
     assert_eq!(caller.join().unwrap().unwrap().tree.id, 7);
 }
+
+#[test]
+fn selective_stop_preserves_explicit_outcomes() {
+    let ready = Msg::Ready {
+        version: omni_proto::VERSION,
+        pid: 4242,
+        info: omni_proto::INFO_SELECTIVE_STOP,
+    };
+    let (sup, mut peer) = connect(1, BOUND, &ready);
+    let sup = sup.expect("start");
+    let caller = {
+        let sup = sup.clone();
+        std::thread::spawn(move || spawn_on(&sup, &spec(false)))
+    };
+    peer.spawned(1);
+    let spawned = caller.join().unwrap().unwrap();
+    let members = vec![
+        omni_proto::ControlMember { pid: 1, birth: 10 },
+        omni_proto::ControlMember { pid: 2, birth: 20 },
+    ];
+    let caller = std::thread::spawn(move || block(spawned.tree.stop_selected(members)));
+    let Msg::ControlStop { req, id, .. } = peer.recv() else { panic!("expected ControlStop") };
+    peer.send(&Msg::ControlResults {
+        req,
+        id,
+        outcomes: vec![omni_proto::SelectiveStopOutcome::Exited, omni_proto::SelectiveStopOutcome::Unknown],
+    });
+    assert_eq!(caller.join().unwrap().unwrap(), vec![
+        omni_proto::SelectiveStopOutcome::Exited,
+        omni_proto::SelectiveStopOutcome::Unknown,
+    ]);
+    assert!(sup.alive());
+}

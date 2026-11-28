@@ -194,7 +194,12 @@ impl NativeChild {
             (token == format!("{pid}:{birth}")).then_some(hugr_omni::ControlMember { pid, birth })
         }).collect::<Option<Vec<_>>>().ok_or_else(|| napi::Error::new(napi::Status::InvalidArg, "invalid control member token"))?;
         let kid = Arc::clone(&self.kid);
-        exec::promise(env, async move { kid.stop_selected(members).await }, |exited| exited)
+        exec::promise(env, async move { kid.stop_selected(members).await }, |outcomes| {
+            outcomes.into_iter().map(|outcome| match outcome {
+                hugr_omni::SelectiveStopOutcome::Exited => "exited".to_string(),
+                hugr_omni::SelectiveStopOutcome::Unknown => "unknown".to_string(),
+            }).collect::<Vec<_>>()
+        })
     }
 
     #[napi(js_name = "observeTree")]

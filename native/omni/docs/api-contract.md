@@ -314,3 +314,13 @@ worker. Windows holds verified process handles while collecting metadata and kee
 the control owner.
 
 `observeTree` optionally returns the complete sum of macOS per-process physical footprints, with an opaque identity of the measured members. The metric and identity are absent when unavailable; the members remain independently useful. This is not RSS or PSS.
+
+### Selective process control
+
+On a supervisor advertising selective control (currently Windows), `Child.controlMembers()` returns canonical
+`pid:birth` identity tokens from its own tree. `Child.stopSelected(tokens)` accepts 1 to 256 tokens and returns a
+positional `"exited"` or `"unknown"` for each. Rust exposes `ControlMember` and `SelectiveStopOutcome` through
+`Child::control_members` and `Child::stop_selected`. Exited means the pinned process was observed exited. Unknown
+means exit was not confirmed and the request may still take effect; reconcile by observation and do not retry
+automatically. A receipt timeout likewise leaves the effect unknown. The supervisor issues the whole batch before
+checking handles with zero wait, preserving responsiveness to other requests.

@@ -202,9 +202,9 @@ impl Gen {
                 check(st, req, |w| w == Want::ControlList, Some(id))?;
                 (req, Answer::ControlMembers(members), None)
             }
-            Msg::ControlResults { req, id, exited } => {
-                check(st, req, |w| matches!(w, Want::ControlStop { count } if count == exited.len()), Some(id))?;
-                (req, Answer::ControlResults(exited), None)
+            Msg::ControlResults { req, id, outcomes } => {
+                check(st, req, |w| matches!(w, Want::ControlStop { count } if count == outcomes.len()), Some(id))?;
+                (req, Answer::ControlResults(outcomes), None)
             }
             Msg::Ready { .. } => return Err("it sent Ready twice".into()),
             other => return Err(format!("it sent {}, which only a host may send", kind(&other))),
