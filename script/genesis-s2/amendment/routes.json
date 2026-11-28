@@ -11,6 +11,16 @@
         "key": "s2.l1.app-session",
         "section": "Prompt admission and draft ownership",
         "maxBytes": 8000
+      },
+      {
+        "key": "s2.l1.app-session",
+        "section": "Authority, composition and identity",
+        "maxBytes": 10000
+      },
+      {
+        "key": "s2.l1.app-session",
+        "section": "Assets, localization and verification evidence",
+        "maxBytes": 10000
       }
     ]
   },
@@ -41,6 +51,21 @@
         "key": "s2.l1.desktop-web",
         "section": "1. Startup, readiness and shutdown",
         "maxBytes": 8000
+      },
+      {
+        "key": "s2.l3.desktop-web",
+        "section": "Launch, choose a server and identify the health decision",
+        "maxBytes": 10000
+      },
+      {
+        "key": "s2.l4.desktop-web",
+        "section": "Maintenance protocol",
+        "maxBytes": 10000
+      },
+      {
+        "key": "s2.l4.desktop-web",
+        "section": "Verification and boundaries",
+        "maxBytes": 10000
       }
     ]
   },
