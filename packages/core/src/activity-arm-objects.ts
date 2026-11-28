@@ -60,6 +60,13 @@ export function make(database: Database.Interface, processService: AppProcess.In
     const registered = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
     const entry = registered?.exitCode === 0 ? worktreeEntry(registered.stdout, candidate.directory) : undefined
     if (!entry) return { observation, partial: true }
+    const common = yield* git(candidate.root, ["rev-parse", "--path-format=absolute", "--git-common-dir"])
+    const placement = () => git(candidate.directory, ["rev-parse", "--path-format=absolute", "--show-toplevel", "--git-common-dir", "HEAD"])
+    const head = entry.split("\0").find((field) => field.startsWith("HEAD "))?.slice(5)
+    if (common?.exitCode !== 0 || !head) return { observation, partial: true }
+    const expected = candidate.directory + "\n" + common.stdout.toString("utf8") + head + "\n"
+    const placed = yield* placement()
+    if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) return { observation, partial: true }
     const tracked = yield* git(candidate.directory, ["ls-files", "-v", "-z"])
     if (tracked?.exitCode !== 0) return { observation, partial: true }
     // A tracked file or a suppressed index entry cannot establish a clean, disposable copy.
@@ -77,9 +84,9 @@ export function make(database: Database.Interface, processService: AppProcess.In
     }, signal))
       .pipe(Effect.timeoutOption("4 seconds"))
     const after = yield* dirt()
-    const final = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
+    const final = yield* placement()
     const current = yield* registrations().where(and(gitWorktree, eq(ProjectDirectoryTable.registration_id, candidate.registrationID))).get()
-    if (after?.exitCode !== 0 || final?.exitCode !== 0 || worktreeEntry(final.stdout, candidate.directory) !== entry ||
+    if (after?.exitCode !== 0 || final?.exitCode !== 0 || final.stdout.toString("utf8") !== expected ||
       !current || current.directory !== candidate.directory || current.root !== candidate.root || current.projectID !== candidate.projectID ||
       proof._tag === "None" || !proof.value) return { observation, partial: true }
     return {
