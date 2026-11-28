@@ -33,8 +33,7 @@ async function parent() {
     await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     const electron = createRequire(join(desktop, "package.json")).resolve("electron")
     const binary = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
-    const bun = Bun.which("bun")
-    if (!bun) throw new Error("Bun not found")
+    const bun = process.execPath
     const child = Bun.spawn([binary, "--no-sandbox", entry, "--activity-arm-child"], {
       stdout: "pipe", stderr: "pipe", env: { ...process.env, ACTIVITY_ARM_ROOT: root, ACTIVITY_ARM_PRELOAD: preload.outputs[0]!.path, ACTIVITY_ARM_BUN: bun, ACTIVITY_ARM_CLI: join(desktop, "../cli/src/index.ts") },
     })
