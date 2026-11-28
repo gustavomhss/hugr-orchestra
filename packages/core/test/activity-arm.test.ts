@@ -88,7 +88,7 @@ test("consumes a preview and refuses every receipt when live verification fails 
       unavailable.add(second.targetID)
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
-      expect(yield* arms.preview({ targets: [second] })).toBeUndefined()
+      expect(yield* arms.preview({ targets: [{ targetID: second.targetID, generation: second.generation }] })).toBeUndefined()
       expect(verified).toEqual([first, second, first, second, second])
       expect(yield* ActivityArmLedger.list(database)).toEqual([])
     }), {

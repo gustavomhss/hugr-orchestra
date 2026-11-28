@@ -14,6 +14,8 @@ The existing HTTP principal identifies a client. The packaged Desktop's owned si
 
 The private channel authenticates the peer for an instance. The dialog supplies the human confirmation inside the trusted Desktop main process. The server consumes the preview once and revalidates the exact observed targets inside the same transaction that commits the receipt. A confirmed arm has no filesystem or process effect. The normal authenticated GET displays current and stale receipts. Runtime effects require their own authority and adapter.
 
+The owned Linux sidecar checks registered Git worktree copies through a signed, explicit IN/OUT inspection. The live verifier checks the candidate and registered Git worktree before the dialog and again before committing the receipt. An incomplete Linux process view refuses eligibility. These readings observe the running system and do not reserve the filesystem object for a later Apply.
+
 Arm and Apply are separate confirmations. Arm persists the selection and leaves the source in place. Apply consumes the exact confirmed binding and acquires a durable claim over the whole set before effects. A conflicting claim, changed evidence, expiry, or mismatched epoch refuses admission. An interrupted attempt that might have started an effect becomes Unknown. The executor will need restart and replay coverage before exposing either confirmation.
 
 ## Filesystem effects
