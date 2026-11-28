@@ -2,8 +2,8 @@ export * as ActivityQuarantineCustody from "./activity-quarantine-custody"
 
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
-import { ActivityQuarantineExecutor } from "./activity-quarantine-executor"
-import type { ActivityQuarantineNative } from "./activity-quarantine-native"
+import type { ActivityQuarantineExecutor } from "./activity-quarantine-executor"
+import { ActivityQuarantineNative } from "./activity-quarantine-native"
 import { ActivityQuarantineCustodyTable } from "./activity-quarantine-custody.sql"
 import type { Database } from "./database/database"
 import { Omni } from "./omni"
@@ -43,11 +43,12 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
               lease.disposable !== "file") return "Refused"
 
             const inserted = await Effect.runPromise(database.db.transaction((tx) => Effect.gen(function* () {
-              const active = yield* tx.select({ targetID: ActivityQuarantineCustodyTable.target_id })
+              const active = yield* tx.select({ phase: ActivityQuarantineCustodyTable.phase })
                 .from(ActivityQuarantineCustodyTable)
                 .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
                 .limit(ActivityArm.maxTargets).all()
-              if (active.length >= ActivityArm.maxTargets) return undefined
+              if (active.length >= ActivityArm.maxTargets || active.some((row) => row.phase === "emptying" || row.phase === "unknown"))
+                return undefined
               return yield* tx.insert(ActivityQuarantineCustodyTable).values({
                 target_id: target.id,
                 generation: target.generation,
@@ -62,32 +63,12 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
             }), { behavior: "immediate" }))
             if (!inserted) return "Refused"
 
-            const native = await Omni.quarantine().catch(() => undefined)
-            if (!native) {
-              await removeMoving(database, target)
-              return "Refused"
-            }
             try {
-              const outcome = await ActivityQuarantineExecutor.execute({
-              async prepare() {
-                const original = await inspect(native, lease.originalPath)
-                const quarantine = await inspect(native, lease.quarantinePath)
-                return {
-                  facts: { original, quarantine },
-                  claimant: "absent",
-                  mutation: async () =>
-                    await native.quarantineRename(lease.originalPath, lease.quarantinePath, target.identity) === target.identity
-                      ? "accepted"
-                      : "unknown",
-                }
-              },
-              async reread() {
-                return {
-                  original: await inspect(native, lease.originalPath),
-                  quarantine: await inspect(native, lease.quarantinePath),
-                }
-              },
-              }, target, "apply")
+              // Keep the producer reservation until the native result is durably recorded.
+              const outcome = await ActivityQuarantineNative.execute(async () => ({
+                ...lease,
+                release: async () => {},
+              }), target, "apply")
               if (outcome === "Verified") await setPhase(database, target, "moving", "ready")
               if (outcome === "Unknown") await setPhase(database, target, "moving", "unknown")
               if (outcome === "Refused") await removeMoving(database, target)
@@ -104,7 +85,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
       })
     },
     preview() {
-      return database.db.transaction((tx) => Effect.gen(function* () {
+      const snapshot = database.db.transaction((tx) => Effect.gen(function* () {
         const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
           .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
           .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
@@ -131,6 +112,9 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         previews.set(preview.previewID, { expiresAt: preview.expiresAt, rows: structuredClone(rows), preview })
         return structuredClone(preview)
       }), { behavior: "immediate" })
+      return Effect.promise(() => Omni.quarantineBatch().catch(() => undefined)).pipe(
+        Effect.flatMap((dispose) => dispose ? snapshot : Effect.succeed(undefined)),
+      )
     },
     confirm(input) {
       return Effect.suspend(() => {
@@ -166,7 +150,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
               })
               try {
                 const native = await Omni.quarantine().catch(() => undefined)
-                const quarantineBatch = await getQuarantineBatch()
+                const quarantineBatch = await Omni.quarantineBatch().catch(() => undefined)
                 if (!native || !quarantineBatch) {
                   await settle(database, reserved.rows, reserved.reservationID, "ready")
                   return emptyReceipt("Refused")
@@ -234,15 +218,19 @@ async function settle(
   reservationID: string,
   phase: "ready" | "finished" | "unknown",
 ) {
-  await Effect.runPromise(database.db.transaction((tx) => Effect.forEach(rows, (row) =>
-    tx.update(ActivityQuarantineCustodyTable).set({
-      phase,
-      reservation_id: phase === "ready" ? null : reservationID,
-    }).where(and(eq(ActivityQuarantineCustodyTable.target_id, row.target_id),
-      eq(ActivityQuarantineCustodyTable.generation, row.generation),
-      eq(ActivityQuarantineCustodyTable.identity, row.identity),
-      eq(ActivityQuarantineCustodyTable.phase, "emptying"),
-      eq(ActivityQuarantineCustodyTable.reservation_id, reservationID))).run()), { behavior: "immediate" }))
+  await Effect.runPromise(database.db.transaction((tx) => Effect.gen(function* () {
+    const updated = yield* Effect.forEach(rows, (row) =>
+      tx.update(ActivityQuarantineCustodyTable).set({
+        phase,
+        reservation_id: phase === "ready" ? null : reservationID,
+      }).where(and(eq(ActivityQuarantineCustodyTable.target_id, row.target_id),
+        eq(ActivityQuarantineCustodyTable.generation, row.generation),
+        eq(ActivityQuarantineCustodyTable.identity, row.identity),
+        eq(ActivityQuarantineCustodyTable.phase, "emptying"),
+        eq(ActivityQuarantineCustodyTable.reservation_id, reservationID)))
+        .returning({ targetID: ActivityQuarantineCustodyTable.target_id }).get())
+    if (updated.some((row) => !row)) return yield* Effect.fail(new Error("Quarantine reservation changed during settlement"))
+  }), { behavior: "immediate" }))
 }
 
 function sameRow(left: CustodyRow, right: CustodyRow | undefined) {
@@ -252,10 +240,3 @@ function sameRow(left: CustodyRow, right: CustodyRow | undefined) {
     left.phase === right.phase && left.reservation_id === right.reservation_id
 }
 
-async function getQuarantineBatch() {
-  const access = Omni as typeof Omni & {
-    quarantineBatch?: () => Promise<((items: readonly { path: string; identity: string }[]) =>
-      Promise<"accepted" | "refused" | "unknown">) | undefined>
-  }
-  return access.quarantineBatch?.()
-}
