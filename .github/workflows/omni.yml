@@ -194,6 +194,17 @@ jobs:
           test_bin="$(jq -er 'select(.reason == "compiler-artifact" and .target.name == "protected_linux" and .profile.test) | .executable' "$RUNNER_TEMP/omni-protected-test.jsonl")"
           test -x "$test_bin"
           sudo "$test_bin" --exact protected_quarantine --ignored
+      - name: Build the installed custody CLI
+        working-directory: apps/cli
+        run: |
+          artifacts="$RUNNER_TEMP/custody-omni"
+          mkdir -p "$artifacts/linux-x64-gnu"
+          cp "$HUGR_OMNI_ADDON" "$artifacts/linux-x64-gnu/hugr_omni.node"
+          cp "$HUGR_OMNI_SUPERVISOR" "$artifacts/linux-x64-gnu/"
+          OMNI_ARTIFACTS="$artifacts" bun script/build.ts --single --skip-install
+          binary="$(find "$PWD/dist" -type f -path '*/bin/orchestra')"
+          test -x "$binary"
+          echo "ACTIVITY_CUSTODY_CLI=$binary" >> "$GITHUB_ENV"
       - name: Install Electron and the nested Wayland fixture
         working-directory: apps/desktop
         run: |
@@ -212,5 +223,5 @@ jobs:
           # Only Weston and the fixture input driver receive the root-owned outer X11 credential.
           # Electron receives only the nested Wayland display and runs as the runner account.
           dbus-run-session -- timeout -k 10s 4m \
-            sudo --preserve-env=ACTIVITY_ARM_UID,ACTIVITY_ARM_GID,CI,DBUS_SESSION_BUS_ADDRESS,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
+            sudo --preserve-env=ACTIVITY_ARM_UID,ACTIVITY_ARM_GID,ACTIVITY_CUSTODY_CLI,CI,DBUS_SESSION_BUS_ADDRESS,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
             xvfb-run -a -s '-screen 0 1280x920x24 -nolisten tcp' "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
