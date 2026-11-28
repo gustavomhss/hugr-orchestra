@@ -64,6 +64,8 @@ export function ExecutionReceipt(props: { report: ExecutionReport; stage: Page["
 export function IssueExecutions(props: { report?: ExecutionReport; failed: boolean; page: Page; time: (at: number) => string; retry: () => void }) {
   const language = useLanguage()
   const t = language.t
+  const terminal = () => props.page.issue.stage === "shipped" || props.page.issue.stage === "cut"
+  const missingClosure = () => terminal() ? "orchestra.board.workspace.unknown" : "orchestra.board.workspace.outcome.open"
   const loose = () => props.page.notes.filter((note) => note.kind != null && note.attempt == null)
   const unmatched = () => !props.report && !props.failed ? [] : [...new Set(props.page.notes.flatMap((note) =>
     note.kind != null && note.attempt != null && !props.report?.attempts.some((attempt) => attempt.n === note.attempt) ? [note.attempt] : [],
@@ -92,12 +94,17 @@ export function IssueExecutions(props: { report?: ExecutionReport; failed: boole
           <For each={[...report().attempts].reverse()}>{(attempt, index) => (
             <details class="board-execution" data-attempt={attempt.n} open={index() === 0}>
               <summary><span><b>{t("orchestra.board.workspace.attempt", { n: attempt.n })}</b><span>{attempt.seat ?? t("orchestra.board.workspace.unknown")}</span></span>
-                 <span data-outcome={attempt.outcome ?? "open"}>{t(`orchestra.board.workspace.outcome.${attempt.outcome ?? "open"}`)}</span>
+                <span data-outcome={attempt.outcome ?? (terminal() ? undefined : "open")}>
+                  {t(attempt.outcome === null ? missingClosure() : `orchestra.board.workspace.outcome.${attempt.outcome}`)}
+                </span>
               </summary>
               <div class="board-execution-content">
                 <dl class="board-execution-facts">
                   <dt>{t("orchestra.board.workspace.started")}</dt><dd>{props.time(attempt.startedAt)}</dd>
-                  <dt>{t("orchestra.board.workspace.ended")}</dt><dd>{attempt.endedAt === null ? t("orchestra.board.workspace.outcome.open") : props.time(attempt.endedAt)}</dd>
+                  <dt>{t("orchestra.board.workspace.ended")}</dt>
+                  <dd>{attempt.endedAt === null
+                    ? t(attempt.outcome === null ? missingClosure() : "orchestra.board.workspace.unknown")
+                    : props.time(attempt.endedAt)}</dd>
                   <dt>{t("orchestra.board.workspace.session")}</dt><dd class="board-mono">{attempt.sessionID ?? t("orchestra.board.workspace.unknown")}</dd>
                   <dt>{t("orchestra.board.workspace.branch")}</dt><dd class="board-mono">{attempt.branch ?? t("orchestra.board.workspace.unknown")}</dd>
                   <dt>{t("orchestra.board.workspace.pr")}</dt><dd>{attempt.prNumber === null ? t("orchestra.board.workspace.unknown") : `#${attempt.prNumber}`}</dd>

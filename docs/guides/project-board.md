@@ -39,7 +39,7 @@ Open an issue for a peek. **Open full page** shows the same issue with more room
 
 - **Overview** shows open questions, the description, steps, Git trail and attachments. Expand a question to see its choices and add an optional reply.
 - **Conversation** shows comments and the composer. Open a long comment to read it in full.
-- **Executions** shows recorded attempts, documents and available usage. Events with unknown attribution stay visible separately. Shipped and Cut transitions record a receipt at the time of closure.
+- **Executions** shows recorded attempts, documents and available usage. An older attempt without a recorded closure is marked **Not recorded** on a Shipped or Cut issue. Events with unknown attribution stay visible separately. Shipped and Cut transitions record a receipt at the time of closure.
 - **History** shows issue changes, movement requests, actual moves and their reasons.
 
 **Properties** groups the issue type, stage age, dependency references and provenance. Expand **Branch** to read the full value. In a narrow window, Properties appears below the issue content. A question reply stays with its question as you switch between the issue and Needs you while the Board remains open.
