@@ -1,0 +1,173 @@
+{
+  "schema": "genesis-s1-upper-recovery/v2",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "count": 7,
+  "exact_hash_matches": 7,
+  "method": "Lossless bytes between attributed XML-like delimiters; one delimiter newline excluded, no body normalization.",
+  "semantic_acceptance": "NOT_INFERRED",
+  "search_scope_prior_to_recovery": "See retrieval-metadata.json; search is bounded, not proof of global absence.",
+  "previous_state": "REFERENCED_HASH_ONLY in repository/cache search; resolved by two original Library prompts",
+  "targets": [
+    {
+      "key": "s1.l2.runtime-ownership",
+      "expected_sha256": "8da484ba0a8f30f0a0da90c02b00650f9b48ed54294dcb0224533c36115cc9f0",
+      "source_file": "s1-impact-1-prompt.txt",
+      "source_sha256": "80f3e49b4ce732493bdb73bad3a48ca531e359cf026a141bd9e7d0cff98ccb24",
+      "matched_exact_hash": true,
+      "captured_bytes": 9323,
+      "raw_sha256": "cbbc466deadc0f8f73e09ab3a3eb2826d30cb453ebf499c84bfd1179eaccd904",
+      "byte_length": 9322,
+      "git_blob_sha": "043dc1754bacb660e6b8d96710d8efce45cf38ff",
+      "body_path": "bodies/s1.l2.runtime-ownership.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-6838fe7487d88191a6a572c470ff9ab8_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-1-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-1-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.session-provider-flow",
+      "expected_sha256": "dd650372006f3ec161f50618ff92c409eef368bd34b7ea401b80d2ce416b9e2a",
+      "source_file": "s1-impact-1-prompt.txt",
+      "source_sha256": "80f3e49b4ce732493bdb73bad3a48ca531e359cf026a141bd9e7d0cff98ccb24",
+      "matched_exact_hash": true,
+      "captured_bytes": 9653,
+      "raw_sha256": "8d162e35d60372afed9089177d2566e7e661b1e83257d1767120caf16ab29acf",
+      "byte_length": 9652,
+      "git_blob_sha": "2e4d58e537c99afa4c29fa4410fc9999d1b54afe",
+      "body_path": "bodies/s1.l3.session-provider-flow.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-6838fe7487d88191a6a572c470ff9ab8_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-1-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-1-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.persistence-evidence-failures",
+      "expected_sha256": "de4c070a6c99b11cbe5e8a85403769fd388da53215233a02774c3a1869e4f3a2",
+      "source_file": "s1-impact-1-prompt.txt",
+      "source_sha256": "80f3e49b4ce732493bdb73bad3a48ca531e359cf026a141bd9e7d0cff98ccb24",
+      "matched_exact_hash": true,
+      "captured_bytes": 18234,
+      "raw_sha256": "9e615c0dc510ebfb02f45c938ef64b50c392999e07c87021e0e377fa6476f48b",
+      "byte_length": 18233,
+      "git_blob_sha": "345440b79da896d805151ba556958dffc417a10f",
+      "body_path": "bodies/s1.l3.persistence-evidence-failures.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-6838fe7487d88191a6a572c470ff9ab8_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-1-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-1-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.ownership-impact-map",
+      "expected_sha256": "3548f7f3689e5ffcbf2eeeb62bf86f56d03cfffe091072c86efcbb1abc88eda4",
+      "source_file": "s1-impact-1-prompt.txt",
+      "source_sha256": "80f3e49b4ce732493bdb73bad3a48ca531e359cf026a141bd9e7d0cff98ccb24",
+      "matched_exact_hash": true,
+      "captured_bytes": 12103,
+      "raw_sha256": "26d8ca533d91749d54d3ac5eb939d0bf8895b6c0e764206c82570da7970d0949",
+      "byte_length": 12102,
+      "git_blob_sha": "81348a145230bb6923c722fab1f852f5f47baf67",
+      "body_path": "bodies/s1.l3.ownership-impact-map.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-6838fe7487d88191a6a572c470ff9ab8_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-1-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-1-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.ownership-entry",
+      "expected_sha256": "aac50370d83ee11af40206d6ee1cc542d1868a45397e1849b0c0c896c5e67a7b",
+      "source_file": "s1-impact-2-prompt.txt",
+      "source_sha256": "79c0555ffb00fe46d6b48be4fcf50aed8c29be1c7444f26f5efc1cb2cc9f4a41",
+      "matched_exact_hash": true,
+      "captured_bytes": 11310,
+      "raw_sha256": "2927427314763f294e2779a8e79ccde44da3c48504a18cb41980b0b46d0a8376",
+      "byte_length": 11309,
+      "git_blob_sha": "66f2dc1e58b320fcec1bae51c9f8285b6e854719",
+      "body_path": "bodies/s1.l4.ownership-entry.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-02db52adc6248191aef9968dd40ef0e0_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-2-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-2-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.safe-change",
+      "expected_sha256": "64ccbc99fbbe86d975563f429117198ed662e126c63502965c6cb5f2399f25a0",
+      "source_file": "s1-impact-2-prompt.txt",
+      "source_sha256": "79c0555ffb00fe46d6b48be4fcf50aed8c29be1c7444f26f5efc1cb2cc9f4a41",
+      "matched_exact_hash": true,
+      "captured_bytes": 13066,
+      "raw_sha256": "be7dd9953f4f855c35af4c496eac3b561a83935d6074b1048c4a0c7a94f48c8e",
+      "byte_length": 13065,
+      "git_blob_sha": "272e4b9312210b97955692a8a57f5305e5b5bf91",
+      "body_path": "bodies/s1.l4.safe-change.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-02db52adc6248191aef9968dd40ef0e0_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-2-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-2-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.diagnosis-maintenance",
+      "expected_sha256": "8ab87cd4bbebb0cb902e3b59657237a6b42b015f0376fa921385bd6d13f9e493",
+      "source_file": "s1-impact-2-prompt.txt",
+      "source_sha256": "79c0555ffb00fe46d6b48be4fcf50aed8c29be1c7444f26f5efc1cb2cc9f4a41",
+      "matched_exact_hash": true,
+      "captured_bytes": 20967,
+      "raw_sha256": "008ea2dfac3580142f566fafaa1c530f835ef40c38512ba0ef03abe09c647426",
+      "byte_length": 20966,
+      "git_blob_sha": "157ec884602d67c04d34706d018a70f4575cee79",
+      "body_path": "bodies/s1.l4.diagnosis-maintenance.md",
+      "library_source": {
+        "library_file_id": "libfile_fde3_f-02db52adc6248191aef9968dd40ef0e0_3a07899f8a4481918837fffaac5a42fc",
+        "version_id": "0",
+        "file_name": "s1-impact-2-prompt.txt"
+      },
+      "source_path": "prompts/s1-impact-2-prompt.txt",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "semantic_acceptances": [],
+      "impact_decision": "NO_CHANGE_IS_NOT_SEMANTIC_PASS",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    }
+  ]
+}

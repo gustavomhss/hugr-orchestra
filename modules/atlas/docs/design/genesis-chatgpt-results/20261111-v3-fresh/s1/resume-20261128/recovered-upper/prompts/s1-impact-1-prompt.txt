@@ -1,0 +1,327 @@
+Tarefa Genesis S1 DELTA CONCRETO, apoio 1/2. Repositório gustavomhss/hugr-orchestra. Os51corpos tinham avaliação histórica; NÃO repetir revisão geral. B15economy revelou dois erros pontuais e recebeu revisãoV2 source-only. Sua missão é verificar APENAS propagação dessas duas correções aos corpos atribuídos abaixo. Grafo de build indica afetados conservadores; isso NÃO prova que toda prosa precisa mudar. Se resultado completo permanece semanticamente válido, entregue NO_CHANGE justificado sem reescrever. Não incluir melhorias opcionais.
+Fonte exata packages/core/src/economy/admission.ts@1cde2ff7a71bcf7aecb5d030917b577165135d38. Deltas: distinguir validação de bounds de tokens do uso de bound.attempts; registrar early grant por completionRef antes da checagem de body encaminhado indisponível. B15antes/depois abaixo são dados públicos. Verifique fonte e contexto relevante porGH MCP; não invente execução.
+Até3apoios reais permitidos; dois revisores novos source-only podem conferir DELTA, com IDs reais persistentes nesta sessão, sem ferramentas: principal entrega textos/fontes inline. Não são dupla histórica nem aprovação central; nenhum oracle privado disponível. Não retornar ADMIT/PASS global nem reabrir casos privados. Se necessária mudança além das duas, reportar separadamente sem executar.
+Autorizado branch nova genesis-campaign-s1-economy-impact-1 a partir de158e612d4d7bd0f486a4bac91e812d7b615375da. Somente docs em modules/atlas/docs/design/genesis-chatgpt-results/20261113-s1-economy-impact-1/. Entregar bodies apenas dos alterados, findings.md com textoantes/depois/racional por chave e NO_CHANGE explícito, manifest.json pins/origens/SHA e limites. Commit final, SHA completo. Não tocar código/CI/runtime/main/branch original nem criarharness. Não duplicar pacoteoutro; só keys listadas. Não apagar histórico. Semadmit/consumer/maintenance real.
+
+<B15_original>
+# Durable economic reservation and evidence separation
+
+Layer: **L1 — pinned factual basis**. Need: `evidence`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+The economy envelope names authority, scope, provider/model/route, admitted stages, attempt/in-flight and optional token limits plus retry policy. A sealed request fingerprints those fields, logical identity/snapshot, endpoint/protocol, final request-body digest and per-attempt bounds. Required bound dimensions must be present and positive safe integers within an envelope's limit. A request-body digest is identity evidence; it is not a provider usage receipt. [1]
+
+`reserveAttempt` requires database storage identity, refuses an ambient transaction and performs admission in its own immediate transaction. It checks the exact stored envelope, reconciles the predecessor-derived admission ordinal, rejects conflicting fingerprints, reuses retained completion when available and holds a previously forwarded response whose body is unavailable. Occupancy sums actual settled usage and retained bounds for unsettled obligations; a slot is counted until explicitly released. Corrupt or incomplete accounted dimensions hold/refuse rather than becoming zero. New rows retain exact body snapshot, bound and a forward intent; physical forward observation is separately recorded. [1]
+
+`observeTerminal` records exact remote terminal evidence and releases the in-flight slot. `settleAttempt` additionally requires terminal evidence, matching evidence identity, complete bound usage dimensions and valid numeric relationships. It stores confirmed usage; exceeding an admitted bound blocks the envelope. An HTTP transport error by itself is explicitly not remote terminus. Completion body/reference, physical forward observation and semantic accepted/refused outcome are separate fields. Semantic rejection has no refund path for confirmed usage or held obligations. Recovery reads persisted obligations and does not infer missing evidence. [1]
+
+## Authority and gaps
+
+These facts describe the Core admission ledger module. The existence of these functions does not prove every provider path is governed by them; sender/route integration and the owning executor are required to establish that claim. Nor does this product module measure this Genesis conversation's tokens, physical attempts or billing. Those session economics remain unknown unless exposed by separate observed receipts. No reservation, settlement, fault injection or provider call was run.
+
+## Source anchors
+
+- **1.** `packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f` — sealed request, reservation, independent observations and recovery, lines 41–110,242–284,409–510,550–615,630–734,783–823.
+
+</B15_original>
+<B15_v2>
+# Durable economic reservation and evidence separation
+
+Layer: **L1 — pinned factual basis**. Need: `evidence`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+The economy envelope names authority, scope, provider/model/route, admitted stages, attempt/in-flight and optional token limits plus retry policy. A sealed request fingerprints those fields, logical identity/snapshot, endpoint/protocol, final request-body digest and per-attempt bounds. `validateBound` requires token dimensions bounded by the envelope to be present; supplied token bounds must be positive safe integers and not exceed any corresponding envelope limit. It does not validate `bound.attempts`; reservation applies the attempt limit by counting stored attempts. A request-body digest is identity evidence; it is not a provider usage receipt. [1]
+
+`reserveAttempt` requires database storage identity, refuses an ambient transaction and performs admission in its own immediate transaction. It checks the exact stored envelope, reconciles the predecessor-derived admission ordinal, rejects conflicting fingerprints, reuses retained completion when available. An existing attempt with a `completionRef` receives a non-consumable grant before the body or forwarding checks, without requiring a `completionBody`; searches for another retained completion require both reference and body. If neither completion path applies, a previously forwarded existing attempt is held as response-unavailable. Occupancy sums actual settled usage and retained bounds for unsettled obligations; a slot is counted until explicitly released. Corrupt or incomplete accounted dimensions hold/refuse rather than becoming zero. New rows retain exact body snapshot, bound and a forward intent; physical forward observation is separately recorded. [1]
+
+`observeTerminal` records exact remote terminal evidence and releases the in-flight slot. `settleAttempt` additionally requires terminal evidence, matching evidence identity, complete bound usage dimensions and valid numeric relationships. It stores confirmed usage; exceeding an admitted bound blocks the envelope. An HTTP transport error by itself is explicitly not remote terminus. Completion body/reference, physical forward observation and semantic accepted/refused outcome are separate fields. Semantic rejection has no refund path for confirmed usage or held obligations. Recovery reads persisted obligations and does not infer missing evidence. [1]
+
+## Authority and gaps
+
+These facts describe the Core admission ledger module. The existence of these functions does not prove every provider path is governed by them; sender/route integration and the owning executor are required to establish that claim. Nor does this product module measure this Genesis conversation's tokens, physical attempts or billing. Those session economics remain unknown unless exposed by separate observed receipts. No reservation, settlement, fault injection or provider call was run.
+
+## Source anchors
+
+- **1.** `packages/core/src/economy/admission.ts:914a0b925dd282e264292b2247189c549c993a3f` — sealed request, reservation, independent observations and recovery, lines 41–110,242–284,409–510,550–615,630–734,783–823.
+
+</B15_v2>
+
+<atribuido key="s1.l2.runtime-ownership" sha256="8da484ba0a8f30f0a0da90c02b00650f9b48ed54294dcb0224533c36115cc9f0">
+# Ownership de runtime: composição, execução limitada e prova do que aconteceu
+
+**Chave:** `s1.l2.runtime-ownership`. L2 prospectiva no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`, derivada de runtime/economy/boundaries/entry L1. Não constitui teste operacional, autorização ou aceite do novo corpo.
+
+## Começar pela porta certa
+
+Core é plataforma reutilizável, com subpaths públicos explícitos, não um entrypoint universal inferido. No manifest pinado há437exports, nenhum `.` nem wildcard. A arquitetura Schema→Core e Protocol→Server impede usar dependência direta de Client/Server como atalho dentro de Core. Host contributions entram por portas; `Host.merge` recusa ownership de nós reservados de SessionExecution, Session, LocationServiceMap e scheduler. Built-ins de Location só mudam via replacements. Dependências Location→global são admitidas por tags, não o sentido contrário. **[I] Scope/source rules; [R], âncoras1–3.**
+
+A consequência prática é separar mudança de composição de mudança de engine: adicionar um produto não autoriza recriar coordenação de Session em contribuição própria. Os caminhos globais XDG são contratos de dados do produto; o módulo cria diretórios no import, portanto importar para “só inspecionar” não é leitura sem efeito. Este documento lê evidência inferior, não importa produto. **[R]**
+
+## Um limite só protege o caminho que realmente o aplica
+
+AppProcess centraliza spawn/collection/stream, mas não possui limite universal sem opções do chamador. Coletores limitados retêm bytes e continuam drenando, registrando truncamento. Inspector vê chunks brutos antes do cap. Opções de inspect ou cap excluem o `collectable` nativo e levam ao coletor inspecionado; isso não significa que a ferramenta deixou de poder usar um spawner nativo, apenas que não usa aquela coleta nativa. Memória de árvore fornecida a Omni não é enforcement do spawner legado. **[R], âncoras4,12–13.**
+
+Para diagnóstico de consumo, anotar backend, opções e qual unidade se mede. Cap de captura não é backpressure, nem limite de memória de toda árvore; timeout/AbortSignal encerram o caminho de coleta scoped, mas garantias OS/descendentes exigem a implementação específica. Não deduzir ausência de output original de preview truncado. Antes de alterar cap/inspect, verificar também a mudança de seleção de coletor, em vez de tratar a opção como cosmética.
+
+Omni é aquisição explícita: addon e supervisor precisam carregar; a falha solicitada não cai silenciosamente no legado. Paths explícitos só são configuráveis antes do primeiro load. O controle de teste exige spawn quando esperado (default) ou quando houve delegation; com expected=false e zero delegation, enabled sem spawn não é recusa incondicional. Strict recusa delegation. Ler esse predicado não executa o controle nem qualifica o backend. **[R], âncora5.**
+
+## Terminal: replay, ambiente e término são três contratos
+
+PTY tem ring retido limitado e até25sessões encerradas, mas um ring finito não limita sozinho a fila de clientes WebSocket que não leem. Attach entrega replay/cursor antes de live activation; gap causa reset, limite de primeira linha limpo e repaint. Subscriber inativo acumula chunks pendentes. Portanto, ao investigar memória, separar retenção do terminal de entrega ao consumidor; a skill registra limite não resolvido de cliente WebSocket sem leitura. **[R], âncoras6–7.**
+
+`exact:true` controla a montagem inicial: ambiente fornecido mais defaults de terminal, sem herdar processo ou adicionar login automaticamente. Porém `shellIntegration:true` explícito ainda pode substituir argumentos e acrescentar environment; depois entram defaults de locale Windows. Não prometer “argv/env intocados” por causa de exact. Teardown para ou adota descendentes Omni; finalização espera no máximo sete segundos pelos stops pendentes. Espera limitada não prova por si só que todos os descendentes morreram. **[R], âncora6.**
+
+LSP e formatter combinam trust com origem do comando: workspace-code confinado; system trusted pode usar caminho ordinário. Formatter delimita writes, mas log de falha não é formatação bem-sucedida. LSP compartilha launches in-flight e filtra fora dos roots. A origem do comando é parte do diagnóstico, não detalhe de UI. “Latest” igual à versão local pode ser fallback de lookup falho; OTLP só inicia com endpoint configurado. Não transformar ausência de observação em confirmação. **[R], âncoras8–11.**
+
+## Economia: reservar, encaminhar e liquidar não são o mesmo evento
+
+A ledger econômica vincula envelope e request a autoridade/escopo/rota/modelo, digest final do corpo, identidade e bounds por tentativa. Fingerprint protege identidade; não mede uso do provider. Reserva em transação imediata própria recusa transação ambiente, confere envelope, ordinal e conflitos, e mantém obrigações não liquidadas. Contabilização soma uso confirmado e bounds retidos; dimensão ausente/corrompida bloqueia em vez de virar zero. Body encaminhado mas indisponível pode impedir reutilização. **[E], implementação/âncora1.**
+
+Terminal remoto observado libera slot; settlement exige esse terminal, identidade de evidência e dimensões completas/relações numéricas válidas. Estouro de bound bloqueia envelope. Erro HTTP de transporte não prova terminus remoto. Outcome semântico recusado não devolve uso confirmado ou obrigações em aberto. Ao corrigir recuperação, conservar forward intent, observação física, body/reference, terminal e aceitação semântica como dimensões distintas. Não “resolver” saldo apagando obrigação desconhecida. A existência da ledger não prova integração de todos os senders, e não mede os tokens/custo desta campanha Genesis. **[E]**
+
+## Adaptadores são fronteiras de autoridade, não motores substitutos
+
+AtlasSurface é síncrono/in-process e transforma throws em Unavailable; tree walk pode ocupar a fiber. O adapter injeta project ID em território, mas legacy screen mining produz candidatos staged, não promoção. Essa rota legada não é import/publicação do protocolo Genesis. A engine Atlas e suas portas governadas continuam com seu dono. **[B], âncora1.**
+
+Relay distingue verdict de gravação: pass que não pode ser anexado vira unavailable/unrecorded; fail continua fail. Recovery local considera run-lock mais velho que o processo e não mantido nele, registra nota antes de remover; isso não prova morte de hosts remotos. Workflow progressive exige settlement nativo e não aceita generic evaluate; trial é comando confiável separado, sem grading/ledger passage. Um maintainer deve diagnosticar “gate passou, receipt ausente” como falta de evidência durável, não promover sucesso pelo retorno parcial. **[B], âncora2.**
+
+MoveSession entre worktree roots captura/aplica mudanças, publica evento e depois descarta origem. Falha tardia de reset pode ocorrer depois de destino e Session terem mudado; não há transação de rollback entre filesystems/evento. A função inspecionada não coordena runner sozinha: validar quiescência do chamador antes de mexer nesse fluxo. Schema RAG de Core tampouco é engine de retrieval: chunks sem foreign key prevêem cleanup futuro; não há embedding/vector table nesse schema. **[B], âncoras3–4.**
+
+## Roteiro de ownership e evidência
+
+Para um incidente, localizar primeiro a porta e o owner: composição/Location em Core; processo/coleta no backend selecionado; terminal e entrega de replay; accounting por ledger e sender; adaptação Atlas/Relay versus engine; transferência de workspace versus caller quiescence. Depois registrar o fato mais forte realmente observado e o que falta. Exemplos: truncado não é vazio; pedido abortado não é remoto não executado; reservation não é uso; latest fallback não é atualização confirmada; staging não é promoção; pass não gravado não é receipt válido.
+
+Para alteração, manter subpaths/geradores e separar build de navegação. O entry L1 reúne1441members com814src,584tests e43outros, mas representa folhas substantivas não lidas como `representative_family_boundary`. Isso dá mapa de aprofundamento, não certificado semântico de cada linha. Os nomes de outros `s1.core.*` no entry são navegação, não dependências implícitas deste L2. Migrações históricas, vendored Copilot, fixtures/gerados e runtime pins mantêm autoridade/disposição próprias. **[I] Population disposition/source rules.**
+
+## Evidência e limites
+
+[R] `s1.core.runtime`; [E] `s1.core.economy`; [B] `s1.core.boundaries`; [I] `s1.core.entry`, com corpos/SHAs no companion. Os diagnósticos e agrupamento acima são síntese nova ancorada nesses L1, não novas observações de execução. Continuam limites OS/nativeRust/PTY/LSP/formatter/telemetria, sender integration econômica, helpers Relay/control-plane e engines vizinhas. Nenhum spawn produto, upgrade, teste, gate, trial, move, DB ou provider foi executado aqui. Conhecimento local não substitui provas runtime de S3/S4; repository AGENTS/skills não são automaticamente instruções embarcadas. Gaps e classificação das folhas inferiores permanecem vinculados sem promoção silenciosa.
+
+</atribuido>
+
+<atribuido key="s1.l3.session-provider-flow" sha256="dd650372006f3ec161f50618ff92c409eef368bd34b7ea401b80d2ce416b9e2a">
+# Contrato de fluxo Session → provider → ferramentas: identidade, autoridade e retomada
+
+**Chave:** `s1.l3.session-provider-flow`. L3 nova, baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Entradas exatas: L2 session-lifecycle [S], tools-and-authority [T], runtime-ownership [R], provider-turns [P]. A cadeia abaixo relaciona responsabilidades documentadas; não cria transação distribuída nem afirma que toda opção de um pacote está conectada ao produto.
+
+## O contrato de passagem entre os donos
+
+| Fronteira | O que passa | O que não passa automaticamente |
+|---|---|---|
+| Chamador → admissão Session | identidade do input, prompt codificado, delivery e recibo durável | execução ou conclusão do turn |
+| Inbox → runner local | promoção ordenada e histórico selecionado após preparação de contexto | posse distribuída ou autorização irrestrita de tools |
+| Runner → camada de turno | mensagens, definição de ferramentas, rota/opções e comportamento de streaming | loop de agente, persistência de Session ou suporte de toda facade pelo Core |
+| Catálogo → settlement | definição e identidade capturadas, depois executable validado | permissão de recurso/ação ou estabilidade após replacement |
+| Tool/provider → histórico/contexto | eventos/resultados e texto selecionado | captura universal, verdade do conteúdo ou igualdade entre preview e original |
+| Runtime/ledger → diagnóstico | fatos de processo, forward/terminal/uso quando observados | exactly-once remoto, refund por recusa semântica ou custo conhecido por ausência de dado |
+
+[S, “Quatro perguntas”/“Ordem”; T, “O catálogo”; P, “A unidade”; R, “Um limite”/“Economia”.] A tabela é síntese de contratos: não documenta uma nova chamada entre módulos nem converte navegação em dependência de build.
+
+## Três identidades precisam continuar distintas
+
+**Input** identifica a admissão e o retry do chamador: Session, JSON do prompt codificado e delivery determinam equivalência. Repetição exata pode gerar outro wake; conflito não se resolve mudando silenciosamente conteúdo sob o mesmo ID. **Execução local** é entrada corrente no coordenador por Session; starter e waiter têm direitos de cancelamento diferentes. **Invocação de ferramenta** é identidade capturada no catálogo/settlement e, no caminho capability nativo, frame host mais prova persistida/placement. Uma identidade correta não substitui as outras. [S, “Quatro perguntas”/“Durabilidade”; T, “O catálogo”/“Três superfícies”.]
+
+Exemplo de impacto: se uma alteração retém o catálogo entre turns, precisa respeitar a recusa de identidade stale após replacement; retry do prompt exato não valida automaticamente uma ferramenta antiga. Se uma alteração torna o waiter capaz de cancelar o starter, muda posse de execução, não apenas UX de retry. Se serializa um frame em JSON para “retomar”, perde a autoridade emitida pelo host e sua revalidação: texto não recria o Symbol privado/permit. São consequências de manutenção deduzidas dos contratos inferiores, não cenários executados.
+
+## A ordem preserva significado antes da chamada remota
+
+Contexto inicial deve existir antes da promoção. Indisponibilidade de fonte já admitida conserva snapshot ou bloqueia replacement; não vira remoção. History selecionado considera baseline/compaction concluída, mas histórico anterior pode continuar acessível. Na fronteira de protocolo, system updates mantêm posição cronológica: transformá-los em system inicial só para serializar não é equivalência inocente. O fallback de texto e o tratamento Anthropic restrito demonstram que preservar significado inclui a vizinhança de tool calls/resultados. [S, “Contexto”; P, “O significado”.]
+
+Essa relação orienta revisão em dois níveis: o dono Session decide **quais mensagens** representam contexto vigente; o encoder decide **como representar** essa sequência no protocolo suportado. Testar apenas o JSON bem formado não demonstra que a seleção ou cronologia permaneceu correta. Compaction também não é remoção durável e seus limites de truncamento não são contagem exata de tokens do provider. Hosted turns têm fronteira própria: não herdar o recovery/transform ordinário automaticamente. [S, “Ordem”/“Contexto”; P, “A unidade”.]
+
+## Turno compilado, turno executado e ferramenta liquidada
+
+`LLMClient.compile` resolve/baixa opções e constrói request; `prepare` não comprova credencial aceita; `stream` executa; `generate` requer finish terminal. A Session é o produto que cerca esse turno com continuidade, histórico e permissões. A existência de uma facade ou de um futuro desenho serializável não implementa retomada durável de Session. Overlays, merge route→model→request e auth sobre URL/body finais impõem outra ordem: alterar headers ou assinatura pode mudar identidade/credencial efetiva mesmo sem mudar nome de modelo. [P, “A unidade”/“Configurar uma rota”.]
+
+Tools locais e provider-executed não podem ser tratados como a mesma fila sem classificar a chamada. Dispatch da camada de tools LLM não consulta `providerExecuted`, enquanto encoder Responses evita ressubmeter chamadas desse tipo. No Core, settlement tem identidade/safety e leaf permission; a policy capability nativa acrescenta provas/transaction checks, mas não cobre toda extensão. A relação segura é atribuir a classificação ao chamador e rastrear a execução real, não deduzir prevenção universal de duplicação de um único guard. [P, “O significado”; T, “Três superfícies”.]
+
+No caminho normal, Session publica chamada completa antes de settlement e aguarda settlements iniciados após stream. Isso sustenta a distinção entre chamada registrada e resultado concluído. Ramos de overflow/interrupção não herdam cegamente a mesma ordem. `apply_patch` pode ter aplicação parcial, o preview de output pode ser truncado, e uma mutação MCP remota pode permanecer unknown. Portanto um erro final de turn não demonstra ausência de efeitos precedentes. [S, “Ordem”; T, “Resultado parcial”/“Vida útil”.]
+
+## Cancelar ou repetir: pergunta de autoridade e evidência
+
+Cancelamento precisa identificar seu alcance: parar entry local exata, interromper espera de autorização, sinalizar processo/host ou solicitar cancelamento remoto são operações diferentes. O inbox durável sobrevive ao drain; o coordenador não oferece lease distribuído; ferramenta running abandonada pode ser marcada falha depois, sem rerun automático de efeitos. Timeout de coleta e ring PTY não demonstram término remoto nem backpressure completo. [S, “Durabilidade”; T, “Três superfícies”; R, “Terminal”.]
+
+A ledger econômica preserva forward intent, terminal remoto e usage separados. Erro HTTP não é terminus e rejeição semântica não restitui uso confirmado/obrigações. O executor de provider só repete falhas classificadas retryable, dois retries por padrão na fonte descrita; isso não prova que qualquer Session/tool possa ser repetida sem duplicação. A integração de sender com ledger precisa de sua própria evidência. **Recomendação derivada:** antes de retry, localizar a última fronteira confirmada e o dono autorizado a reconciliá-la. Não preencher falta de resultado com “zero efeitos”. [R, “Economia”; P, “Falha remota”.]
+
+## Mapa de alteração e verificações exigidas, não realizadas
+
+- **Encoding/prompt/delivery:** afeta equivalência de retry, promoção e histórico. Revisar esquema canônico e Session; verificar futuramente retry exato/conflitante e steer/queue/admit-only. Não remover conflito para “melhorar retry”. [S]
+- **Contexto/compaction:** afeta seleção e cronologia entregue ao encoder; verificar fonte indisponível versus removida, replacement bloqueado, resumo falho e boundary de overflow ordinário/host. [S,P]
+- **Tool/plugin:** afeta registro/disposal, identidade stale, policy leaf/capability e resultado parcial. Verificar invalidation/authorization após aprovação e não tratar plugin tipos como enforcement host. [T]
+- **Provider/auth/transport:** afeta lowering, overlays finais, classificação de falha, terminal e recording. Verificar protocolo específico e roteamento Core antes de alegar suporte da facade. Fixture existente não é recibo de execução. [P]
+- **Processo/custo:** afeta seleção do coletor/backend, bounds e obrigações. Verificar opções/backend e evidência de término/usage; não atribuir cap legado a Omni ou contagem conhecida à ausência de dado. [R]
+
+## Evidência e alcance
+
+Os quatro L2 completos são dependências de construção, com SHAs/bytes no companion e respectivos L1/primários pinados por eles. As tabelas, caminhos de impacto e recomendações são síntese L3 nova; fatos de implementação vêm das seções citadas. Sem nova observação de produto, execução de testes, provider, tool, processo, consumidor, parser ou Git mutation.
+
+Permanecem gaps de host/engine/OS, leaves e registro plugin/MCP não concluídos, policy Session não uniforme, heurística de segredos, semântica não auditada de todos os reducers/fixtures e roteamento fora do guia. OpenAPI/fixtures metadata-only e limitações históricas de observer não são promovidos; source-only não prova compatibilidade remota ou accounting desta campanha. Os quatro conjuntos de limites herdados permanecem integrais na proveniência. Aceite L2 não é voto L3; original9casos, direct-use e maintenance continuam futuros e L4 ainda não produzido.
+
+</atribuido>
+
+<atribuido key="s1.l3.persistence-evidence-failures" sha256="de4c070a6c99b11cbe5e8a85403769fd388da53215233a02774c3a1869e4f3a2">
+# Persistência, replay e falhas: conservar o fato sem inventar a garantia
+
+**Chave:** `s1.l3.persistence-evidence-failures`. Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Inputs diretos lidos integralmente: `s1.l2.session-lifecycle` [S], `s1.l2.runtime-ownership` [O], `s1.l2.provider-turns` [P], `s1.l2.runtime-adapters` [D]. Esta L3 relaciona mecanismos e limites; não propõe que todo componente participe de uma mesma transação ou esteja integrado a todos os senders.
+
+## 1. Quatro perguntas que “tem registro” não responde sozinho
+
+Persistir pode significar evento de domínio, linha projetada, obrigação econômica ou cassette de transporte. Cada forma responde a uma pergunta distinta:
+
+| Evidência | O que o mecanismo inferior sustenta | O que não se pode importar de outro mecanismo |
+| --- | --- | --- |
+| `PromptAdmitted` e inbox | Identidade admitida antes do wake consultivo | Turn executado, ferramenta concluída ou recuperação distribuída. |
+| Evento selado/projeção EventV2 | Ordem/identidade e aplicação transacional descritas | Autorização pelo seal ou exatamente-uma-vez externo. |
+| Reserva/settlement econômico | Bounds e uso confirmado conforme evidência exigida | Zero uso porque transporte falhou ou integração de todos os senders. |
+| Cassette HTTP/socket | Interações/frames segundo matching e API concreta | Serviço atual, timing/backpressure real, terminal remoto econômico ou efeito de negócio. |
+| Receipt de Relay | Verdict anexado segundo regras do adapter | Gate bem-sucedido a partir de retorno parcial sem gravação. |
+
+A tabela é síntese nova de S, “Quatro perguntas diferentes”/“Durabilidade não é posse de execução”; O, “Economia”/“Adaptadores”; P, “Falha remota, retry e prova de gravação”; D, “Recorder”. Não é uma hierarquia em que o último registro substitui os anteriores. Um incidente pode ter admissão válida, provider desconhecido e obrigação retida ao mesmo tempo, sem contradição.
+
+## 2. Separar atomicidade local de continuidade do trabalho
+
+No Core descrito por S, admissão grava antes do wake; promoção grava `Prompted` e histórico na transação de evento. EventV2 valida identidade/sequência, executa projectors/hook local, avança sequência e insere evento selado. O coordenador de drains, entretanto, é um mapa em memória por Session. Perda de processo preserva o que já foi admitido, não esse mapa. `claim` trata owner de replay, não a posse de execução. Assim, fortalecer uma verificação de replay não transforma coordenação local em lock distribuído; tornar wake mais insistente não fortalece a atomicidade da admissão. [S, “Quatro perguntas diferentes para um mesmo pedido” e “Durabilidade não é posse de execução”.]
+
+O adapter SQLite descrito por D fornece outra atomicidade, de transação/connection: conexão reservada ou contexto da fiber, outer deferred por padrão, nested savepoints `effect_sql_N`, interrupção restaurada no callback e finalização scoped. Commit falho tenta rollback; nested failure inclui release; `finalizedExit` preserva falha original e todas as falhas de cleanup, sem deduplicar tentativas iguais. Isso orienta onde procurar erro de finalização, mas o adapter genérico não possui tabelas, caminhos, backup ou after-commit Orchestra. Não se deduz, pela coexistência dos L2, uma pilha exata de chamadas entre qualquer transação EventV2 e todo ramo desse adapter: tal vínculo exigiria fontes de integração. [D, “SQLite: sucesso precisa sobreviver à finalização”.]
+
+A consequência prática é registrar o ponto de sucesso mais estreito. Callback retornado não é commit confirmado; evento aplicado não é tool externo concluído; dados admitidos não são runner sobrevivente. `persist:false` é uma escolha explícita de projeção/notificação sem append/avanço durável, e não aceita hook local. Substituir gravação por esse caminho para “destravar” um erro elimina justamente a evidência recuperável que se tenta diagnosticar. [S, seção de durabilidade; D, seção SQLite.]
+
+## 3. Replay de domínio, de transporte e de terminal não têm a mesma igualdade
+
+No EventV2, a ordem de decisões importa. `strictOwner` rejeita owner incompatível primeiro; sequência já vista é reconciliada por ID/tipo versionado/payload; só depois replay não estrito com outro owner retorna sem aplicar. Logo, evento antigo divergente desse owner falha, enquanto evento novo com gap pode sair antes da verificação de gap. “Owner diferente é sempre ignorado” e “todo gap sempre falha” seriam resumos incorretos. Seals verificam cadeia em janelas limitadas, sem autenticar autor; registro de projectors por tipo ainda tem pendência de versão exata. [S, “Durabilidade não é posse de execução”.]
+
+No recorder HTTP, interação é reivindicada sequencialmente depois de matching de método, URL, headers permitidos e JSON canônico, salvo matcher customizado. Keys de objetos são ordenadas; ordem de arrays permanece. Isso não é a igualdade de input de Session: ali vale Session, serialização JSON do prompt codificado e delivery, com `promptContext`/tempo fora da equivalência do chamador. Nem é regra universal para digest econômico do body final. Reutilizar um desses comparadores em outro domínio mudaria a identidade aceita; a semelhança da palavra “replay” não constitui autorização de mudança. [S, “Quatro perguntas diferentes”; D, “Recorder”; O, “Economia”.]
+
+No terminal, replay é retenção limitada mais cursor: attach entrega replay/cursor antes de live activation; gap causa reset/repaint e limpeza do limite de primeira linha. Subscriber inativo acumula chunks pendentes. Esse replay não é journal durável de sessão nem prova que todo byte emitido foi entregue a qualquer cliente. Ring limitado e retenção de até 25 sessões encerradas não limitam a fila de WebSocket que não lê. Para diagnosticar perda aparente, primeiro identificar qual replay e qual janela estão em jogo. [O, “Terminal: replay, ambiente e término são três contratos”.]
+
+## 4. Falha ou cancelamento local não prova não execução remota
+
+O executor de provider só repete classes retryable, com dois retries por padrão. `prepare` constrói/valida o request, mas não faz a chamada; `generate` exige finish terminal e não aceita apenas texto parcial como conclusão. Esses termos de LLM não devem ser confundidos com o terminal remoto exigido pela ledger econômica: O exige terminal observado, identidade de evidência e dimensões completas/relações válidas para settlement, e não demonstra mapeamento de todos os eventos LLM para essa evidência. A ligação de cada sender continua uma necessidade explícita. [P, “A unidade de trabalho é um turno” e “Falha remota”; O, “Economia”.]
+
+A reserva econômica usa transação imediata própria, recusa transação ambiente e vincula envelope/request a autoridade, escopo, rota/modelo, digest final, identidade e bounds por tentativa. Dimensão ausente/corrompida bloqueia; conta agrega uso confirmado e bounds retidos. Terminal observado libera slot; resultado semântico recusado não devolve uso confirmado nem apaga obrigações. Um HTTP error de transporte não prova terminus remoto, e body encaminhado indisponível pode impedir reutilização. Portanto corrigir diagnóstico não é limpar saldo desconhecido ou repetir side effect até aparecer resultado. [O, mesma seção.]
+
+S acrescenta que interrupção preserva inbox, cancela permissões/perguntas e distingue starter com `interruptOnCancel` de waiter. Ferramentas projetadas running de processo anterior recebem falha antes do trabalho seguinte, não repetição autorizada de seu efeito. P acrescenta que `ToolRuntime.dispatch` não inspeciona `providerExecuted`, embora Responses evite ressubmissão de calls provider-executed no encoder. São proteções em fronteiras diferentes; uma rotina de recuperação que despache toda chamada encontrada pode transpor essa responsabilidade. Não se afirma que isso ocorreu, apenas que o contrato não oferece proteção universal implícita. [S, “Durabilidade”/roteiro; P, “O significado de mensagem e tool precisa sobreviver ao lowering”.]
+
+Também no OS, timeout/AbortSignal do coletor scoped não provam fim de todos os descendentes; teardown PTY espera stops por até sete segundos, podendo parar/adotar via Omni. Quiescência remota/OS precisa de evidência do dono, não de log de timeout. [O, “Um limite só protege o caminho que realmente o aplica” e “Terminal”.]
+
+## 5. Preparar investigação sem transformar lacuna em gravação nova
+
+O recorder público em automático grava se falta cassette local; CI não vazio exceto `false`/`0` força replay. O harness LLM usa modo interno explícito: só `RECORD` exatamente `true` grava, env obrigatória ausente pula; em replay, cassette ausente normalmente falha, salvo ledger de gap nomeado. Ledger com cassette existente falha como stale, filtros podem pular e caminhos duplicados são recusados. Portanto uma investigação precisa fixar modo e identidade do caso antes de qualquer execução autorizada. “Vamos abrir o teste para ver” não é promessa de read-only, assim como importar caminhos XDG de Core pode criar diretórios. Aqui só foram lidos documentos e bytes. [D, “Recorder”; P, “Falha remota”; O, “Começar pela porta certa”.]
+
+Uma disciplina de leitura de resultado futuro, inferida desses mecanismos, é:
+
+1. **Identificar o caso e request efetivos.** Distinguir caso nunca gravado de renomeado sem revalidação; cassette antigo não comprova novo request.
+2. **Identificar seleção e consumo.** Caso declarado pode ter sido pulado. O finalizer HTTP verifica sobra somente depois de consumir pelo menos uma interação; zero consumidas é exceção, não coverage.
+3. **Identificar a API usada.** Socket público preserva intercalação e verifica client write antes de liberar server seguinte; `makeWebSocketExecutor` interno separa listas e expõe stream server independente. LLM usa o interno. Não transferir garantia do público para o helper.
+4. **Identificar o que o arquivo representa.** HTTP grava respostas completas e ordena append pelo início das requests; socket registra application frames, não timing/cancelamento/backpressure/close codes completos. Fixture POST/200 é dado gravado, não chamada atual.
+5. **Separar execução e embalagem.** `./internal` existe no workspace, mas pack o remove. Node ≥22 e Effect peer `4.0.0-beta.83` são declarações; packed-consumer não foi exercitado.
+
+Fontes: P, “Falha remota”/“Evidência e manutenção responsável”; D, “Recorder”. O roteiro não foi executado e não converte fixtures em evidência econômica, autorização ou teste aprovado.
+
+Redaction também tem escopo: bloqueia nomes/caminhos lexicais perigosos, remove campos/headers conhecidos/configurados, faz scan de prováveis segredos e temp+rename. Não demonstra defesa de symlink nem detecção universal; base64 binário não é decodificado no scan. Publicar um cassette requer decisão separada, não inferência de que “passou no redactor”. Buffering completo pode consumir memória; truncamento posterior de erro provider limita diagnóstico, não download. [D, “Recorder”; P, “Falha remota”.]
+
+## 6. Atualidade, recorte e truncamento produzem ausências diferentes
+
+Contexto indisponível não significa removido: S retém snapshot admitido na reconciliação, exige fontes na inicialização e bloqueia replacement com fonte já admitida indisponível. `ContextUpdated` e snapshot avançam atomicamente por hook local; replacement bloqueado retém baseline/sequência. Compaction concluída e baseline recortam history, mas `loadAll` ainda chega ao passado; resumo vazio/falho não avança fronteira. Assim, “não está no prompt” pode ser seleção e “fonte não respondeu” pode ser retenção, sem exclusão persistente. Qualidade de resumo e correção semântica das instruções continuam fora da prova. [S, “Contexto tem atualidade própria”.]
+
+Recorte de processo é diferente: coletores com cap retêm bytes e continuam drenando; inspector vê chunks antes do cap; inspect/cap selecionam coletor inspecionado em vez de `collectable` nativo, sem excluir todo spawner nativo. Não inferir output vazio de preview truncado ou limite de árvore de um cap de captura. CodeMode, por sua vez, limita o payload/log serializado quando configurado, não necessariamente marker/envelope inteiro; não tem defaults de timeout/call-count/output bytes. OpenAPI tem cap real de leitura de 50 MiB por content length e chunks, mas parse JSON não valida schema de resposta. São unidades e pontos de aplicação distintos. [O, “Um limite só protege”; D, “Do programa ao efeito”/“OpenAPI”.]
+
+Essas diferenças importam na coleta de evidência: anotar origem do recorte e conservar o estado desconhecido em vez de fabricar ausência. “Latest” igual ao local pode ser fallback de lookup falho; OTLP só inicia com endpoint configurado; log de formatter falho não é formatação bem-sucedida. Nenhum desses sinais, isolado, fecha diagnóstico do efeito principal. [O, “Terminal”.]
+
+## 7. Recuperação e migração: não ultrapassar a transação que existe
+
+O engine em S distingue banco vazio, Session existente e banco desconhecido, recusa journal desconhecido e faz backup antes de migrations pendentes. D mostra recusa de row unmatched no upgrade legado antes de montar/executar backfill, por tempo normalizado/candidate hash/hash fallback; futuro serial-ID é comentário, não permissão. Init registra sem executar SQL inicial e recusa journal existente/múltiplas migrations. A relação útil é conservar identidade/ordem de migrations e descobrir em qual dono ocorre a recusa. Não deduzir backup do produto pelo adapter genérico; não usar modo init como bypass de uma incompatibilidade. [S, roteiro item 5; D, “SQLite”.]
+
+Há limites além do banco: MoveSession aplica destino, publica evento e só depois descarta origem; reset tardio pode falhar depois de destino/Session mudarem. Não há rollback atômico entre filesystem/evento e a função inspecionada não coordena runner sozinha. Recuperação precisa saber o que mudou e quem assegurou quiescência antes de repetir. Relay também separa resultado de gravação: pass não anexável vira unavailable/unrecorded, fail continua fail. Recovery local de run-lock registra nota antes de remover e não prova morte de host remoto. Progressive exige settlement nativo; trial separado não equivale a grading/ledger passage. [O, “Adaptadores são fronteiras de autoridade”.]
+
+AtlasSurface transforma throws em Unavailable e staging legado não é promoção/import/publicação Genesis; schema RAG sem embedding/vector table não prova engine de retrieval, e cleanup de chunks sem foreign key permanece previsto. Usar esses adapters como evidência de motores vizinhos ultrapassaria o escopo. Essas relações de diagnóstico não acrescentam build edges nem alteram ownership. [O, mesma seção.]
+
+## 8. Limites herdados e estado desta produção
+
+Todos os fatos específicos acima são ancorados nos quatro L2 e suas referências inferiores; a matriz de evidências, distinções entre igualdades e roteiro de investigação são síntese nova. Nenhuma fonte primária foi reinterpretada como integralmente lida por esta L3. S mantém coordenação não distribuída/recuperação pós-crash não implementada, hosts externos, migrações/driver leaves não exaustivos, história V1 não sendo inventário atual e contribuições Continuity/Atlas externas. O mantém limites OS/nativeRust/PTY/LSP/formatter/telemetria, integração de senders e helpers Relay/control-plane. Seus 1.441 members (814 src, 584 tests, 43 outros) incluem folhas `representative_family_boundary`, não certificação de cada linha; exports e navegação não provam grafo transitivo.
+
+P mantém reducers/opções selecionados/estruturais, multimodal não exaustivo, defaults de facade sem comprovação remota ou roteamento Core universal, e DESIGN como proposta. Seu scan de 58 arquivos é de declarações; seis estruturas de fixtures não são resultados, e 39 fixture/media continuam metadata-only, incluindo OpenAPI de 637.024 bytes. O observer de 256.000 bytes é limite histórico registrado no L1; não se determina capacidade posterior nem se fecha binding/observação pendente. D mantém interpretador de 3.465 linhas com leitura selecionada, stdlib/query builders em profundidade registrada, host adapters não verificados, promises pipelines/async iteration/richer values/tool paths abertos; JSON Schema não é validação runtime plena. OpenAPI conserva TODOs de redirect/security/response validation/tamanho configurável, specimen grande e retry fixture sem leitura semântica.
+
+Guides/specs continuam intenções atribuídas: trust, permissões, credential storage, disconnect/revocation, Claude billing, backup/restore e after-commit não nascem implementados nos adapters. Cards antigos usam baseline histórico, não comandos desta tarefa. Config gerado com `additionalProperties:false` versus guia que ignora extras permanece discrepância sem decoder/publisher; relato de índices entregues não prova migration Core, foreign keys adiadas não estão silenciosamente resolvidas. `effect-sqlite-node` continua com `executeStream` não implementado e flags sem efeito no construtor; declaração de não uso pelo Core não é censo de imports.
+
+Não houve banco, restore, rede, provider, credenciais, processos de produto, parser/import/teste, CI, recorder, package build, mutation Git/native, gate/trial/move, consumidor ou publicação. Trabalho realizado: leitura pública, hashing e escrita destes documentos. Não há métricas de custo/tokens da campanha, runtime binding, nove casos originais tentados, fechamento de manutenção, PASS próprio ou conclusão S1. Aceite documental inferior não substitui os próximos gates nem libera L4 por si só.
+
+</atribuido>
+
+<atribuido key="s1.l3.ownership-impact-map" sha256="3548f7f3689e5ffcbf2eeeb62bf86f56d03cfffe091072c86efcbb1abc88eda4">
+# Mapa de ownership e propagação de mudanças em S1
+
+**Chave:** `s1.l3.ownership-impact-map`. L3 nova sobre os oito L2 aceitos documentalmente, baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. A finalidade é decidir quem deve examinar uma mudança e qual conhecimento deixa de ser suficiente, não declarar que toda família foi semanticamente auditada ou que há uma dependência de código para cada relação abaixo.
+
+## Oito entradas, três tipos de vínculo
+
+As abreviações apontam para corpos integrais pinados: [S] `s1.l2.session-lifecycle`; [T] `s1.l2.tools-and-authority`; [C] `s1.l2.local-coordination`; [R] `s1.l2.runtime-ownership`; [A] `s1.l2.api-contracts`; [D] `s1.l2.client-delivery`; [P] `s1.l2.provider-turns`; [X] `s1.l2.runtime-adapters`.
+
+**Dependência de construção documental:** este L3 usa exatamente esses oito, com hashes/bytes e dependências transitivas registrados no companion. **Relação de produto:** uma passagem de dados ou chamada explicitamente descrita nesses textos. **Navegação de manutenção:** uma indicação de que outro owner precisa avaliar a alteração; não é import, execução nem requisito artificial de rebuild. Não confundir esses três vínculos ao invalidar conhecimento.
+
+| Necessidade de mudança | Primeiro dono/evidência | Fronteira que propaga impacto | Onde parar a conclusão |
+|---|---|---|---|
+| identidade de prompt/Session, delivery, cancelamento | Core Session [S] | schema/contrato HTTP e cliente [A,D]; seleção histórica/contexto [S] | admissão não garante conclusão ou exactly-once |
+| DTO/evento/erro público | Schema e Protocol [A] | handlers Server e projeções Client/SDK [A,D] | tipos não provam codec/handler/replay compatíveis |
+| ferramenta, plugin, permissão ou recurso | registry/leaf/host [T] | catálogo/contexto capability, geração/disposal e resultado | cadastro/JSON de modelo não concede autoridade |
+| provider/opções/auth | catálogo/Core e pacote de turno [C,P] | rota final, encoder, erro/retry, terminal/economia [R] | facade não comprova roteamento Core ou serviço vivo |
+| config/trust/projeto | Location/Config/Project [C] | comandos, serviços, policy/identidade e preparação | resolver caminho/trust não substitui leaf permission |
+| processo/PTY/host | composição e backend selecionado [R] | captura/retention, descendants, ambiente e integração | opção de cap ou ring não prova backpressure/término |
+| persistência/replay/migration | Event/Session/database Core [S] | adapters SQL/recorders e schemas [X,A] | adapter genérico não implementa política Core |
+| automação/research/economia | serviços/ledgers correspondentes [C,R] | bindings/claims/evidência e chamadas externas | registro, prepared, started e uso não são sinônimos |
+
+A matriz é derivação das seções de mecanismo e manutenção dos oito inputs. As fronteiras concretas são explicadas abaixo para que ela não se reduza a uma lista de nomes.
+
+## Uma mudança de contrato tem caminho autoral e caminho de execução
+
+Schema fornece valores; Protocol declara operações; Server liga serviços. Client mantém sua configuração de naming/omissões e codegen emite projeções Promise e Effect. O SDK compõe Core/Server e transporte embutido. Essa organização permite distinguir mudar o formato público de mudar o efeito de domínio. Não contornar o owner editando gerado ou importando Client/Server dentro de Core. Subpaths explícitos e replacements de Host mantêm o limite de composição; contributions não possuem os nós reservados. [A, “Uma API”; D, “Localizar a mudança”; R, “Começar pela porta”.]
+
+O efeito no consumidor pode ultrapassar o campo alterado: só `{data:A}` exato é unwrapped, portanto novo campo pode preservar envelope onde antes havia valor direto. Promise recebe encoded wire; Effect aplica codecs. A mesma assinatura nominal não garante valores iguais. Alterar DTO exige considerar representabilidade do gerador, omissões do Client, valores decodificados e handler Server. A presença do método upload ou de `files.read` gerado não elimina as discrepâncias de declaração/README retidas nos inferiores. [D, “O mesmo contrato”/“Classificar falhas”.]
+
+No caminho de execução, middleware de Session usa Location armazenada; o chamador não a redireciona por um parâmetro. Basic/tickets/capability têm gates próprios. SDK embedded não cria listener TCP, mas continua capaz de efeitos reais e preserva autoridade capability mesmo com Basic desabilitado. Portanto “local” descreve transporte, não permissão ou ausência de impacto. [A, “Da requisição”/“Autorização”; D, “SDK embutido”.]
+
+## Eventos ligam estados, não apagam diferenças de tempo
+
+Há quatro tempos a manter separados: admissão de inbox, promoção para histórico, execução local e entrega ao observador. O feed global live não equivale a cursor durável; heartbeats e connected não são recibos de persistência. History/seq do agregado, paginação de mensagens e SSE global têm contratos distintos. Uma mudança de evento precisa decidir o inventário correto e compatibilidade histórica; nem toda delta é durável e ausência de delta no replay não demonstra perda do resultado final. [S, “Quatro perguntas”/“Durabilidade”; A, “Entrega ao vivo”.]
+
+Contexto adiciona um tempo de observação: snapshot indisponível é conservado, não removido; compaction concluída muda seleção, não apaga todo histórico. Provider encoding deve preservar system updates cronológicos, não movê-los para facilitar serialização. Esse é o caminho de impacto entre manutenção de history e protocolo, ainda que seus owners sejam diferentes. [S, “Contexto”; P, “O significado”.]
+
+O mesmo cuidado vale para automação: prepared/sending é ledger local, `started` de schedule é admissão e outcome Board é decisão registrada. A janela revocation→admission e o takeover já admitido não desaparecem ao mudar status de UI. Config snapshotted de projeto e globals refreshed também não têm a mesma atualidade. Um bug atribuído a “cache” pode ser contrato de lifetime/observação, não falha universal de sincronização. [C, “Location”/“Uma operação”.]
+
+## Autoridade percorre o caminho efetivo, não o nome da API
+
+Catálogo materializado, identidade de settlement, ToolSafety, permissão de leaf e capability nativa são superfícies diferentes. Session rules no catálogo/contexto e `PermissionV2.configured` ordinário não foram demonstrados equivalentes. Preservar denies/identidade depois de aprovação exige seguir a implementação usada, não confiar na existência de um campo permissions. [T, “Três superfícies”.]
+
+Plugins de autoria definem contextos e helpers; o host implementa loader/disposal. CodeMode restringe ambiente e recebe tools explícitos, mas não implementa autorização/replay/exactly-once externo. OpenAPI serializa/authentica pela capacidade host e conserva skips/TODOs; JSON Schema anunciado não é codec Effect completo nem response validation universal. Mudança nesses adapters desloca o ponto que deve validar, sem transferir autoridade ao modelo. [T, “Vida útil”; X, “Do programa”/“OpenAPI”.]
+
+Para filesystem/processo, identidade física/lexical e trust vêm antes do acesso apropriado, mas não o concedem sozinhos. Shell wrapper tem condições de confinamento/fallback e filtro heurístico de segredos. `exact:true` PTY não anula `shellIntegration:true`; backend/coletor determina enforcement de caps. Não aprovar uma alteração de segurança com argumento baseado somente no nome “sandbox”, “trusted” ou “exact”. [C, “Location”; T, “Shell”; R, “Um limite”/“Terminal”.]
+
+## Persistência e evidência exigem reconciliação, não sucesso otimista
+
+Transação de evento e adapter SQL são mecanismos distintos. Core tem caminho de banco/migrations/projectors próprios; adapter genérico oferece transação/savepoint/cleanup sem possuir esses contratos de produto. Commit falho e falhas de cleanup não devem sumir porque o callback concluiu. Replay-owner não é lease de Session; seal/digest não é autorização nem verdade semântica. [S, “Durabilidade”/“Roteiro”; X, “SQLite”; C, “Reutilização”.]
+
+Recorders preservam um recorte: replay HTTP sequencial e socket público intercalado diferem do helper WebSocket interno; fixture não comprova execução atual. Zero interação consumida tem exceção de finalizer; um teste declarado ou cassette com200 não fecha cobertura. Redaction/scan não autorizam publicação automática nem demonstram proteção contra toda forma de segredo. Esses limites importam quando um maintainer usa gravação para decidir que uma mudança externa é compatível. [P, “Falha remota”; X, “Recorder”.]
+
+Economia exige forward/terminal/usage completos e conserva bounds não liquidados. Actions conserva outcome_unknown sem rerun; research verifica identity/placement, não verdade da fonte; checkpoint verifica bytes, não restauração garantida. A relação de manutenção entre eles é conservar dúvida atribuída ao seu owner, não unificar todas as ledgers numa falsa semântica de “done”. Atlas staged não é promoção; Relay pass não gravável vira unavailable/unrecorded; MoveSession pode falhar depois de efeitos no destino/evento. [R, “Economia”/“Adaptadores”; C, “Uma operação”/“Reutilização”.]
+
+## Método de impacto sem transformar navegação em build
+
+1. **Fixar o objeto alterado:** schema/gerador, leaf, binding, estado persistido, algoritmo de seleção, comando/backend ou interpretação de evidência.
+2. **Seguir somente relações demonstradas:** para DTO, Schema→Protocol/Server→Client/SDK; para prompt, identidade→admissão→promoção→runner; para tool, materialização→identidade→policy/leaf→output; para provider, seleção de rota→lowering/auth→execução→evidência. Relações adicionais exigem fonte do owner.
+3. **Marcar o tipo de invalidação:** bytes/dependência documental mudaram; contrato semântico mudou; apenas observação de disponibilidade envelheceu; ou evidência ficou indisponível. Não servir conteúdo stale como atual, nem invalidar independentes só porque aparecem no mesmo mapa.
+4. **Obter prova proporcional antes de aceite:** testes autorizados do ramo/gerador/contrato e consumidor correto. Comandos/gates mencionados nos inferiores são planos de verificação, não resultados desta produção.
+5. **Conservar o que não se sabe:** se a alteração exige leaf não interpretada, host/vendor/OS fora do corpus ou ledger sem recibo, registrar lacuna específica e aprofundar; não preencher com títulos/hashes ou intenção histórica.
+
+Esses passos são método proposto de manutenção, não um algoritmo de invalidação implementado por S1 nem execução de gates.
+
+## Cobertura cumulativa e obrigações restantes
+
+Os oito L2 abrangem os36L1 que reconciliam2236members da fatia. Isso não transforma inventário, leitura representativa ou metadata-only em leitura semântica integral. A1441/B472/C323 continuam com disposições próprias; os inputs L2 mantêm seus registros/necessidades inferiores. Generated `types.ts` e OpenAPI conservam os limites históricos de captura/observer onde descritos, sem extrapolar capacidade atual nem concluir binding. Documentos históricos/vendored/gerados/fixtures mantêm autoridade e profundidade justificadas, não descarte por conveniência. [R, “Roteiro”; D, “Disposição”; P/X, limites.]
+
+Nenhum produto, teste, provider, banco, parser, runtime, native, consumidor ou publicação foi executado nesta autoria. A construção documental L3 não cumpre consumo real, manutenção executada, original9casos ou direct-use por intermediário. L4 depende de aceite integral dos quatro L3 e oracle próprio. Os oito lower bodies/companions e limites permanecem vinculados byte a byte; este mapa é nova síntese a julgar, não relatório de aceite global.
+
+</atribuido>

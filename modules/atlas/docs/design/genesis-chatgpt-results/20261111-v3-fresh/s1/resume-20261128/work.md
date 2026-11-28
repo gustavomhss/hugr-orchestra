@@ -19,7 +19,8 @@ Essas contagens não incluem corpos superiores ainda em recuperação nem sínte
 | Trabalho | Estado | Condição de fechamento |
 | --- | --- | --- |
 | Inventário por chave, versão, hash e aceite | RUNNING | Incorporar recuperação dos superiores e decisões novas; conferir união |
-| Sete superiores e B15 | RUNNING | Busca por hash/proveniência; distinguir bytes, aceites e NO_CHANGE |
+| Sete superiores | DONE — recuperação de bytes | Sete corpos extraídos dos prompts originais; 7/7 SHA-256 exatos; aceites e predecessores ainda não presumidos |
+| B15 corrigido | REVIEW | Corpo exato recuperado; nenhum parecer original exato encontrado; novo par avalia apenas essa dívida |
 | Cinco L1 pendentes de Sessões | REVIEW | Dois juízes independentes novos; corrigir achados pelo mesmo par |
 | Sete L1 aceitos de Sessões | DONE — reúso delimitado | Bytes e pareceres exatos preservados |
 | Ferramentas: quatro corpos históricos | REVIEW | Dossiê existente, lacunas de folhas e dois pareceres |
@@ -45,3 +46,9 @@ Somente a principal escreve remotamente; atualizações usam lease de HEAD e `fo
 Os registros históricos permanecem intactos. Tokens, tentativas físicas e cobrança não expostos permanecem UNKNOWN. A reconciliação financeira antiga continua GLOBAL_UNRECONCILED. Parecer semântico não é binding, publicação, consumo ou CI.
 
 O release observado inicialmente em `genesis-runtime-resume@af0ed426b8caf0d95772e1fb174d34bab86399c4` ainda descreve R3 e o limite de 256.000 bytes; isso não qualifica os pacotes completos. A disponibilidade será reconferida antes do fechamento.
+
+## Recuperação dos sete superiores
+
+Os dois prompts originais foram localizados e materializados. `recovered-upper/verify.py` recompõe a extração sem normalização e confere 94.649 bytes de corpos contra os sete SHA-256 publicados nos impactos. A busca anterior no Git/caches não era prova de ausência global e foi superada por essa recuperação. Os prompts, corpos e proveniência estão preservados em `recovered-upper/`.
+
+Nenhum `NO_CHANGE` foi convertido em PASS. Referências a oito L2/quatro L3 e alegações de aceite contidas nos próprios textos são dados históricos que ainda precisam de recibos e predecessores exatos. As sete versões ficam `HISTORICAL_RECOVERED_NOT_SELECTED` até resolver esse vínculo ou demonstrar uma supersessão específica na seleção corrente.

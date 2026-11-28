@@ -103,9 +103,14 @@
   "summary": {
     "REUSED_EXACT_BODY_ACCEPTANCE": 32,
     "UNREVIEWED_EXACT_BODY": 10,
-    "REUSED_BOUNDED_BODY_ACCEPTANCE": 10
+    "REUSED_BOUNDED_BODY_ACCEPTANCE": 10,
+    "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND": 7
   },
-  "upper_artifacts_recovery": "IN_PROGRESS: seven referenced upper bodies are being traced; NO_CHANGE impact is not semantic acceptance.",
+  "upper_artifacts_recovery": {
+    "state": "RECOVERED_7_OF_7_EXACT_HASH",
+    "path": "recovered-upper/recovery.json",
+    "semantic_acceptance": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND"
+  },
   "artifacts": [
     {
       "key": "s1.api.boundaries",
@@ -4021,6 +4026,118 @@
         "{\"blocks\": \"Freshness dos gerados, resultados de gates e compatibilidade browser.\", \"next\": \"Aplicar a geração oficial e os gates pertinentes no candidato autorizado; testes de produto somente Actions.\", \"scope\": \"Geração/CI/browser\", \"status\": \"NOT_EXECUTED_BY_THIS_PRODUCTION\"}",
         "{\"blocks\": \"Uso de conhecimento não aceito como se estivesse demonstrado.\", \"next\": \"Conservar gaps dos predecessores e RETIRED_EXTRA_CLAIM; completar somente o necessário ao novo claim.\", \"scope\": \"Limites herdados e claims retirados\", \"status\": \"PRESERVED\"}"
       ]
+    },
+    {
+      "key": "s1.l2.runtime-ownership",
+      "layer": 2,
+      "need": "component",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l2.runtime-ownership.md",
+        "sha256": "8da484ba0a8f30f0a0da90c02b00650f9b48ed54294dcb0224533c36115cc9f0",
+        "byte_length": 9322
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.session-provider-flow",
+      "layer": 3,
+      "need": "flow",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l3.session-provider-flow.md",
+        "sha256": "dd650372006f3ec161f50618ff92c409eef368bd34b7ea401b80d2ce416b9e2a",
+        "byte_length": 9652
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.persistence-evidence-failures",
+      "layer": 3,
+      "need": "flow",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l3.persistence-evidence-failures.md",
+        "sha256": "de4c070a6c99b11cbe5e8a85403769fd388da53215233a02774c3a1869e4f3a2",
+        "byte_length": 18233
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l3.ownership-impact-map",
+      "layer": 3,
+      "need": "flow",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l3.ownership-impact-map.md",
+        "sha256": "3548f7f3689e5ffcbf2eeeb62bf86f56d03cfffe091072c86efcbb1abc88eda4",
+        "byte_length": 12102
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/7bfb9a4f69cd5ea1dc31b33d4afd26ec9e6c7f4a",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.ownership-entry",
+      "layer": 4,
+      "need": "ownership",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l4.ownership-entry.md",
+        "sha256": "aac50370d83ee11af40206d6ee1cc542d1868a45397e1849b0c0c896c5e67a7b",
+        "byte_length": 11309
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/51a7c500835c48b35cdfc2348484482d41c9770f",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.safe-change",
+      "layer": 4,
+      "need": "ownership",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l4.safe-change.md",
+        "sha256": "64ccbc99fbbe86d975563f429117198ed662e126c63502965c6cb5f2399f25a0",
+        "byte_length": 13065
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/51a7c500835c48b35cdfc2348484482d41c9770f",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
+    },
+    {
+      "key": "s1.l4.diagnosis-maintenance",
+      "layer": 4,
+      "need": "ownership",
+      "selection": "HISTORICAL_RECOVERED_NOT_SELECTED",
+      "selected_version": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/recovered-upper/bodies/s1.l4.diagnosis-maintenance.md",
+        "sha256": "8ab87cd4bbebb0cb902e3b59657237a6b42b015f0376fa921385bd6d13f9e493",
+        "byte_length": 20966
+      },
+      "acceptance_state": "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND",
+      "acceptance_refs": [],
+      "original_impact": "https://github.com/gustavomhss/hugr-orchestra/commit/51a7c500835c48b35cdfc2348484482d41c9770f",
+      "state": "RECOVERED_EXACT_BODY_NO_SEMANTIC_ACCEPTANCE",
+      "unblock": "Recover exact original acceptance plus predecessor identities, or judge only the scoped body needed against its accepted current predecessors. Do not rewrite or rejudge all seven by default."
     }
   ]
 }
