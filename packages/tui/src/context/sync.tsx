@@ -72,6 +72,8 @@ export const {
     const pendingMoves = new Map<string, Set<object>>()
     const placements = new Map<string, SessionRevision & Pick<Session, "location" | "subpath">>()
     const titles = new Map<string, SessionRevision & Pick<Session, "title">>()
+    const listedTitleReads = new Map<string, number>()
+    let listReadSequence = 0
     const statusReads = new Set<Set<string>>()
     const lifetime = { disposed: false }
     const statusEpoch = () => Math.max(0, sdk.connectionEpoch() - 1)
@@ -92,6 +94,7 @@ export const {
       pendingMoves.clear()
       placements.clear()
       titles.clear()
+      listedTitleReads.clear()
       syncingSessions.clear()
       trailing.clear()
       hydratingSessions.clear()
@@ -284,11 +287,13 @@ export const {
       }
       const epoch = sdk.connectionEpoch()
       const status = statusEpoch()
+      const sequence = ++listReadSequence
       const renames = new Map(titles)
       const sessions = await sdk.catalog.sessions(input)
       return {
         sessions,
         epoch,
+        sequence,
         renames,
         current: () => !lifetime.disposed && sdk.binding().active && statusEpoch() === status &&
           project.workspace.current() === input.workspace && project.data.project.id === input.project &&
@@ -329,12 +334,15 @@ export const {
         if (!metadata) return withLiveMetadata(listed)
         const cached = metadata.snapshot
         // The list can repair a missed title only. Leave the exact selection, placement and authority epoch intact.
-        if (titles.get(listed.id) !== read.renames.get(listed.id) || metadataReads.has(listed.id) ||
-            listed.title === cached.title) return cached
+        if (read.sequence < (listedTitleReads.get(listed.id) ?? 0) ||
+            titles.get(listed.id) !== read.renames.get(listed.id) || metadataReads.has(listed.id)) return cached
         // Across a reconnect the current list can be newer than an exact read with the same or higher wall-clock time.
         // If the Session got another exact read in the meantime, its title already had a current source.
         if (retained ? metadata.epoch === undefined || metadata.epoch >= read.epoch
-          : listed.time.updated <= cached.time.updated) return cached
+          : listed.title !== cached.title && listed.time.updated <= cached.time.updated) return cached
+        // An agreeing list result also fences an older in-flight title observation.
+        listedTitleReads.set(listed.id, read.sequence)
+        if (listed.title === cached.title) return cached
         const snapshot = {
           ...cached,
           title: listed.title,
@@ -589,6 +597,7 @@ export const {
           pendingMoves.delete(event.data.sessionID)
           placements.delete(event.data.sessionID)
           titles.delete(event.data.sessionID)
+          listedTitleReads.delete(event.data.sessionID)
           syncingSessions.delete(event.data.sessionID)
           trailing.delete(event.data.sessionID)
           hydratingSessions.delete(event.data.sessionID)

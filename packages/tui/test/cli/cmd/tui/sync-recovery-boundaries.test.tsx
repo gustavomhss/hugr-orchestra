@@ -417,21 +417,28 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     location: { directory: "/tmp/listed-placement", workspaceID: "wrk_listed" },
     subpath: "listed-subpath",
   }
+  const other = { ...original, id: otherID }
+  const recoveredOther = { ...other, title: "Recovered title at the same timestamp" }
+  const latest = { ...changedListRow, title: "Newest explicit title", time: { created: 0, updated: 20 } }
+  const heldRecovery = Promise.withResolvers<Response>()
   const heldList = Promise.withResolvers<Response>()
   const streams: ReadableStreamDefaultController<Uint8Array>[] = []
-  const state = { listReads: 0, exactReads: 0, historyReads: 0, listed: original, exact: original }
-  const list = (row: typeof original) => json({ data: [row], cursor: {} })
+  const state = { listReads: 0, exactReads: 0, historyReads: 0, exact: original }
+  const list = (...rows: (typeof original)[]) => json({ data: rows, cursor: {} })
   const transport = createFetch(routes((url) => {
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
     if (url.pathname === "/api/session") {
-      if (++state.listReads === 3) return heldList.promise
-      return list(state.listed)
+      if (++state.listReads === 2) return heldRecovery.promise
+      if (state.listReads === 3) return list(latest, { ...other, title: "Stale explicit title" })
+      if (state.listReads === 4) return heldList.promise
+      return list(original, other)
     }
     if (url.pathname === `/api/session/${sessionID}`) {
       state.exactReads++
       return json({ data: state.exact })
     }
-    if (url.pathname === `/api/session/${sessionID}/message`) state.historyReads++
+    if (url.pathname === `/api/session/${otherID}`) return json({ data: other })
+    if ([`/api/session/${sessionID}/message`, `/api/session/${otherID}/message`].includes(url.pathname)) state.historyReads++
   }))
   const server = Bun.serve({
     port: 0, hostname: "127.0.0.1",
@@ -459,18 +466,25 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     send(streams[0], { id: "evt_title_seed", type: "session.next.renamed", data: {
       sessionID, timestamp: original.time.updated, title: original.title,
     } })
-    await wait(() => state.exactReads === 1 && sync.selectionReady(sessionID))
+    send(streams[0], { id: "evt_other_title_seed", type: "session.next.renamed", data: {
+      sessionID: otherID, timestamp: other.time.updated, title: other.title,
+    } })
+    await wait(() => state.exactReads === 1 && sync.selectionReady(sessionID) && sync.selectionReady(otherID))
     expect(state.historyReads).toBe(0)
 
     streams[0].close()
     await wait(() => mounted.sdk.offline())
-    state.listed = changedListRow
     await wait(() => streams.length === 2, 5_000)
-    // The rename was lost in the disconnect and has the same timestamp as the previous exact snapshot.
     send(streams[1], connected(2).payload)
-    await wait(() => state.listReads === 2 && row()?.title === changedListRow.title)
+    await wait(() => state.listReads === 2)
+    await sync.refresh()
+    expect(sync.get(sessionID)?.title).toBe(latest.title)
+    // The other row proves the held recovery publishes its title at the same timestamp.
+    // Its older primary row must yield to the explicit list read that just completed.
+    heldRecovery.resolve(list(changedListRow, recoveredOther))
+    await wait(() => sync.get(otherID)?.title === recoveredOther.title)
     for (const projected of [row(), sync.get(sessionID)]) expect(projected).toMatchObject({
-      title: changedListRow.title, agent: original.agent, model: original.model, location: original.location,
+      title: latest.title, agent: original.agent, model: original.model, location: original.location,
       subpath: original.subpath,
     })
     expect(sync.selectionReady(sessionID)).toBe(false)
@@ -478,13 +492,13 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     expect(state.historyReads).toBe(0)
 
     const old = sync.refresh()
-    await wait(() => state.listReads === 3)
+    await wait(() => state.listReads === 4)
     state.exact = { ...original, title: "Newest live title", time: { created: 0, updated: 30 } }
     send(streams[1], { id: "evt_title_live", type: "session.next.renamed", data: {
       sessionID, timestamp: state.exact.time.updated, title: state.exact.title,
     } })
     await wait(() => state.exactReads === 2 && sync.selectionReady(sessionID))
-    heldList.resolve(list({ ...changedListRow, time: { created: 0, updated: 40 } }))
+    heldList.resolve(list({ ...changedListRow, time: { created: 0, updated: 40 } }, recoveredOther))
     await old
     for (const projected of [row(), sync.get(sessionID)]) expect(projected).toMatchObject({
       title: state.exact.title, agent: original.agent, model: original.model, location: original.location,
@@ -493,7 +507,8 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     expect(sync.selectionReady(sessionID)).toBe(true)
     expect(state.historyReads).toBe(0)
   } finally {
-    heldList.resolve(list(original))
+    heldRecovery.resolve(list(original, other))
+    heldList.resolve(list(original, other))
     mounted.app.renderer.destroy()
     server.stop(true)
   }
@@ -510,16 +525,23 @@ test.each([false, true])("bootstrap retries a Session list superseded by reconne
   const mounted = await mount(routes((url) => {
     if (url.pathname !== "/api/session") return
     return ++listReads === 1 ? old.promise : current.promise
-  }), tmp.path, { continue: continuing }, undefined, { waitComplete: false })
+  }), tmp.path, { continue: continuing }, undefined, { delaySync: true })
+  const ready = mounted.startSync()
   try {
     await wait(() => listReads === 1)
     await emit(mounted, connected(1))
     await emit(mounted, connected(2))
     old.resolve(json({ data: [staleSession], cursor: {} }))
-    await wait(() => listReads === 2 && mounted.sync.status === (continuing ? "loading" : "partial"))
-    expect(mounted.sync.data.session).toEqual([])
-    expect(mounted.sync.ready).toBe(!continuing)
+    await wait(() => listReads === 2)
+    // The real SyncProvider with --continue withholds its children until the replacement list arrives.
+    if (continuing) expect(mounted.mounts.count).toBe(0)
+    else {
+      await ready
+      expect(mounted.sync.status).toBe("partial")
+      expect(mounted.sync.data.session).toEqual([])
+    }
     current.resolve(json({ data: [currentSession], cursor: {} }))
+    await ready
     await wait(() => mounted.sync.status === "complete")
     expect(mounted.sync.data.session.map((row) => row.id)).toEqual([sessionID])
     expect(mounted.sync.ready).toBe(true)
