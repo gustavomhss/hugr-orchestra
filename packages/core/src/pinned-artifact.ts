@@ -8,6 +8,7 @@ import { Effect, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "./effect/layer-node"
 import { AppProcess } from "./process"
+import { ActivityQuarantineArchive } from "./activity-quarantine-archive"
 
 // The host (never the model) installs pinned upstream artifacts. A download is checked against its pinned digest before
 // any byte of it is written to disk, and the install directory only appears through one rename of a complete staging
@@ -94,7 +95,9 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
   if (createHash(algorithm).update(bytes).digest("base64") !== artifact.integrity.slice(separator + 1))
     return yield* new Failed({ cause: "integrity-mismatch" })
 
-  const directory = yield* step("filesystem", () => mkdtemp(path.join(staging, ".unpack-")))
+  const directory = yield* step("filesystem", () => mkdtemp(path.join(extractor ? path.dirname(staging) : staging, ".unpack-")))
+  const preservation = { required: false }
+  yield* Effect.gen(function* () {
   const out = path.join(directory, "out")
   yield* step("filesystem", () => mkdir(out))
   yield* step("filesystem", () =>
@@ -103,8 +106,12 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
         ? path.join(directory, `archive.${artifact.format}`)
         : path.join(out, path.posix.basename(new URL(artifact.url).pathname)),
       bytes,
+      { flag: "wx" },
     ),
   )
+  const archive = extractor
+    ? yield* Effect.promise(() => ActivityQuarantineArchive.capture(path.join(directory, `archive.${artifact.format}`)).catch(() => undefined))
+    : undefined
   if (extractor)
     yield* Effect.gen(function* () {
       const processService = yield* AppProcess.Service
@@ -134,7 +141,14 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
       }),
     { discard: true },
   )
-  yield* step("filesystem", () => rm(directory, { recursive: true, force: true }))
+  if (archive) {
+    yield* step("filesystem", () => rm(out, { recursive: true, force: true }))
+    const outcome = yield* Effect.uninterruptible(Effect.promise(() => ActivityQuarantineArchive.handoff(archive, staging).catch(() => "Unknown" as const)))
+    if (outcome === "Unknown") {
+      preservation.required = true
+    }
+  }
+  }).pipe(Effect.ensuring(Effect.promise(() => preservation.required ? Promise.resolve() : rm(directory, { recursive: true, force: true }))))
 })
 
 /** The extractor argv, run in the unpack dir with the download saved as `archive.<format>`, writing into `out`. */

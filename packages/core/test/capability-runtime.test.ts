@@ -8,6 +8,7 @@ import { BackendToolkit } from "../src/backend-toolkit"
 import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { PinnedArtifact } from "../src/pinned-artifact"
+import { ActivityQuarantineArchive } from "../src/activity-quarantine-archive"
 import { ToolkitInstall } from "../src/toolkit/install"
 import { ToolkitRuntime } from "../src/toolkit/runtime"
 import { it } from "./lib/effect"
@@ -123,6 +124,36 @@ it.live("existing tiny archive fixture passes through authentic PinnedArtifact e
     const ready = yield* f.ensure({ ...spec, targets: { [host()]: archive } })
     expect(yield* Effect.promise(() => readFile(ready.executable, "utf8"))).toBe("#!/bin/sh\necho zipped\n")
     expect(f.hits).toEqual({ "/tool.zip": 1 })
+  }), 120_000,
+)
+
+it.live("archive custody receives only the closed verified download after layout", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    const observed: string[] = []
+    yield* Effect.acquireRelease(Effect.sync(() => ActivityQuarantineArchive.bind({
+      move: (target, acquire) => Effect.tryPromise(async () => {
+        const lease = await acquire(target, "apply")
+        expect(lease?.disposable).toBe("file")
+        expect(lease?.originalPath.endsWith("archive.zip")).toBe(true)
+        expect(await readFile(lease!.originalPath)).toEqual(Buffer.from(f.zip))
+        expect(await readFile(path.join(path.dirname(lease!.originalPath), "out", "bin", "tool"), "utf8").catch(() => "moved"))
+          .toBe("moved")
+        observed.push(target.identity)
+        await lease!.release()
+        return "Refused" as const
+      }),
+      preview: () => Effect.succeed(undefined),
+      confirm: () => Effect.succeed(undefined),
+    })), (unbind) => Effect.sync(unbind))
+    yield* PinnedArtifact.install(f.directory(), [{
+      url: `http://127.0.0.1:${f.server.port}/tool.zip`, integrity: sri(f.zip), format: "zip",
+      entries: [{ from: "bin/tool", to: "bin/tool" }],
+    }])
+    expect(observed).toHaveLength(1)
+    expect(observed[0]).toMatch(/^[0-9a-f]{48}$/)
+    expect(yield* Effect.promise(() => readFile(path.join(f.directory(), "bin", "tool"), "utf8")))
+      .toBe("#!/bin/sh\necho zipped\n")
   }), 120_000,
 )
 
