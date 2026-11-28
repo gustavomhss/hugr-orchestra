@@ -1,4 +1,5 @@
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
+import type { ActivityApply } from "@orchestra/schema/activity-apply"
 import { createMemo, createEffect, on, onCleanup, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
@@ -28,12 +29,17 @@ export function ActivityPlan(props: { query: string }) {
     failed: false,
     armTarget: undefined as string | undefined,
     armFailed: false,
+    applyState: undefined as ActivityApply.State | undefined,
+    applyScope: undefined as string | undefined,
+    applyingTarget: undefined as string | undefined,
+    applyFailed: false,
   })
   let requestID = 0
   let pending: AbortController | undefined
   let inspectID = 0
   let inspectController: AbortController | undefined
   let armID = 0
+  let applyID = 0
   const scope = () => server.current?.http.url
   const ownedScope = () => {
     const current = server.current
@@ -64,9 +70,21 @@ export function ActivityPlan(props: { query: string }) {
     inspectController = undefined
     const currentSDK = sdk()
     pending?.abort()
+    applyID++
     const request = new AbortController()
     pending = request
     const id = ++requestID
+    const applyRead = platform.readActivityApply
+    const ownedURL = ownedScope()
+    setState({ applyState: undefined, applyScope: undefined, applyFailed: false })
+    if (applyRead && ownedURL === serverURL) {
+      const applyID = requestID
+      void applyRead(serverURL).then((applyState) => {
+        if (applyState && requestID === applyID && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK) {
+          setState({ applyState, applyScope: serverURL })
+        }
+      }).catch(() => {})
+    }
     setState({ scope: serverURL, busy: true, failed: false, verified: undefined, verifiedScope: undefined,
       inspecting: false, inspectFailed: false })
     try {
@@ -141,11 +159,41 @@ export function ActivityPlan(props: { query: string }) {
     }
   }
 
+  async function apply(target: ActivityArm.Target, approvalID: string) {
+    const current = server.current
+    const serverURL = current?.http.url
+    const applyObjects = platform.applyActivityQuarantine
+    const eligible = state.applyState?.eligible.some((item) => item.approvalID === approvalID && item.targetID === target.targetID && item.generation === target.generation)
+    if (!serverURL || current?.type !== "sidecar" || current.variant !== "base" || !applyObjects || !eligible || state.applyState?.partial ||
+      !state.applyState.available || state.applyingTarget) return
+    const currentSDK = sdk()
+    const id = ++applyID
+    const isCurrent = () => applyID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK
+    setState({ applyingTarget: target.targetID, applyFailed: false })
+    try {
+      const receipt = await applyObjects(serverURL, { approvalID, targetID: target.targetID, generation: target.generation })
+      if (!isCurrent()) return
+      if (!receipt || receipt.targetID !== target.targetID || receipt.generation !== target.generation || receipt.approvalID !== approvalID) {
+        setState("applyFailed", true)
+        return
+      }
+      const persisted = await platform.readActivityApply?.(serverURL)
+      if (!isCurrent()) return
+      if (persisted) setState({ applyState: persisted, applyScope: serverURL })
+      else setState("applyFailed", true)
+    } catch {
+      if (isCurrent()) setState("applyFailed", true)
+    } finally {
+      if (isCurrent()) setState("applyingTarget", undefined)
+    }
+  }
+
   createEffect(
     on(
       () => ({ serverURL: scope(), ownedURL: ownedScope(), client: sdk() }),
       ({ serverURL }) => {
         armID++
+        applyID++
         requestID++
         pending?.abort()
         pending = undefined
@@ -154,6 +202,7 @@ export function ActivityPlan(props: { query: string }) {
         inspectController = undefined
         setState({ scope: serverURL, snapshot: undefined, verified: undefined, verifiedScope: undefined, inspecting: false, inspectFailed: false,
           busy: Boolean(serverURL), failed: false, armTarget: undefined, armFailed: false })
+        setState({ applyState: undefined, applyScope: undefined, applyingTarget: undefined, applyFailed: false })
         if (serverURL) void refresh()
       },
       { defer: false },
@@ -161,6 +210,7 @@ export function ActivityPlan(props: { query: string }) {
   )
   onCleanup(() => {
     armID++
+    applyID++
     requestID++
     pending?.abort()
     inspectID++
@@ -179,6 +229,9 @@ export function ActivityPlan(props: { query: string }) {
       !state.busy && !state.failed && !state.armTarget &&
       state.verified?.ready.some((ready) => ready.targetID === target.targetID && ready.generation === target.generation)
   }
+  const applyResult = (target: ActivityArm.Target) => state.applyScope === scope()
+    ? state.applyState?.results.find((item) => item.targetID === target.targetID && item.generation === target.generation)
+    : undefined
 
   return (
     <section aria-busy={state.busy}>
@@ -204,6 +257,9 @@ export function ActivityPlan(props: { query: string }) {
       </Show>
       <Show when={state.inspectFailed}>
         <p class="activity-error" role="alert">{language.t("orchestra.monitor.planVerifyFailed")}</p>
+      </Show>
+      <Show when={state.applyFailed}>
+        <p class="activity-error" role="alert">{language.t("orchestra.monitor.applyFailed")}</p>
       </Show>
       <Show when={state.verified ?? state.snapshot} fallback={
         <div class="mx-empty" role={state.failed ? "alert" : "status"}>
@@ -245,11 +301,20 @@ export function ActivityPlan(props: { query: string }) {
                           <td><code>{row.target.targetID}</code></td>
                           <td class="activity-path" title={row.target.label}><code>{row.target.label}</code></td>
                           <td>{row.target.owner}</td>
-                          <td>{language.t(`orchestra.monitor.planState.${row.state}`)}</td>
+                          <td>{language.t(applyResult(row.target) ? `orchestra.monitor.applyState.${applyResult(row.target)?.outcome}` : `orchestra.monitor.planState.${row.state}`)}</td>
                           <td>
                             <Show when={row.armable && armAvailable(row.target)}>
                               <button type="button" class="mx-btn" disabled={Boolean(state.armTarget)} onClick={() => void arm(row.target)}>
                                 {language.t(state.armTarget === row.target.targetID ? "orchestra.monitor.planArming" : "orchestra.monitor.planArm")}
+                              </button>
+                            </Show>
+                            <Show when={state.applyScope === scope() && state.applyState?.available && !state.applyState.partial && Boolean(platform.applyActivityQuarantine) &&
+                              state.applyState.eligible.some((item) => item.targetID === row.target.targetID && item.generation === row.target.generation)}>
+                              <button type="button" class="mx-btn" disabled={Boolean(state.applyingTarget)} onClick={() => {
+                                const approval = state.applyState?.eligible.find((item) => item.targetID === row.target.targetID && item.generation === row.target.generation)
+                                if (approval) void apply(row.target, approval.approvalID)
+                              }}>
+                                {language.t(state.applyingTarget === row.target.targetID ? "orchestra.monitor.applying" : "orchestra.monitor.apply")}
                               </button>
                             </Show>
                           </td>

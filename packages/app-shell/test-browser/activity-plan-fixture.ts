@@ -1,5 +1,6 @@
 import { expect, mock } from "bun:test"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
+import type { ActivityApply } from "@orchestra/schema/activity-apply"
 import type { Locale } from "@/context/language"
 import type { Platform } from "@/context/platform"
 import type { ServerConnection } from "@/context/server"
@@ -40,6 +41,8 @@ type InspectCall = {
   fail(error: unknown): void
 }
 
+type ApplyStateCall = { serverURL: string; promise: Promise<ActivityApply.State | undefined>; respond(value: ActivityApply.State): void; fail(error: unknown): void }
+
 function planCall(options?: { signal?: AbortSignal }): PlanCall {
   const result = Promise.withResolvers<ActivityArm.PlanSnapshot>()
   return {
@@ -56,6 +59,8 @@ export async function mount(options: {
   connection?: ServerConnection.Any
   arm?: (serverURL: string, request: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>
   inspect?: (serverURL: string) => Promise<ActivityArm.PlanSnapshot | undefined>
+  applyState?: (serverURL: string) => Promise<ActivityApply.State | undefined>
+  apply?: (serverURL: string, request: ActivityApply.Request) => Promise<ActivityApply.Receipt | undefined>
 } = {}) {
   const { ActivityPlan }: typeof import("@/orchestra/chapters/activity/plan") = await load(
     "@/orchestra/chapters/activity/plan",
@@ -64,6 +69,8 @@ export async function mount(options: {
   const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
   const calls: PlanCall[] = []
   const inspections: InspectCall[] = []
+  const applyStates: ApplyStateCall[] = []
+  const applies: { serverURL: string; request: ActivityApply.Request }[] = []
   const arms: { serverURL: string; request: ActivityArm.Request }[] = []
   const host = document.body.appendChild(document.createElement("div"))
   const [query, setQuery] = createSignal("")
@@ -91,6 +98,16 @@ export async function mount(options: {
     inspections.push(call)
     return options.inspect ? options.inspect(serverURL) : result.promise
   }
+  const readActivityApply = (serverURL: string) => {
+    const result = Promise.withResolvers<ActivityApply.State | undefined>()
+    const call = { serverURL, promise: result.promise, respond: result.resolve, fail: result.reject }
+    applyStates.push(call)
+    return options.applyState ? options.applyState(serverURL) : result.promise
+  }
+  const applyActivityQuarantine = async (serverURL: string, request: ActivityApply.Request) => {
+    applies.push({ serverURL, request })
+    return options.apply?.(serverURL, request)
+  }
   const platform = {
     platform: "web" as const,
     openExternal() {},
@@ -99,6 +116,8 @@ export async function mount(options: {
     ...options.platform,
     inspectActivityArm,
     armActivityQuarantine: arm,
+    readActivityApply,
+    applyActivityQuarantine,
   } as unknown as Platform
   const dispose = render(
     () => createComponent(PlatformProvider, {
@@ -135,6 +154,8 @@ export async function mount(options: {
     host,
     calls,
     inspections,
+    applyStates,
+    applies,
     arms,
     panel,
     button,
@@ -149,6 +170,7 @@ export async function mount(options: {
       host.remove()
       calls.forEach((call) => call.fail(new DOMException("Fixture disposed", "AbortError")))
       inspections.forEach((call) => call.fail(new DOMException("Fixture disposed", "AbortError")))
+      applyStates.forEach((call) => call.fail(new DOMException("Fixture disposed", "AbortError")))
       expect(host.isConnected).toBe(false)
     },
   }

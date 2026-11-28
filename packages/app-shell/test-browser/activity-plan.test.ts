@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
+import type { ActivityApply } from "@orchestra/schema/activity-apply"
 import type { Platform } from "@/context/platform"
 import type { ServerConnection } from "@/context/server"
 import { mount, receipt, snapshot, target, until } from "./activity-plan-fixture"
@@ -80,6 +81,44 @@ test("a web server displays Ready rows without an arm control", async () => {
     await until("ready target appears", () => text(app.panel()).includes("ready-a"))
     expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm quarantine…")
     expect(app.arms).toEqual([])
+  } finally {
+    app.dispose()
+  }
+})
+
+test("apply uses only the cached ledger state, waits for a signed result, and replays Unknown", async () => {
+  const ready = target("ready-a")
+  const approval = { approvalID: "approval-1", targetID: ready.targetID, generation: ready.generation }
+  const states: ActivityApply.State[] = [
+    { available: true, partial: false, eligible: [approval], results: [] },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome: "Unknown" }] },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome: "Unknown" }] },
+  ]
+  let applyResult: ((value: ActivityApply.Receipt | undefined) => void) | undefined
+  let stateIndex = 0
+  const app = await mount({
+    connection: { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } },
+    platform: { platform: "desktop", os: "linux", async openDirectoryPickerDialog() { return null } } as unknown as Platform,
+    applyState: async () => states[stateIndex++]!,
+    apply: () => new Promise((resolve) => { applyResult = resolve }),
+  })
+  try {
+    await until("cached public plan GET and apply state read", () => app.calls.length === 1 && app.applyStates.length === 1)
+    app.calls[0]!.respond(snapshot({ ready: [ready] }))
+    await until("eligible Apply control", () => [...app.panel().querySelectorAll("button")].some((item) => text(item) === "Apply…"))
+    expect(app.inspections).toHaveLength(0)
+    button(app, "Apply…").click()
+    await until("native Apply call is pending", () => app.applies.length === 1)
+    expect(app.applies).toEqual([{ serverURL: "http://127.0.0.1:4777", request: approval }])
+    expect(text(app.panel())).toContain("Ready")
+    expect(text(app.panel())).not.toContain("Out")
+    applyResult!({ previewID: "preview-1", ...approval, outcome: "Unknown" })
+    await until("signed persisted Unknown appears", () => text(app.panel()).includes("Unknown"))
+    button(app, "Refresh").click()
+    await until("cached plan reload plus persisted state replay", () => app.calls.length === 2 && app.applyStates.length === 3)
+    app.calls[1]!.respond(snapshot({ ready: [ready] }))
+    await until("replayed Unknown remains visible", () => text(app.panel()).includes("Unknown"))
+    expect(app.inspections).toHaveLength(0)
   } finally {
     app.dispose()
   }
