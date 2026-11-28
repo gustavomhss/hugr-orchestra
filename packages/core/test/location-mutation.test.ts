@@ -29,6 +29,29 @@ function withTmp<A, E, R>(f: (directory: string) => Effect.Effect<A, E, R>) {
 }
 
 describe("LocationMutation", () => {
+  it.live("acquires without resolving a missing Location until a filesystem target is requested", () =>
+    withTmp((directory) =>
+      Effect.gen(function* () {
+        const mutation = yield* LocationMutation.Service
+        expect(mutation.resolve).toBeFunction()
+      }).pipe(provide(path.join(directory, "missing-location"))),
+    ),
+  )
+
+  it.live("fails actual resolution of a missing Location and retains that cached failure", () =>
+    withTmp((directory) => {
+      const missing = path.join(directory, "missing-location")
+      return Effect.gen(function* () {
+        const mutation = yield* LocationMutation.Service
+        const error = yield* Effect.flip(mutation.resolve({ path: "new.txt" }))
+        expect(error).toMatchObject({ _tag: "PlatformError", reason: { _tag: "NotFound" } })
+        yield* Effect.promise(() => fs.mkdir(missing))
+        const retry = yield* Effect.flip(mutation.resolve({ path: "new.txt" }))
+        expect(retry).toBe(error)
+      }).pipe(provide(missing))
+    }),
+  )
+
   it.live("resolves an active relative existing file target", () =>
     withTmp((directory) =>
       Effect.gen(function* () {
@@ -135,6 +158,100 @@ describe("LocationMutation", () => {
       }).pipe(provide(directory)),
     ),
   )
+
+  it.live("rejects an internal dangling directory ancestor whose physical target is outside", () =>
+    withTmp((directory) =>
+      withTmp((outside) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            fs.symlink(
+              path.join(outside, "missing-parent"),
+              path.join(directory, "alias"),
+              process.platform === "win32" ? "junction" : "dir",
+            ),
+          )
+          const mutation = yield* LocationMutation.Service
+          const error = yield* Effect.flip(mutation.resolve({ path: path.join("alias", "nested", "new.txt") }))
+          expect(error).toMatchObject({ _tag: "LocationMutation.PathError", reason: "location_escape" })
+        }).pipe(provide(directory)),
+      ),
+    ),
+  )
+
+  it.live("allows an internal dangling directory ancestor against its canonical internal target", () =>
+    withTmp((directory) =>
+      Effect.gen(function* () {
+        yield* Effect.promise(() =>
+          fs.symlink(
+            path.join(directory, "future"),
+            path.join(directory, "alias"),
+            process.platform === "win32" ? "junction" : "dir",
+          ),
+        )
+        const mutation = yield* LocationMutation.Service
+        const target = yield* mutation.resolve({ path: path.join("alias", "nested", "new.txt") })
+        expect(target).toMatchObject({
+          canonical: path.join(directory, "future", "nested", "new.txt"),
+          resource: "future/nested/new.txt",
+        })
+        expect(target.externalDirectory).toBeUndefined()
+      }).pipe(provide(directory)),
+    ),
+  )
+
+  it.live("maps an explicit external dangling ancestor to its physical resource and existing approval directory", () =>
+    withTmp((directory) =>
+      withTmp((outside) =>
+        Effect.gen(function* () {
+          yield* Effect.promise(() =>
+            fs.symlink(
+              path.join(outside, "future"),
+              path.join(outside, "alias"),
+              process.platform === "win32" ? "junction" : "dir",
+            ),
+          )
+          const mutation = yield* LocationMutation.Service
+          const target = yield* mutation.resolve({ path: path.join(outside, "alias", "nested", "new.txt") })
+          expect(target).toMatchObject({
+            canonical: path.join(outside, "future", "nested", "new.txt"),
+            resource: path.join(outside, "future", "nested", "new.txt").replaceAll("\\", "/"),
+            externalDirectory: {
+              directory: outside,
+              resource: path.join(outside, "*").replaceAll("\\", "/"),
+              save: path.join(outside, "*").replaceAll("\\", "/"),
+            },
+          })
+        }).pipe(provide(directory)),
+      ),
+    ),
+  )
+
+  for (const shape of ["over-limit chain", "cycle"]) {
+    it.live(`fails with a typed error for a dangling directory ancestor ${shape}`, () =>
+      withTmp((directory) =>
+        Effect.gen(function* () {
+          const links = Array.from({ length: shape === "cycle" ? 2 : 43 }, (_, index) =>
+            path.join(directory, `link-${index}`),
+          )
+          yield* Effect.promise(() =>
+            Promise.all(
+              links.map((link, index) =>
+                fs.symlink(
+                  links[index + 1] ?? (shape === "cycle" ? links[0] : path.join(directory, "future")),
+                  link,
+                  process.platform === "win32" ? "junction" : "dir",
+                ),
+              ),
+            ),
+          )
+          const mutation = yield* LocationMutation.Service
+          const error = yield* Effect.flip(mutation.resolve({ path: path.join(links[0], "nested", "new.txt") }))
+          expect(["LocationMutation.PathError", "PlatformError", "FileSystemError"]).toContain(error._tag)
+          if (error._tag === "LocationMutation.PathError") expect(error.reason).toBe("symlink_limit")
+        }).pipe(provide(directory)),
+      ),
+    )
+  }
 
   it.live("requires external-directory authorization for an explicit external absolute target", () =>
     withTmp((directory) =>

@@ -18,6 +18,7 @@ import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
 import { InstructionContext } from "../../instruction-context"
 import { Location } from "../../location"
+import { LocationMutation } from "../../location-mutation"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
 import { Project } from "../../project"
@@ -96,6 +97,7 @@ const layer = Layer.effect(
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
+    const mutations = yield* LocationMutation.Service
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
@@ -327,20 +329,46 @@ const layer = Layer.effect(
             const decision = yield* store.charge(session.id, { type: "tool", name: input.safety?.tool ?? input.action })
             if (!decision.admitted) return yield* new PermissionV2.CorrectedError({ feedback: decision.deviation.detail })
           }
-          yield* permissions
-            .authorize({
+          const target = input.filesystem
+            ? yield* mutations.resolve(input.filesystem).pipe(
+                Effect.mapError(() => new ToolSafety.Denied({ reason: "hosted-filesystem-path" })),
+              )
+            : undefined
+          const authorizePermission = Effect.fnUntraced(function* (
+            request: Pick<PermissionV2.AssertInput, "action" | "resources" | "save">,
+          ) {
+            // For hosted file access, a Session rule can narrow the seat's permission.
+            if (target) {
+              const rules = yield* store.permissions(session.id)
+              if (request.resources.some((resource) => PermissionV2.evaluate(request.action, resource, rules).effect === "deny"))
+                return yield* new PermissionV2.BlockedError({ rules })
+            }
+            return yield* permissions.authorize({
+              ...request,
               sessionID: session.id,
               agent: agent.id,
-              action: input.action,
-              resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
-            })
-            .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+            }).pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+          })
+          if (target?.externalDirectory)
+            yield* authorizePermission(LocationMutation.externalDirectoryPermission(target.externalDirectory))
+          const fileResource = input.filesystem?.resource === "path" ? target?.resource : undefined
+          const resources = fileResource === undefined ? [...input.resources] : [fileResource]
+          yield* authorizePermission({ action: input.action, resources })
           if (!input.safety) return {}
-          const call = input.safety
+          // The SDK keeps its input. Action permission and ToolSafety judge the same physical target.
+          const call = target
+            ? {
+                ...input.safety,
+                args: {
+                  ...input.safety.args,
+                  ...(input.filesystem?.resource === "path" ? { filePath: target.canonical } : { path: target.canonical }),
+                },
+              }
+            : input.safety
           const hooks = hostedHooks(permissions, {
             sessionID: session.id, agent: agent.id, location, fs,
-            callID: input.callID, action: input.action, resources: input.resources,
+            callID: input.callID, action: input.action, resources, fileResource,
           })
           const authorization = yield* tools.hosted(
             {
@@ -752,6 +780,7 @@ export const node = makeLocationNode({
     SessionSubagentModels.node,
     SessionStore.node,
     Location.node,
+    LocationMutation.node,
     SystemContextRegistry.node,
     SkillGuidance.node,
     ReferenceGuidance.node,
