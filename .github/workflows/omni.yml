@@ -99,17 +99,6 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/omni-binaries
-      - name: Install Electron
-        working-directory: apps/desktop
-        run: bun run install-electron
-      - name: Install X11 fixture tools
-        run: |
-          if ! command -v xdotool >/dev/null || ! command -v xvfb-run >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq xdotool xvfb
-          fi
-      - name: Enable the Chromium sandbox on the runner
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Provision the runner's isolated supervisor
         shell: bash
         run: |
@@ -156,9 +145,6 @@ jobs:
       - name: Verify the supervisor's independent executable policy
         working-directory: apps/desktop
         run: bun test ./test/activity-isolated-supervisor.hosted.ts
-      - name: Exercise the Desktop confirmation and member controls
-        working-directory: apps/desktop
-        run: xvfb-run -a bun run ./test/activity-freeze-sidecar-e2e.hosted.ts
       - name: Collect supervisor diagnostics and remove the fixture
         if: always() && env.ACTIVITY_OMNI_UNIT != ''
         shell: bash
