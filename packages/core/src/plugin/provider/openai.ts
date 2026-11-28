@@ -224,7 +224,10 @@ export const OpenAIPlugin = define({
         const credential = connection ? yield* ctx.integration.connection.resolve(connection) : undefined
         if (credential?.type !== "oauth" || credential.methodID !== Siwc.methodID)
           return yield* Effect.fail(new Error("Connect a new ChatGPT plan account first"))
-        const registration = yield* Effect.try(() => Siwc.registration(credential.metadata))
+        const registration = yield* Effect.try({
+          try: () => Siwc.registration(credential.metadata),
+          catch: (cause) => cause,
+        })
         return yield* SiwcListener.authorize({ hostFile, methodID: Siwc.methodID, registration })
       }),
     } satisfies IntegrationOAuthMethodRegistration
