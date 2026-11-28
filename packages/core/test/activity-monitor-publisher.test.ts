@@ -60,8 +60,9 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     yield* publisher.publish(LLMEvent.toolCall({ id: "call-matched", name: "bash", input: {} }))
     const assistantMessageID = yield* publisher.assistantMessageID("call-matched")
     const provenance = { sessionID, assistantMessageID, agentID: "backend", tool: "bash", callID: "call-matched" }
-    const matched = ActivityMonitor.observe(observed, "runtime", "", provenance)
-    const unmatched = ActivityMonitor.observe(observed, "runtime", "", { ...provenance, callID: "call-other" })
+    const held = [observed]
+    const matched = ActivityMonitor.observe(held[0], "runtime", "", provenance)
+    const unmatched = ActivityMonitor.observe(held[0], "runtime", "", { ...provenance, callID: "call-other" })
     yield* Effect.promise(() => Promise.all([ActivityMonitor.inspect(matched), ActivityMonitor.inspect(unmatched)]))
     yield* Effect.promise(() => waitForClock())
     yield* publisher.publish(LLMEvent.toolResult({
@@ -79,7 +80,7 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     const records = ActivityMonitor.snapshot().records
     expect(records.find((record) => record.recordID === matched)?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     expect(records.find((record) => record.recordID === unmatched)?.footprint?.hypothesis).toBe("insufficient")
-    void observed
+    expect(held[0]).toBeTruthy()
   }),
   30_000,
 )

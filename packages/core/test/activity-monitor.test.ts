@@ -169,7 +169,8 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     })
     const monitor = make()
     const identity = { sessionID: "ses_a", assistantMessageID: "msg_a", tool: "bash", callID: "call_a" }
-    const id = monitor.observe(observed, "runtime", "", { ...identity, agentID: "backend" })
+    const held = [observed]
+    const id = monitor.observe(held[0], "runtime", "", { ...identity, agentID: "backend" })
     const row = () => monitor.snapshot().records.find((record) => record.recordID === id)
     expect(row()?.footprint).toBeUndefined()
     await monitor.inspect(id)
@@ -188,7 +189,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
       sample.bytes = bytes
       await monitor.inspect(id)
     }
-    expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
+    const current = row()
+    if (current?.footprint?.hypothesis !== "compatible-with-logical-leak")
+      throw new Error(`footprint ${JSON.stringify({ footprint: current?.footprint, state: current?.state, failed: current?.inspectionFailed, held: held.length })}`)
     const previous = row()?.footprint
     if (!previous) throw new Error("Missing complete footprint before the invalid sample")
     sample.bytes = NaN
@@ -213,9 +216,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
-    // The monitor keeps only a weak handle. The last use has to be after the samples,
-    // or a collector drops the proxy and later readings stay on the first sample.
-    void observed
+    expect(held[0]).toBeTruthy()
   }, 30_000)
 })
 
