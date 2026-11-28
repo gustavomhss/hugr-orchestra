@@ -102,7 +102,9 @@ export async function mount(options: {
     const result = Promise.withResolvers<ActivityApply.State | undefined>()
     const call = { serverURL, promise: result.promise, respond: result.resolve, fail: result.reject }
     applyStates.push(call)
-    return options.applyState ? options.applyState(serverURL) : result.promise
+    const read = options.applyState
+    if (read) void Promise.resolve().then(() => read(serverURL)).then(result.resolve, result.reject)
+    return result.promise
   }
   const applyActivityQuarantine = async (serverURL: string, request: ActivityApply.Request) => {
     applies.push({ serverURL, request })
