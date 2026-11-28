@@ -206,3 +206,46 @@ for (const labels of cases) {
     }
   })
 }
+
+for (const labels of cases) {
+  test(`footprint displays the server reading and hypothesis (${labels.locale})`, async () => {
+    const app = mount(labels.locale)
+    const positive = labels.locale === "en" ? "Hypothesis: compatible with logical leak" : "Hipótese: compatível com vazamento lógico"
+    const measuredRecord = {
+      ...record,
+      sampledAt: 2_000,
+      footprint: {
+        source: "omni.darwin.phys-footprint" as const,
+        bytes: 512,
+        sampledAt: 1_000,
+        hypothesis: "compatible-with-logical-leak" as const,
+      },
+    }
+    const reading = { ...base, records: [measuredRecord, base.records[1]!] }
+    try {
+      ;(await app.call(0, "/api/activity")).respond(reading)
+      await until("footprint reading", () => app.host.querySelectorAll("tbody tr").length === 2)
+      const rows = () => [...app.host.querySelectorAll<HTMLTableRowElement>("tbody tr")]
+      const column = [...app.host.querySelectorAll("thead th")].map(text).indexOf("Footprint")
+      const footprint = (index: number) => text(rows()[index]!.querySelectorAll("td")[column]!)
+      expect(footprint(0)).toContain("512 B")
+      expect(footprint(0)).toContain("omni.darwin.phys-footprint")
+      expect(footprint(0)).toContain("2 s")
+      expect(footprint(1)).toBe(labels.unread)
+      const details = rows()[0]!.querySelector("details")!
+      const before = app.calls.length
+      details.querySelector("summary")!.click()
+      expect(app.calls).toHaveLength(before)
+      expect(text(details)).toContain(positive)
+      const refresh = [...app.host.querySelectorAll("button")].find((button) => text(button) === labels.refresh)!
+      await until("refresh ready", () => !refresh.disabled)
+      refresh.click()
+      const insufficient = { ...reading, records: [{ ...measuredRecord, footprint: { ...measuredRecord.footprint, hypothesis: "insufficient" as const } }, base.records[1]!] }
+      ;(await app.call(before, "/api/activity")).respond(insufficient)
+      await until("server insufficient hypothesis", () => text(details).includes(labels.hypothesis))
+      expect(app.calls.every((call) => call.request.method === "GET")).toBe(true)
+    } finally {
+      app.dispose()
+    }
+  })
+}
