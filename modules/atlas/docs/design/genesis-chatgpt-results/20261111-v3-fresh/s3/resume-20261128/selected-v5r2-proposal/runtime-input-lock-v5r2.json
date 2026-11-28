@@ -1,9 +1,9 @@
 {
   "schema": "genesis-s3-input-lock/v1",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-  "package_commit": "666832e52850e816678c4f95232c2a64c2878f2d",
+  "package_commit": "61c7ce90d0d045d6d87a6e00c6a5c29ede925ad6",
   "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/native-package.v5r2-proposal.json",
-  "package_sha256": "c34179440f0640330f755f9d7b95f9a1d781e76eca9b5dbb2e94bf9cadfeddca",
+  "package_sha256": "dcc695f58740aa528da5bffb4724517d93fd905cf71a517bc74234348741bc3e",
   "files": [
     {
       "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
@@ -3374,11 +3374,11 @@
       "sha256_state": "LOCAL_BYTES_AND_GIT_BLOB_VERIFIED"
     },
     {
-      "commit": "666832e52850e816678c4f95232c2a64c2878f2d",
+      "commit": "61c7ce90d0d045d6d87a6e00c6a5c29ede925ad6",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/native-package.v5r2-proposal.json",
-      "git_blob_sha": "6fc1632936b310121040e6edd9433a3aa5b61cc3",
-      "byte_length": 1167539,
-      "sha256": "c34179440f0640330f755f9d7b95f9a1d781e76eca9b5dbb2e94bf9cadfeddca",
+      "git_blob_sha": "0a0904045a762d42af526d630432e4f0caf9ddc4",
+      "byte_length": 1165526,
+      "sha256": "dcc695f58740aa528da5bffb4724517d93fd905cf71a517bc74234348741bc3e",
       "mode": "100644",
       "sha256_state": "LOCAL_BYTES_AND_GIT_BLOB_VERIFIED"
     },
