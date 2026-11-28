@@ -247,6 +247,1215 @@
         "bytes": 4125,
         "sha256": "40083a9ec73cc0f05af086abc85ffc85c8993bc34b06fbf0ed862e958b466d06"
       }
+    },
+    {
+      "key": "s1.core.runtime",
+      "body_sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+      "body_bytes": 6974,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "J1_response": "reviews/responses/r02-j1-v1.md",
+      "open_mandatory_findings_J1": [],
+      "criteria": {
+        "GO-A1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-6": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I8": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "AC-01": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        }
+      },
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      },
+      "open_mandatory_findings": [],
+      "J1": {
+        "path": "reviews/responses/r02-j1-v1.md",
+        "bytes": 4508,
+        "sha256": "c7c87ae946aaf335fe194f063c464a61e5fba54c74de7f73df7d2a49e343d1b1"
+      },
+      "J2": {
+        "path": "reviews/responses/r02-j2-v1.md",
+        "bytes": 4656,
+        "sha256": "85a914c9c73253e3fd1c8923ebafb878c32e95542ad688d3804a6193993c8796"
+      }
+    },
+    {
+      "key": "s1.subslice01.runtime-models-economy-completion",
+      "body_sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20",
+      "body_bytes": 35465,
+      "state": "FIX_FIRST_BOTH_JUDGES_WITH_REQUEST_EVIDENCE",
+      "J1_response": "reviews/responses/c01-j1-v1.md",
+      "open_mandatory_findings_J1": [
+        "F01",
+        "F02",
+        "F03",
+        "F04"
+      ],
+      "J2": {
+        "path": "reviews/responses/c01-j2-v1.md",
+        "bytes": 7767,
+        "sha256": "69c9e03157d714ef245df5633824a818cd1f239d5b7e6a2f8f41a2cc4c188081"
+      },
+      "open_mandatory_findings_J2": [
+        "F01",
+        "F02",
+        "F03",
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05"
+      ],
+      "J2_criteria": {
+        "GO-A1": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "GO-A2": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "QS-2": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "CC-3": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "GO-A3": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "GO-A4": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "QS-1": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "GO-I8": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "QS-4": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "CC-7": "FIX_FIRST_AND_REQUEST_EVIDENCE",
+        "GO-A5": "FIX_FIRST",
+        "GO-I2": "FIX_FIRST",
+        "QS-3": "PASS_LOCAL_BOUNDED",
+        "QS-6": "PASS_LOCAL_BOUNDED",
+        "CC-2": "PASS_LOCAL_BOUNDED",
+        "GO-I1": "PASS_LOCAL_BOUNDED",
+        "GO-I7": "PASS_LOCAL_BOUNDED",
+        "QS-5": "REQUEST_EVIDENCE",
+        "CC-1": "REQUEST_EVIDENCE",
+        "AC-01": "REQUEST_EVIDENCE",
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN"
+      }
+    },
+    {
+      "key": "s1.subslice05.llm-contracts.l2",
+      "body_sha256": "5a65c4a80bf142d54a5e7eab30718090975d7d0e8d10cd6119340dfc134ed814",
+      "body_bytes": 8399,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L2",
+      "criteria": {
+        "GO-A1": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, CC-3, QS-2** | **PASS.** A sequência request → turno → dispatch → settlement → decisão do runner acrescenta entendimento cumulativo e orienta diagnóstico e mudança, com contratos e responsáveis concretos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **PASS** — a sequência reúne propósito, contratos, diagnóstico, manutenção e aprofundamento pelos predecessores; o intermediário tem utilidade própria. |"
+          }
+        },
+        "GO-A2": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, CC-3, QS-2** | **PASS.** A sequência request → turno → dispatch → settlement → decisão do runner acrescenta entendimento cumulativo e orienta diagnóstico e mudança, com contratos e responsáveis concretos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **PASS** — a sequência reúne propósito, contratos, diagnóstico, manutenção e aprofundamento pelos predecessores; o intermediário tem utilidade própria. |"
+          }
+        },
+        "CC-3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, CC-3, QS-2** | **PASS.** A sequência request → turno → dispatch → settlement → decisão do runner acrescenta entendimento cumulativo e orienta diagnóstico e mudança, com contratos e responsáveis concretos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **PASS** — a sequência reúne propósito, contratos, diagnóstico, manutenção e aprofundamento pelos predecessores; o intermediário tem utilidade própria. |"
+          }
+        },
+        "QS-2": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, CC-3, QS-2** | **PASS.** A sequência request → turno → dispatch → settlement → decisão do runner acrescenta entendimento cumulativo e orienta diagnóstico e mudança, com contratos e responsáveis concretos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **PASS** — a sequência reúne propósito, contratos, diagnóstico, manutenção e aprofundamento pelos predecessores; o intermediário tem utilidade própria. |"
+          }
+        },
+        "GO-A3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A3, GO-A4, QS-1** | **PASS local.** As referências P1/P2/C1/S1/S2 acompanham o conhecimento e indicam quando aprofundar ou solicitar evidência Core. O texto distingue consulta de dependência. Consumo real permanece em AC-03. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **PASS** — a sequência reúne propósito, contratos, diagnóstico, manutenção e aprofundamento pelos predecessores; o intermediário tem utilidade própria. |"
+          }
+        },
+        "GO-A4": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A3, GO-A4, QS-1** | **PASS local.** As referências P1/P2/C1/S1/S2 acompanham o conhecimento e indicam quando aprofundar ou solicitar evidência Core. O texto distingue consulta de dependência. Consumo real permanece em AC-03. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A4, GO-A5, QS-1, GO-I2, GO-I3** | **PASS no vínculo apresentado** — fontes e versões estão identificadas; autoridade, validade e adoção são distintas; intenção histórica não substitui comportamento observado. Leitura nas portas reais ainda não foi provada. |"
+          }
+        },
+        "QS-1": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A3, GO-A4, QS-1** | **PASS local.** As referências P1/P2/C1/S1/S2 acompanham o conhecimento e indicam quando aprofundar ou solicitar evidência Core. O texto distingue consulta de dependência. Consumo real permanece em AC-03. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A4, GO-A5, QS-1, GO-I2, GO-I3** | **PASS no vínculo apresentado** — fontes e versões estão identificadas; autoridade, validade e adoção são distintas; intenção histórica não substitui comportamento observado. Leitura nas portas reais ainda não foi provada. |"
+          }
+        },
+        "GO-A5": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Mantém distintos código inspecionado, intenção documental, validade e execução. Os limites dos predecessores não são apagados pela síntese. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A4, GO-A5, QS-1, GO-I2, GO-I3** | **PASS no vínculo apresentado** — fontes e versões estão identificadas; autoridade, validade e adoção são distintas; intenção histórica não substitui comportamento observado. Leitura nas portas reais ainda não foi provada. |"
+          }
+        },
+        "GO-I2": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Mantém distintos código inspecionado, intenção documental, validade e execução. Os limites dos predecessores não são apagados pela síntese. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A4, GO-A5, QS-1, GO-I2, GO-I3** | **PASS no vínculo apresentado** — fontes e versões estão identificadas; autoridade, validade e adoção são distintas; intenção histórica não substitui comportamento observado. Leitura nas portas reais ainda não foi provada. |"
+          }
+        },
+        "QS-5": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Mantém distintos código inspecionado, intenção documental, validade e execução. Os limites dos predecessores não são apagados pela síntese. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-5, QS-6, GO-I1, GO-I8** | **PASS semântico** — distingue fonte de execução, conserva identidade dos predecessores e não infere sucesso ou economia física de hashes, fixtures ou estrutura. |"
+          }
+        },
+        "GO-A7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não introduz plataforma paralela nem desloca autorização, persistência ou continuação para a biblioteca. Distingue ferramentas tipadas de JSON Schema descritivo e preserva as fronteiras de capacidade. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — síntese delimitada sobre conhecimento aceito e duas leituras adicionais, sem introduzir plataforma paralela ou mecanismo desnecessário. Não certifica mecanização executada. |"
+          }
+        },
+        "QS-3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não introduz plataforma paralela nem desloca autorização, persistência ou continuação para a biblioteca. Distingue ferramentas tipadas de JSON Schema descritivo e preserva as fronteiras de capacidade. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — síntese delimitada sobre conhecimento aceito e duas leituras adicionais, sem introduzir plataforma paralela ou mecanismo desnecessário. Não certifica mecanização executada. |"
+          }
+        },
+        "QS-4": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não introduz plataforma paralela nem desloca autorização, persistência ou continuação para a biblioteca. Distingue ferramentas tipadas de JSON Schema descritivo e preserva as fronteiras de capacidade. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS** — validação tipada/dinâmica, autorização externa e fronteiras de route são preservadas; documentação e planos mantêm autoridade limitada, com N04/N06/X01 e disposições herdadas explicitamente conservados. |"
+          }
+        },
+        "GO-I7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não introduz plataforma paralela nem desloca autorização, persistência ou continuação para a biblioteca. Distingue ferramentas tipadas de JSON Schema descritivo e preserva as fronteiras de capacidade. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS** — validação tipada/dinâmica, autorização externa e fronteiras de route são preservadas; documentação e planos mantêm autoridade limitada, com N04/N06/X01 e disposições herdadas explicitamente conservados. |"
+          }
+        },
+        "QS-6": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-6** | **PASS no relato local.** As leituras adicionais são delimitadas; não se inventam tokens, custos, execução ou economia obtida. Isso não reconcilia o ledger da campanha. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-5, QS-6, GO-I1, GO-I8** | **PASS semântico** — distingue fonte de execução, conserva identidade dos predecessores e não infere sucesso ou economia física de hashes, fixtures ou estrutura. |"
+          }
+        },
+        "GO-I1": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I3** | **PASS quanto aos vínculos declarados.** Os predecessores permanecem imutáveis, identificados por bytes e pacotes exatos; o candidato não afirma ativação nem uso por leitor atual. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-5, QS-6, GO-I1, GO-I8** | **PASS semântico** — distingue fonte de execução, conserva identidade dos predecessores e não infere sucesso ou economia física de hashes, fixtures ou estrutura. |"
+          }
+        },
+        "GO-I3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I3** | **PASS quanto aos vínculos declarados.** Os predecessores permanecem imutáveis, identificados por bytes e pacotes exatos; o candidato não afirma ativação nem uso por leitor atual. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A4, GO-A5, QS-1, GO-I2, GO-I3** | **PASS no vínculo apresentado** — fontes e versões estão identificadas; autoridade, validade e adoção são distintas; intenção histórica não substitui comportamento observado. Leitura nas portas reais ainda não foi provada. |"
+          }
+        },
+        "GO-I8": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I8** | **PASS.** O aceite resulta da correspondência semântica entre síntese, predecessores e código suplementar, não apenas dos hashes. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-5, QS-6, GO-I1, GO-I8** | **PASS semântico** — distingue fonte de execução, conserva identidade dos predecessores e não infere sucesso ou economia física de hashes, fixtures ou estrutura. |"
+          }
+        },
+        "CC-1": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-1, AC-01** | **PASS no suporte local desta unidade.** Os três predecessores efetivamente usados e as duas fontes suplementares estão identificados; lacunas externas permanecem nomeadas. Não certifica novamente os 323 paths nem a cobertura agregada. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-1, AC-01** | **PASS para o suporte exigido por este L2** — predecessores e aprofundamento adicional estão identificados e disponíveis. Não certifica novamente a população C inteira ou sua reconciliação mecânica. |"
+          }
+        },
+        "AC-01": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-1, AC-01** | **PASS no suporte local desta unidade.** Os três predecessores efetivamente usados e as duas fontes suplementares estão identificados; lacunas externas permanecem nomeadas. Não certifica novamente os 323 paths nem a cobertura agregada. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-1, AC-01** | **PASS para o suporte exigido por este L2** — predecessores e aprofundamento adicional estão identificados e disponíveis. Não certifica novamente a população C inteira ou sua reconciliação mecânica. |"
+          }
+        },
+        "CC-7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-7** | **PASS.** A enumeração documental de rotas não é promovida a implantação corrente; X01 e as limitações de schemas, reducers, multimodalidade e fixtures permanecem explícitas. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS** — validação tipada/dinâmica, autorização externa e fronteiras de route são preservadas; documentação e planos mantêm autoridade limitada, com N04/N06/X01 e disposições herdadas explicitamente conservados. |"
+          }
+        },
+        "DOD-7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **DOD-7** | **PASS quanto à separação de estados.** Candidatura, aceite semântico, binding/publicação, consumo e liberação L3/L4 são distinguidos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **DOD-7** | **PASS quanto à distinção de estados** — candidato, aceite semântico, publicação, consumo e liberação L3/L4 não são confundidos. |"
+          }
+        },
+        "GO-A6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas; o corpo não certifica mecanização ou execução do produtor Atlas. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — síntese delimitada sobre conhecimento aceito e duas leituras adicionais, sem introduzir plataforma paralela ou mecanismo desnecessário. Não certifica mecanização executada. |"
+          }
+        },
+        "AC-04": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas; o corpo não certifica mecanização ou execução do produtor Atlas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "CC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "SC-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "AC-05": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "AC-06": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "CC-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "SC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "AC-08": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "DOD-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "CC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "CC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "SC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-07": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-09": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-10": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "SC-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "SC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "AC-02": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "AC-03": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "DOD-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "DOD-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        },
+        "DOD-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        },
+        "DOD-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "DOD-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        }
+      },
+      "open_mandatory_findings": [],
+      "scope": "Semantic body only; runtime binding/publication/consumer and deferred operational duties not accepted",
+      "J1": {
+        "path": "reviews/responses/l01a-j1-v1.md",
+        "bytes": 5759,
+        "sha256": "8e6b754269ca4c695aa18e2e780e1a0907e50f129b43506a80b834fc277659fd"
+      },
+      "J2": {
+        "path": "reviews/responses/l01a-j2-v1.md",
+        "bytes": 5702,
+        "sha256": "ac5e9c755506371a8354fc0bfcb5e2348c4c0e7804494a5c1257d544e3c7f748"
+      }
+    },
+    {
+      "key": "s1.subslice05.extension-contracts.l2",
+      "body_sha256": "59a9f41829855df521efcaf45ff42026f4bf0ff5c227a99a42624808e399d00e",
+      "body_bytes": 9532,
+      "state": "FIX_FIRST_J1_AND_REQUEST_EVIDENCE_J2",
+      "J1": {
+        "path": "reviews/responses/l01b-j1-v2.md",
+        "bytes": 3180,
+        "sha256": "d9b1f2a1adaa2ae00fe655c622d2e4698c829ac7f07791ddccd1cb491cef01a6"
+      },
+      "J1_prior": {
+        "path": "reviews/responses/l01b-j1-v1.md",
+        "bytes": 6390,
+        "sha256": "acdd919d1719e2b6585dcab0f32f368c3abfc0e7f6409b14f784a4893a369ed5"
+      },
+      "J2": {
+        "path": "reviews/responses/l01b-j2-v1.md",
+        "bytes": 5907,
+        "sha256": "ad950b8fef631d3d1e30ec91246cb2abf96aa0d27c5be04e7f2a2a43925b80ae"
+      },
+      "criteria": {
+        "GO-A1": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **REQUEST_EVIDENCE**, F01. A síntese é útil, mas falta conhecimento necessário para interpretar observações de execução/interrupção no caso obrigatório. |"
+          }
+        },
+        "GO-A3": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **REQUEST_EVIDENCE**, F01. A síntese é útil, mas falta conhecimento necessário para interpretar observações de execução/interrupção no caso obrigatório. |"
+          }
+        },
+        "GO-A4": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A4, GO-A5, QS-1, QS-5, GO-I8** | **REQUEST_EVIDENCE**, F01/F02. Fontes herdadas sustentam as demais fronteiras; referência a manifesto e oracle não substitui o suporte ausente. |"
+          }
+        },
+        "QS-1": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A4, GO-A5, QS-1, QS-5, GO-I8** | **REQUEST_EVIDENCE**, F01/F02. Fontes herdadas sustentam as demais fronteiras; referência a manifesto e oracle não substitui o suporte ausente. |"
+          }
+        },
+        "QS-2": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **REQUEST_EVIDENCE**, F01. A síntese é útil, mas falta conhecimento necessário para interpretar observações de execução/interrupção no caso obrigatório. |"
+          }
+        },
+        "CC-1": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **CC-1, AC-01** | **REQUEST_EVIDENCE** para a completude local acima. Não reabro a população herdada nem solicito nova auditoria dos três L1. |"
+          }
+        },
+        "AC-01": {
+          "J1": {
+            "result": "FIX_FIRST",
+            "evidence": "J1 supplementary v2 F01 content incomplete; F02 quantities closed"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **CC-1, AC-01** | **REQUEST_EVIDENCE** para a completude local acima. Não reabro a população herdada nem solicito nova auditoria dos três L1. |"
+          }
+        },
+        "GO-A2": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A2, CC-3** | **PASS quanto à contribuição substantiva demonstrada.** A sequência autoridade → árvore → validação → limites → observação e a sequência OpenAPI → credencial → pedido → resposta explicam relações úteis entre P1–P3. |"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **REQUEST_EVIDENCE**, F01. A síntese é útil, mas falta conhecimento necessário para interpretar observações de execução/interrupção no caso obrigatório. |"
+          }
+        },
+        "CC-3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A2, CC-3** | **PASS quanto à contribuição substantiva demonstrada.** A sequência autoridade → árvore → validação → limites → observação e a sequência OpenAPI → credencial → pedido → resposta explicam relações úteis entre P1–P3. |"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A1, GO-A2, GO-A3, QS-2, CC-3** | **REQUEST_EVIDENCE**, F01. A síntese é útil, mas falta conhecimento necessário para interpretar observações de execução/interrupção no caso obrigatório. |"
+          }
+        },
+        "GO-A5": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Tipos, documentação, implementação observada e execução permanecem distintos. O plano Effect não substitui a API Promise/Effect corrente; TODOs de resposta e redirect continuam abertos. |"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A4, GO-A5, QS-1, QS-5, GO-I8** | **REQUEST_EVIDENCE**, F01/F02. Fontes herdadas sustentam as demais fronteiras; referência a manifesto e oracle não substitui o suporte ausente. |"
+          }
+        },
+        "GO-I2": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Tipos, documentação, implementação observada e execução permanecem distintos. O plano Effect não substitui a API Promise/Effect corrente; TODOs de resposta e redirect continuam abertos. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I2, GO-I3, QS-6** | **PASS no vínculo apresentado** — predecessores exatos, erratas identificadas, limites de inspeção preservados e nenhum sucesso físico ou economia inventada. Não certifica leitura corrente nas portas reais. |"
+          }
+        },
+        "QS-5": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A5, GO-I2, QS-5** | **PASS.** Tipos, documentação, implementação observada e execução permanecem distintos. O plano Effect não substitui a API Promise/Effect corrente; TODOs de resposta e redirect continuam abertos. |"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A4, GO-A5, QS-1, QS-5, GO-I8** | **REQUEST_EVIDENCE**, F01/F02. Fontes herdadas sustentam as demais fronteiras; referência a manifesto e oracle não substitui o suporte ausente. |"
+          }
+        },
+        "GO-A7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não cria plataforma paralela, permissão genérica ou capacidades ambientes. Mantém credenciais no host e distingue JSON Schema descritivo de validação específica do adaptador. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — reúso delimitado e organização por decisões, sem mecanismo paralelo desnecessário. |"
+          }
+        },
+        "QS-3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não cria plataforma paralela, permissão genérica ou capacidades ambientes. Mantém credenciais no host e distingue JSON Schema descritivo de validação específica do adaptador. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — reúso delimitado e organização por decisões, sem mecanismo paralelo desnecessário. |"
+          }
+        },
+        "QS-4": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não cria plataforma paralela, permissão genérica ou capacidades ambientes. Mantém credenciais no host e distingue JSON Schema descritivo de validação específica do adaptador. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS no conteúdo sustentado** — capacidades do host, validação, credenciais, compatibilidade congelada, plano futuro e TODO permanecem distintos. |"
+          }
+        },
+        "GO-I7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A7, QS-3, QS-4, GO-I7** | **PASS.** Não cria plataforma paralela, permissão genérica ou capacidades ambientes. Mantém credenciais no host e distingue JSON Schema descritivo de validação específica do adaptador. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS no conteúdo sustentado** — capacidades do host, validação, credenciais, compatibilidade congelada, plano futuro e TODO permanecem distintos. |"
+          }
+        },
+        "QS-6": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-6** | **PASS no relato de uso.** Preserva inspeção seletiva, fixtures não observadas e ausência de execução, sem inventar custo ou economia. A exatidão dos tamanhos continua em F02. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I2, GO-I3, QS-6** | **PASS no vínculo apresentado** — predecessores exatos, erratas identificadas, limites de inspeção preservados e nenhum sucesso físico ou economia inventada. Não certifica leitura corrente nas portas reais. |"
+          }
+        },
+        "GO-I1": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I3** | **PASS declarativo.** Predecessores imutáveis e versões exatas estão vinculados; nenhuma leitura Atlas atual ou ativação é alegada. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I2, GO-I3, QS-6** | **PASS no vínculo apresentado** — predecessores exatos, erratas identificadas, limites de inspeção preservados e nenhum sucesso físico ou economia inventada. Não certifica leitura corrente nas portas reais. |"
+          }
+        },
+        "GO-I3": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I3** | **PASS declarativo.** Predecessores imutáveis e versões exatas estão vinculados; nenhuma leitura Atlas atual ou ativação é alegada. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I1, GO-I2, GO-I3, QS-6** | **PASS no vínculo apresentado** — predecessores exatos, erratas identificadas, limites de inspeção preservados e nenhum sucesso físico ou economia inventada. Não certifica leitura corrente nas portas reais. |"
+          }
+        },
+        "GO-I8": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-I8** | **PASS.** As pendências resultam do conteúdo e da evidência, apesar da estrutura e dos hashes completos. |"
+          },
+          "J2": {
+            "result": "REQUEST_EVIDENCE",
+            "evidence": "| **GO-A4, GO-A5, QS-1, QS-5, GO-I8** | **REQUEST_EVIDENCE**, F01/F02. Fontes herdadas sustentam as demais fronteiras; referência a manifesto e oracle não substitui o suporte ausente. |"
+          }
+        },
+        "CC-7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **CC-7** | **PASS.** Há disposição explícita para API atual versus planos, wire types versus schema corrente, fixtures e limitações históricas de promises, envelope e OpenAPI. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **QS-4, GO-I7, CC-7** | **PASS no conteúdo sustentado** — capacidades do host, validação, credenciais, compatibilidade congelada, plano futuro e TODO permanecem distintos. |"
+          }
+        },
+        "DOD-7": {
+          "J1": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **DOD-7** | **PASS quanto à separação de estados.** O corpo não transforma aceite local em aprovação Core, publicação ou liberação L3/L4. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **DOD-7** | **PASS quanto à distinção de estados** — candidato e aceite local não são apresentados como publicação, liberação L3/L4 ou conclusão global. |"
+          }
+        },
+        "GO-A6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — reúso delimitado e organização por decisões, sem mecanismo paralelo desnecessário. |"
+          }
+        },
+        "AC-04": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "GO-I4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "GO-I5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "CC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "SC-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "AC-05": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "AC-06": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, impacto, alterações de inputs/receita e controles negativos executados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | **HOLD — fase própria:** construção, reúso, impacto, rebuild e controles negativos reais. |"
+          }
+        },
+        "GO-I6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Ledger, despachos, uso, reservas e incertezas reconciliados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | **HOLD — fase própria:** reconciliação de despachos, reservas, uso e incertezas. |"
+          }
+        },
+        "CC-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Ledger, despachos, uso, reservas e incertezas reconciliados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | **HOLD — fase própria:** reconciliação de despachos, reservas, uso e incertezas. |"
+          }
+        },
+        "SC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Ledger, despachos, uso, reservas e incertezas reconciliados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | **HOLD — fase própria:** reconciliação de despachos, reservas, uso e incertezas. |"
+          }
+        },
+        "AC-08": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Ledger, despachos, uso, reservas e incertezas reconciliados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | **HOLD — fase própria:** reconciliação de despachos, reservas, uso e incertezas. |"
+          }
+        },
+        "DOD-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Ledger, despachos, uso, reservas e incertezas reconciliados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | **HOLD — fase própria:** reconciliação de despachos, reservas, uso e incertezas. |"
+          }
+        },
+        "CC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "CC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "SC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "AC-07": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "AC-09": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "AC-10": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis, persistência, publicação, recuperação, compatibilidade e gates reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "SC-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes e limites de leitura observados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "SC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes e limites de leitura observados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "AC-02": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes e limites de leitura observados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "AC-03": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes e limites de leitura observados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "DOD-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes e limites de leitura observados. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | **HOLD — fase própria:** níveis restantes, persistência/alcançabilidade e consumo real com limites. |"
+          }
+        },
+        "DOD-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos pareceres, controles, gates e evidências operacionais preservadas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | **HOLD — consolidação própria:** par de decisões, controles e entrega operacional completa. |"
+          }
+        },
+        "DOD-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos pareceres, controles, gates e evidências operacionais preservadas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | **HOLD — consolidação própria:** par de decisões, controles e entrega operacional completa. |"
+          }
+        },
+        "DOD-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos pareceres, controles, gates e evidências operacionais preservadas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | **HOLD — fase própria:** publicação, recuperação, gates, compatibilidade e migração. |"
+          }
+        },
+        "DOD-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos pareceres, controles, gates e evidências operacionais preservadas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | **HOLD — consolidação própria:** par de decisões, controles e entrega operacional completa. |"
+          }
+        }
+      },
+      "open_mandatory_findings": [
+        "J1-L01B-F01",
+        "J2-L01B-F01",
+        "J2-L01B-F02"
+      ],
+      "closed_findings": [
+        "J1-L01B-F02"
+      ]
     }
   ]
 }

@@ -1,0 +1,249 @@
+C01 — fontes literais decisivas adicionais. Mesmos pin/corpo e critérios. Este primeiro conjunto, junto às fontes E01/M02/R01 já recebidas, permite decidir defeitos demonstrados no corpo integral. Não presuma consumo dos outros anexos; se a evidência disponível não fecha um critério, registre HOLD/REQUEST_EVIDENCE com caminho/range/afirmação precisa. Nenhum PASS deve apoiar-se só na declaração do produtor.
+
+### E02 — Composição/ligação LLM: `packages/core/src/effect/app-node-platform.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `3238fc642c5124e9de82de23d4c6a8bbb0107f00`; SHA-256 `3607751ac0c9cfeb54d3d94f13eb66175d58c3e1dd648328d22d63f85e954ffe`.
+Linhas 9–18; hash do trecho UTF-8 original `a270bb2961e41ab81e1390befb1cb9d6ab53d32235ad3a9d17483664d00575f4`.
+````text
+9: export const path = makeGlobalNode({ service: Path.Path, layer: NodePath.layer, deps: [] })
+10: export const httpClient = makeGlobalNode({ service: HttpClient.HttpClient, layer: FetchHttpClient.layer, deps: [] })
+11: export const requestExecutor = makeGlobalNode({
+12:   service: RequestExecutor.Service,
+13:   layer: RequestExecutor.layer,
+14:   deps: [httpClient],
+15: })
+16: export const llmClient = makeGlobalNode({ service: LLMClient.Service, layer: LLMClient.layer, deps: [requestExecutor] })
+17: 
+18: export * as LayerNodePlatform from "./app-node-platform"
+````
+
+### E06 — Ligação nativa auxiliar: `packages/core/src/session/runner/llm.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c3ad8d87a58923d40797d38a77ff65367bbe66b6`; SHA-256 `03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7`.
+Linhas 117–130; hash do trecho UTF-8 original `f2cfc8323e0cc19a14d3ed072ea79e609f8913bab4e218f92eea6b4c481d3f83`.
+````text
+117: const layer = Layer.effect(
+118:   Service,
+119:   Effect.gen(function* () {
+120:     const events = yield* EventV2.Service
+121:     const llm = yield* LLMClient.Service
+122:     const agents = yield* AgentV2.Service
+123:     const tools = yield* ToolRegistry.Service
+124:     const mcp = yield* Mcp.Service
+125:     const reader = yield* ReadToolFileSystem.Service
+126:     const models = yield* SessionRunnerModel.Service
+127:     const subagentModels = yield* SessionSubagentModels.Service
+128:     const store = yield* SessionStore.Service
+129:     const location = yield* Location.Service
+130:     const systemContext = yield* SystemContextRegistry.Service
+````
+Linhas 427–448; hash do trecho UTF-8 original `acd2ba39f442ac7be09279773359974b18b8c8fe6eb47a1ea17b8b1c502ee56d`.
+````text
+427:       const source = request
+428:         ? llm.stream(request)
+429:         : host && agent.info
+430:           ? host.stream({
+431:               session,
+432:               agent: agent.info,
+433:               model: modelRef,
+434:               system: systemText,
+435:               context: contextText,
+436:               history: context,
+437:               tools: toolMaterialization?.definitions ?? [],
+438:               execute,
+439:               authorize,
+440:               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
+441:               memory,
+442:               steers,
+443:               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
+444:               notify,
+445:               todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
+446:               state: ExecutionHost.state(db, session.id, host.stateKey),
+447:             })
+448:           : Stream.die("SessionRunner: no provider for this turn")
+````
+Linhas 731–745; hash do trecho UTF-8 original `b7a17b2caa50f17d98f6004935a36b4d7314e6f431e56a88df2a1057ab7d36ae`.
+````text
+731: export const node = makeLocationNode({
+732:   service: Service,
+733:   layer,
+734:   deps: [
+735:     EventV2.node,
+736:     llmClient,
+737:     AgentV2.node,
+738:     ToolRegistry.node,
+739:     Mcp.node,
+740:     ReadToolFileSystem.node,
+741:     SessionRunnerModel.node,
+742:     SessionSubagentModels.node,
+743:     SessionStore.node,
+744:     Location.node,
+745:     SystemContextRegistry.node,
+````
+
+### E22 — Economia vínculo: `packages/core/src/economy/executor.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `925984643e4a4cd5b844e02e9d48c473b8d3353c`; SHA-256 `cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e`.
+Linhas 1–19; hash do trecho UTF-8 original `e5d69053db23b81c01295460bdd1fff69902e3ccc7e65ab3458f360a5ac564ad`.
+````text
+1: // @orchestra/core — src/economy/executor.ts (G1 / F2)
+2: //
+3: // Scoped physical-attempt guard composed with `RequestExecutor.layer` (contract:
+4: // modules/atlas/docs/design/genesis-g1-contract.md §1, §2.2, Astra decision 2026-11-09).
+5: //
+6: // - Every controllable send passes through this guard: the wrapped HttpClient is what
+7: //   `RequestExecutor.layer` receives, so `retryStatusFailures` re-encounters the guard on
+8: //   each retry and every attempt reserves inside the retry frontier (§1.5, EA-08).
+9: // - The bound is sealed from the *final* request bytes: `max_output_tokens` must be a
+10: //   positive finite integer and is the bound sent to reserve; the same bytes are
+11: //   fingerprinted, reserved and forwarded — no re-serialization in between (§4.1, EA-05/06).
+12: // - The admission context is a per-dispatch object created by the host; there is no global
+13: //   "current attempt" (§2.2). The attempt chain (initial attempt and its retries) lives
+14: //   inside that context: each retry reserves with the previous attempt as its named
+15: //   predecessor, whose ≥400 response is recorded terminal evidence via `observeTerminal`
+16: //   before the retry is reserved (§1.5).
+17: // - Economic refusals keep a typed channel: the per-context outcome register (written
+18: //   before the response path ever runs) plus a typed fail value — never converted into a
+19: //   valid empty model response (EA-28).
+````
+Linhas 102–137; hash do trecho UTF-8 original `d2f77e99f1065f5994c916d9f57b152b4f8a15f7d5bfeb828e4d47c5d7782e2b`.
+````text
+102:   evidence: JSON.stringify({ status, body }),
+103: })
+104: 
+105: /** One native bound field per admitted protocol. Aliases of another protocol never substitute. */
+106: const NATIVE_BOUND_FIELD = {
+107:   responses: "max_output_tokens",
+108:   "openai-chat": "max_tokens",
+109: } as const
+110: 
+111: const PROTOCOL_PROVIDER = {
+112:   responses: "openai",
+113:   "openai-chat": "openai",
+114: } as const
+115: 
+116: type AdmittedProtocol = keyof typeof NATIVE_BOUND_FIELD
+117: 
+118: const isAdmittedProtocol = (protocol: string): protocol is AdmittedProtocol => protocol in NATIVE_BOUND_FIELD
+119: 
+120: const boundOf = (protocol: AdmittedProtocol, body: string): AttemptBound | "invalid" | "absent" => {
+121:   let parsed: unknown
+122:   try {
+123:     parsed = JSON.parse(body)
+124:   } catch {
+125:     return "absent"
+126:   }
+127:   const max = (parsed as Record<string, unknown>)[NATIVE_BOUND_FIELD[protocol]]
+128:   if (max === undefined) return { attempts: 1 }
+129:   if (typeof max !== "number" || !Number.isSafeInteger(max) || max <= 0) return "invalid"
+130:   return { attempts: 1, outputTokens: max }
+131: }
+132: 
+133: const modelOf = (body: string): string | undefined => {
+134:   try {
+135:     const model = (JSON.parse(body) as { readonly model?: unknown }).model
+136:     return typeof model === "string" && model.length > 0 ? model : undefined
+137:   } catch {
+````
+Linhas 278–313; hash do trecho UTF-8 original `b768cedc84eca36a051490bc9b86f75521c744f3606cf76a6fec93057ac5fc6a`.
+````text
+278:   submit: (request: HttpClientRequest.HttpClientRequest) => Effect.Effect<HttpClientResponse.HttpClientResponse, unknown>,
+279: ) {
+280:   if (input.route !== "http" || input.route !== input.envelope.route) {
+281:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.route, input.envelope.route] }
+282:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+283:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+284:   }
+285:   const effective = protocolOfUrl(request.url)
+286:   if (effective === undefined || effective !== input.protocol) {
+287:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol, request.url] }
+288:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+289:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+290:   }
+291:   // §4.1: capture one copy of the final bytes; seal, reserve and send exactly from it.
+292:   if (!isAdmittedProtocol(input.protocol) || input.envelope.provider !== PROTOCOL_PROVIDER[input.protocol]) {
+293:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol] }
+294:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+295:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+296:   }
+297:   const bytes = yield* requestBodyOf(request)
+298:   const operationModel = modelOf(bytes)
+299:   if (operationModel !== input.envelope.model) {
+300:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "identity", evidence: [operationModel ?? "model-missing"] }
+301:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+302:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+303:   }
+304:   const bound = boundOf(input.protocol, bytes)
+305:   if (bound === "invalid" || bound === "absent") {
+306:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "bound", evidence: [NATIVE_BOUND_FIELD[input.protocol]] }
+307:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+308:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+309:   }
+310:   const entries = yield* Ref.get(chain)
+311:   const prior = entries.at(-1)
+312:   if (prior !== undefined && !prior.answered) {
+313:     return yield* Effect.fail(new EconomyDispatchRefused({
+````
+
+### E26 — Economia composição e teste fonte: `packages/core/test/economy/executor.test.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `ec84047bc6a2064a35f88d2deac269f119f96bf2`; SHA-256 `f0d09baa7db5530605a7a4c71debca71897938809d9bdc295d081e43d21430e1`.
+Linhas 72–100; hash do trecho UTF-8 original `fe2adf0eba046f04942460ebbd983ab44165ac0e2d9d7973d2effafda1761401`.
+````text
+72: const chain = (
+73:   env: EconomyEnvelope,
+74:   input: { logicalRequestId?: string; route?: string; key?: string },
+75:   responses: ReadonlyArray<Response>,
+76: ): { guard: AttemptContext; hits: Ref.Ref<number>; app: Layer.Layer<unknown> } => {
+77:   const { layer, hits } = synthetic(responses)
+78:   const database = Database.layerFromPath(":memory:")
+79:   const guard = makeAdmissionGuard({
+80:     envelope: env,
+81:     logical: {
+82:       logicalRequestId: input.logicalRequestId ?? "req-1",
+83:       stage: "prod",
+84:       snapshot: `${input.key ?? "sha-1"}-snapshot`,
+85:     },
+86:     key: input.key ?? "k-chain",
+87:     route: input.route ?? "http",
+88:     protocol: "openai-chat",
+89:   })
+90:   // The guard's layer builder captures Database.Service at build; give it the same fixture
+91:   // database branch-merge, shared across the guard and the app wiring (one layer object →
+92:   // one layer build → one in-memory database).
+93:   const guarded = Layer.provide(guard.layer, Layer.mergeAll(layer, database))
+94:   const executor = RequestExecutor.layer.pipe(Layer.provide(guarded))
+95:   const app = Layer.mergeAll(
+96:     executor,
+97:     LLMClient.layer.pipe(Layer.provide(executor)),
+98:     database,
+99:   ) as Layer.Layer<unknown>
+100:   return { guard, hits, app }
+````
+Linhas 221–245; hash do trecho UTF-8 original `83228eee49465bfe8b7441e715dc303215cd1be9d0d3a4b0903a4c23425a351f`.
+````text
+221:   test("EA-08 status retry reserves every attempt inside the executor frontier", async () => {
+222:     const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
+223:     const retrying = { ...env, retryPolicy: { maxRetries: 1, statuses: [503] } }
+224:     const busy = new Response("busy", { status: 503 })
+225:     const { guard, hits, app } = chain(retrying, { key: "k-retry" }, [busy, SUCCESS()])
+226:     const observed = await Effect.runPromise(Effect.gen(function* () {
+227:       yield* seedEnvelope(retrying)
+228:       const response = yield* LLMClient.generate(LLM.request({
+229:         model: model(),
+230:         prompt: "Say hello.",
+231:         generation: { maxTokens: 4 },
+232:       }))
+233:       const attempts = yield* guard.attempts
+234:       const first = yield* lookupAttempt(attempts[0]!)
+235:       const second = yield* lookupAttempt(attempts[1]!)
+236:       return { attempts, hits: hitsOf(hits), response, first, second }
+237:     }).pipe(Effect.provide(app)))
+238:     expect(observed.hits).toBe(2)
+239:     expect(observed.attempts).toHaveLength(2)
+240:     expect(observed.response.usage).toMatchObject({ inputTokens: 3, outputTokens: 2 })
+241:     expect(observed.first).toMatchObject({ state: "reserved" })
+242:     expect(observed.first).not.toHaveProperty("usage")
+243:     expect(observed.second).toMatchObject({ state: "settled", usage: { inputTokens: 3, outputTokens: 2 } })
+244:   })
+245: })
+````
+
+
+FIM C01 PRIMEIRA DECISÃO. O corpo integral foi entregue nas partes01/02 e contrato/oracles/disposições na03. Julgue por artefato/hash e cada critério obrigatório: PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE. Fontes de PTY exact/shellIntegration/retenção/replay e skill terminal já recebidas em R01+adicional; catálogo/modelos em M02, admission em E01. Esses bytes de fonte podem ser reutilizados, jamais as decisões de outros candidatos. Não exponha raciocínio privado; resultados/evidência/menor correção em até1200palavras. Fases de execução separadas.

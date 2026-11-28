@@ -1,0 +1,106 @@
+Complemento dos oracles herdados, objetos literais da origem preservados. Fonte efetiva 1cde2ff7a71bcf7aecb5d030917b577165135d38; oracle congelado em 2026-11-11, recuperado no commit a8df22ae3a140c58c63f62ce2a634c84f415c943, blob 7193907d2f1a298dee51b4d84a6453ae30658b2c. Nenhum oracle substitui evidência de implementação.
+
+[
+  {
+    "id": "S1-O1",
+    "kind": "permitted-change",
+    "question": "Um cliente quer admitir um prompt sem executar e, depois, retentar com o mesmo message ID e mesmo prompt/delivery permitindo execução. Qual sequência preserva a admissão única e o que comprova que executou?",
+    "expected": [
+      "Usar resume:false na primeira admissão; ausência de wake não significa falta de persistência.",
+      "Retentar com mesmo ID, session, prompt canônico e delivery preserva registro; resume não participa da equivalência e pode habilitar wake.",
+      "Admitted não é prova de conclusão do modelo; consultar histórico/estado e observar execução. Não criar novo ID para esconder retry."
+    ],
+    "critical_errors": [
+      "Dizer que resume faz parte da identidade de retry",
+      "Dizer que admitir executa necessariamente",
+      "Dizer que retorno Admitted prova conclusão"
+    ],
+    "sources": [
+      "packages/core/src/session.ts",
+      "packages/core/src/session/input.ts",
+      "packages/protocol/src/groups/session.ts"
+    ],
+    "limits": {
+      "index_calls": 1,
+      "read_calls": 2,
+      "body_bytes": 24000
+    }
+  },
+  {
+    "id": "S1-O2",
+    "kind": "contract-violation",
+    "question": "Mesmo Session ID, message ID e texto; o retry troca delivery de steer para queue. É o mesmo pedido? Qual falha e efeito sobre os registros/execução?",
+    "expected": [
+      "Delivery faz parte da equivalência, portanto é conflito.",
+      "Core PromptConflictError; handler mapeia para ConflictError no contrato HTTP.",
+      "Não inserir segunda admissão nem acordar a execução pelo caminho que falhou; preservar original."
+    ],
+    "critical_errors": [
+      "Aceitar por igualdade apenas do texto",
+      "Sobrescrever delivery existente",
+      "Propor novo registro silencioso"
+    ],
+    "sources": [
+      "packages/core/src/session/input.ts",
+      "packages/core/src/session.ts",
+      "packages/server/src/handlers/session.ts"
+    ],
+    "limits": {
+      "index_calls": 2,
+      "read_calls": 4,
+      "body_bytes": 60000
+    }
+  },
+  {
+    "id": "S1-O4",
+    "kind": "operational-failure",
+    "question": "Duas chamadas resume esperam a mesma Session. A segunda, que só se juntou, é cancelada com interruptOnCancel. Deve cancelar o dono? Como tratar interrupção e retomada após falha do processo?",
+    "expected": [
+      "Quem se junta não adquire ownership; cancelamento do waiter não cancela a execução do dono.",
+      "Interrupção explícita atinge a cadeia ativa local; idle/missing é no-op.",
+      "Consultar estado/histórico, distinguir wake de resume e ferramentas interrompidas; não reenviar provider work automaticamente após crash sem política explícita."
+    ],
+    "critical_errors": [
+      "Cancelamento do joiner mata o dono",
+      "Afirmar exactly-once externo ou recuperação distribuída automática"
+    ],
+    "sources": [
+      "packages/core/src/session/run-coordinator.ts",
+      "packages/core/src/session/execution/local.ts",
+      "packages/core/src/session/runner/llm.ts",
+      "AGENTS.md"
+    ],
+    "limits": {
+      "index_calls": 2,
+      "read_calls": 6,
+      "body_bytes": 80000
+    }
+  },
+  {
+    "id": "S1-O5",
+    "kind": "out-of-scope-abstention",
+    "question": "Podemos colocar dois processos em hosts diferentes retomando a mesma Session e garantir exclusão mútua distribuída e repetição exactly-once dos efeitos?",
+    "expected": [
+      "Abster-se de garantir; coordinator/ownership são process-local, sem implementação de ownership durável multi-node.",
+      "Persistência/EventV2 replay não demonstram execução clusterizada nem exactly-once de efeitos externos.",
+      "Exigir desenho e provas adicionais, sem inventar protocolo de lock/lease existente."
+    ],
+    "critical_errors": [
+      "Garantir segurança multi-host por Session ID",
+      "Confundir replay owner claims com lock de execução"
+    ],
+    "sources": [
+      "AGENTS.md",
+      "packages/core/src/session/execution/local.ts",
+      "packages/core/src/session/run-coordinator.ts",
+      "packages/core/src/session/runner/llm.ts"
+    ],
+    "limits": {
+      "index_calls": 1,
+      "read_calls": 2,
+      "body_bytes": 24000
+    }
+  }
+]
+
+Critérios de consumo/execução são fase própria; esta rodada é semântica dos corpos apresentados.

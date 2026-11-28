@@ -1,0 +1,112 @@
+L01B — base aceita e fontes decisivas, mesmo candidato.
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.runtime.plugin.l1",
+  "body_identity": {
+    "byte_length": 3392,
+    "sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Host loader, ordering, cleanup, installation and permission implementation not established by package types.",
+    "Plan, current declarations and frozen compatibility types must remain distinct."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# Plugin authoring contracts and host-owned behavior
+
+**L1 authority:** the package's exported types, small definition helpers and author documentation. These establish interfaces and documented host expectations. They do not prove loader ordering, permission enforcement, scope cleanup or UI installation in the host. Excerpts C15–C18 preserve that boundary.
+
+`@orchestra/plugin` exports the root, tool, TUI, V2 Effect, selected Effect subpaths and V2 Promise entry points. The legacy root `Hooks` shape contains an optional tool map. The `tool` helper returns its input definition; argument schemas use Zod, and execution receives a typed host context and returns text or structured metadata/attachments. `ToolContext` distinguishes a stable `agentID` from display identity and can carry readonly binding identity (optional for legacy hosts) for project, directory, worktree, workspace, member, execution session, authority session, assistant message, call, and optional task/resume. The context exposes metadata publication and permission asking; their actual enforcement belongs to the host. Source: `package.json`, `src/index.ts`, `src/tool.ts` (C15).
+
+V2 defines parallel Effect and Promise authoring surfaces. The Effect plugin definition has an ID and setup effect; the Promise definition has an ID and setup callback. The helpers preserve definitions rather than implement a loader. Current contexts expose options, agent/catalog/command/integration/reference/skill transform-and-reload capabilities, AI SDK hooks, and plugin management. Effect registrations require Scope and return an Effect disposal handle; Promise registrations return asynchronous disposal. Source: `src/v2/types.ts`, `src/tui.ts` (C17). Do not infer that the absence of a client in the V2 context also removes it from TUI.
+
+The public V2 data aliases derive encoded schema types while deliberately leaving request and variant bodies open to arbitrary provider options. The TUI surface differs from the V2 server authoring context: it includes a typed Orchestra client, routes, dialogs, state, keymaps, slots, attention, theme, plugin operations and an abort/disposal lifecycle. Its command API is explicitly deprecated compatibility. Source: `src/v2/types.ts`, `src/tui.ts` (C17). Do not infer that the absence of a client in the V2 context also removes it from TUI.
+
+The Effect/Promise READMEs describe ordering, replay and disposal semantics. `src/v2/effect/PLAN.md`, however, explicitly identifies itself as a target plan rather than current API documentation. It proposes domains, `rebuild`, event subscriptions and future Promise work that must not override current context declarations. The package already contains Promise exports and uses `reload` in current declarations. Source: current `context.ts`/`registration.ts` and PLAN status (C18).
+
+**Boundary and gaps.** Frozen compatibility wire types remain local in `src/wire.ts`; they are not identical to the generated current config schema. In particular, frozen `Config.plugin` and current schema `Config.Info.plugins` are different contracts. Also, `docs/guides/plugins.md` describes model behavior instructions such as Caveman, not this code plugin loader. Host runtime files are outside this production unit. Their implementation must be read before accepting documented lifecycle semantics, credential handling, host authorization or package install behavior as runtime facts.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.runtime.codemode.l1",
+  "body_identity": {
+    "byte_length": 3480,
+    "sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Selected interpreter paths and supporting structural scans do not establish full language conformance.",
+    "Host adapters and leaf-tool authorization remain external to this implementation proof.",
+    "Result-envelope bytes may exceed configured value/log payload budget."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# CodeMode's explicit tool and plain-data boundary
+
+**L1 authority:** the confined interpreter, tool runtime, public constructors and package instructions at the source pin. Excerpts C19–C24 support the principal implementation boundaries. This is source evidence, not a complete language-conformance or isolation test.
+
+`CodeMode.make` prepares a reusable explicit tool tree and discovery index; `execute` runs one program. TypeScript syntax is transpiled, then Acorn parses the JavaScript for the owned interpreter. The program receives a controlled set of data builtins and tool references. External authority comes from supplied tools; no ambient filesystem, environment, network, module or process capability is provided. The package does not implement application authentication, permission policy, durable replay or exactly-once effects. Source: `src/codemode.ts`, `src/interpreter/runtime.ts`, `README.md`, `AGENTS.md`.
+
+Effect Schema tools validate and transform values at their declared boundaries. JSON Schema tools use schemas for signatures, while their values still cross the plain-data boundary; JSON Schema is not runtime validation. Data copying refuses cycles, nonplain host objects, blocked property names and excess nesting. The fixed value-depth limit is 32. Supported sandbox dates/URLs become strings and Map/Set/RegExp become empty objects at the data boundary; runtime references and unresolved promises cannot escape as ordinary data. Nonfinite numeric values are normalized when copied out. Sources: `src/tool.ts`, `src/tool-runtime.ts`, `src/values.ts` (C20–C21).
+
+Tool calls start eagerly on supervised fibers with a fixed concurrency limit of eight. A sandbox promise settles once. Pending calls are drained before a successful program result; unhandled failures become diagnostics. Promise combinators are an explicit set, and `.then`, `.catch`, `.finally` chaining remains unsupported. Source: `src/interpreter/runtime.ts`, `src/stdlib/promise.ts` (C22).
+
+There are no default timeout, call-count or output-byte budgets. Supplied limits must be safe integers with timeout at least one and the other limits nonnegative. Invalid configuration can throw during construction, before a result Effect exists. The runtime converts expected program/tool failures into diagnostics and preserves host interruption. Unknown host failure causes are sanitized; `ToolError` supplies the deliberate model-safe message. Source: `src/codemode.ts`, `src/tool-runtime.ts` (C19, C23).
+
+Output bounding truncates the serialized value/log payload and marks it. Its explanatory marker and outer Result envelope are not a guarantee that every returned byte fits `maxOutputBytes`. Discovery uses an estimated token budget and `$codemode.search` remains available; search is not permission checking. Source: `src/interpreter/runtime.ts`, `src/tool-runtime.ts` (C24).
+
+**Boundary and gaps.** The 3,465-line interpreter was read at selected decisive parsing, global, promise, access and execution boundaries, not every operator branch. Supporting standard-library files received the depth recorded per file in coverage. Host adapters described in `codemode.md` were not implementation-verified here; leaf tools must supply authority enforcement. The design explicitly retains unresolved work for promise pipelines, async iteration, richer value types and reserved tool-path policy. Test declarations cover these boundaries but provide no execution receipt.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.runtime.codemode_openapi.l1",
+  "body_identity": {
+    "byte_length": 2698,
+    "sha256": "0f906322c8952eb43396870be8fea15b2d47146df43a9d604cfd39c9cb293977"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Response-schema validation and adapter-enforced redirect policy are documented future work.",
+    "Large reference fixture remains unobserved; no network or test execution."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# OpenAPI tool planning, credentials and bounded response handling
+
+**L1 authority:** `packages/codemode/src/openapi` implementation plus its explicit TODO. Excerpts C25–C28 show represented and refused behavior. This record does not certify arbitrary OpenAPI specifications or external endpoints.
+
+`OpenAPI.fromSpec` plans representable operations, emits tools and retains precise skipped-operation reasons. The planner checks supported input/output/security shapes instead of treating every operation as callable. Base URL selection follows explicit options, operation, path, then document servers; URLs must be absolute HTTP(S), without unsupported query/fragment or unresolved server templates. Serialization supports particular path/header/query shapes, including supported form/deepObject query cases; unsupported cookie, body, encoding or response semantics are skipped. Source: `openapi/spec.ts`, `openapi/index.ts` (C25).
+
+Generated tools carry JSON Schema signatures. Consequently the interpreter's Effect Schema validation contract is not automatically available to these tools. The HTTP adapter still validates its own required fields, value shapes and serialization before invoking credential resolution. Path segments are encoded and empty, `.` or `..` segments are refused; unresolved placeholders are errors. Source: `openapi/runtime.ts`, `src/tool.ts` (C26).
+
+Security requirements implement alternatives across requirement objects and conjunction within one requirement. A resolver returning no credential permits trying another alternative; resolver failure aborts. Conflicting header/query credentials are refused, and resolved credential headers are applied after model-provided headers. Credentials remain a host capability rather than fields advertised to the model. Source: `openapi/runtime.ts` security and request construction (C26).
+
+Response reading has a fixed 50 MiB cap, checked against a declared content length and again while consuming chunks. JSON parse failures produce tool errors; non-success status handling limits the body summary. The UTF-8 decoding and JSON parser do not constitute response-schema validation. Source: `openapi/runtime.ts` (C27).
+
+**Boundary and gaps.** The TODO explicitly retains redirect constraints, complete malformed-security handling, response validation and configurable size controls as remaining work (C28). This does not support an all-OpenAPI or all-HTTP security guarantee. The captured happy-path specimen was structurally inspected; the much larger `opencode-v2-openapi.json` specimen remains metadata-only, with its size and blob recorded. No generated tool, network request, OpenAPI test or fixture replay was executed.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+
+FIM L01B. Julgue chave/hash, todos os critérios obrigatórios, dependências e limites reais. PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE por critério; evidências e findings concisos. Operações/AC-02/03 ficam em suas fases; oracle não substitui fonte. Até900palavras se possível, sem raciocínio privado.

@@ -1,0 +1,17 @@
+{
+  "schema": "genesis-s1-operation-archive-custody/v1",
+  "run_id": 46119396443,
+  "archives": [
+    {
+      "selection": "automation",
+      "base64_chars": 1393680,
+      "git_blob_sha": "7e66b12d20f7e508b2ee454d915e97d574168f6f"
+    },
+    {
+      "selection": "api",
+      "base64_chars": 961700,
+      "git_blob_sha": "f9ebab6349f69296b6c656045336fdde18245b65"
+    }
+  ],
+  "content": "Exact original GitHub Actions artifact ZIPs; full materialization, prepared, CAS raw bytes, receipts and quarantined baseline metadata preserved inside. Extracted review paths are convenience copies, not substitutes for raw archive custody."
+}

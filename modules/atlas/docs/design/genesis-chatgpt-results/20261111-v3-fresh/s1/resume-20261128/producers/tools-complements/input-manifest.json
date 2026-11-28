@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-producer-public-inputs/v1",
+  "entries": [
+    {
+      "input_role": "public_projection_or_contract",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/a_needs.json",
+      "capture_path": "inputs/a_needs.json",
+      "byte_length": 30816,
+      "sha256": "33d0e44b14e6290bc0e1d9224e4c23d07bcbc2075e7958a7d3c7ca233f5a3b7d",
+      "git_blob_sha": "e432da082234cb4fd4aa740a488ce0aed1eeefb9"
+    },
+    {
+      "input_role": "public_projection_or_contract",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/tools-source-map.json",
+      "capture_path": "inputs/tools-source-map.json",
+      "byte_length": 180454,
+      "sha256": "a0f17cc645c3a51cd1a012aabc22964c9a344e69895f3ff6711154b4b998fafa",
+      "git_blob_sha": "2ff95624881908fbe660c9cf7f4dc89cc13092fe"
+    },
+    {
+      "input_role": "public_projection_or_contract",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/tools_contract.json",
+      "capture_path": "inputs/tools_contract.json",
+      "byte_length": 4178,
+      "sha256": "85092bacad55e68a94f0dd17595e51ad3bcb7f821d33633b6c749b53126e7833",
+      "git_blob_sha": "cb7866af72598d944d48a53dfcab1710b4c12af8"
+    },
+    {
+      "input_role": "public_projection_or_contract",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/tools_work.md",
+      "capture_path": "inputs/tools_work.md",
+      "byte_length": 2829,
+      "sha256": "f075c0a13a3ba8d47b1e1eea00dc2ab6fcbce886dc9c76a175bd23df6958fc89",
+      "git_blob_sha": "74109a594555955aa5676b23868570af87a99a54"
+    },
+    {
+      "input_role": "protocol",
+      "asserted_protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/protocol/AGENTS.md",
+      "capture_path": "inputs/protocol-AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+    },
+    {
+      "input_role": "protocol",
+      "asserted_protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/protocol/transport.md",
+      "capture_path": "inputs/protocol-transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5"
+    },
+    {
+      "input_role": "protocol",
+      "asserted_protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/protocol/principles.md",
+      "capture_path": "inputs/protocol-principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765"
+    }
+  ]
+}

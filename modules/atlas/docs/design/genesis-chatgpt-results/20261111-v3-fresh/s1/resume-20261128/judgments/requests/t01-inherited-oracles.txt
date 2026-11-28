@@ -1,0 +1,53 @@
+Complemento dos oracles herdados, objetos literais da origem preservados. Fonte efetiva 1cde2ff7a71bcf7aecb5d030917b577165135d38; oracle congelado em 2026-11-11, recuperado no commit a8df22ae3a140c58c63f62ce2a634c84f415c943, blob 7193907d2f1a298dee51b4d84a6453ae30658b2c. Nenhum oracle substitui evidência de implementação.
+
+[
+  {
+    "id": "S1-O6",
+    "kind": "provider-tool-failure",
+    "question": "Uma ferramenta tipada devolve valor incompatível com seu success schema. Qual camada transforma o erro, quem continua o modelo e que afirmação sobre loops automáticos seria incorreta?",
+    "expected": [
+      "ToolRuntime.dispatch decodifica input, executa uma chamada, codifica success e transforma falha tipada de validação em eventos tool-error/tool-result de erro.",
+      "Não possui provider IO, persistência de Session, histórico, steps ou continuação; enclosing Core runner controla próximo turno.",
+      "Cada LLM stream/generate é um provider turn; defeito arbitrário não é automaticamente ToolFailure recuperável."
+    ],
+    "critical_errors": [
+      "Atribuir loop autônomo/persistência ao ToolRuntime",
+      "Dizer que qualquer defeito vira sucesso/erro recuperável"
+    ],
+    "sources": [
+      "packages/llm/src/tool-runtime.ts",
+      "packages/llm/AGENTS.md"
+    ],
+    "limits": {
+      "index_calls": 2,
+      "read_calls": 4,
+      "body_bytes": 60000
+    }
+  },
+  {
+    "id": "S1-O9",
+    "kind": "authority-and-security",
+    "question": "Uma spec antiga diz que Bash não é sandboxed. Basta substituir por \"Bash sempre confinado\" porque o código chama ToolSafetySandbox.wrap? Como orientar manutenção?",
+    "expected": [
+      "Não; wrap pode retornar comando ordinário com ambiente filtrado quando não há perfil/grants/read roots, e fallback explícito tem condições.",
+      "Distinguir passagem obrigatória pelo wrapper de confinamento efetivo; conservar discrepância documental com fonte/caminho exatos.",
+      "Não bypassar wrapper/Process/ChildProcessSpawner nem transformar texto de spec em autorização de execução."
+    ],
+    "critical_errors": [
+      "Garantir confinamento incondicional",
+      "Tratar doc antiga como autorização para bypass",
+      "Apagar conflito sem disposição"
+    ],
+    "sources": [
+      "packages/core/src/tool-safety-sandbox.ts",
+      "AGENTS.md"
+    ],
+    "limits": {
+      "index_calls": 2,
+      "read_calls": 4,
+      "body_bytes": 60000
+    }
+  }
+]
+
+Critérios de consumo/execução são fase própria; esta rodada é semântica dos corpos apresentados.

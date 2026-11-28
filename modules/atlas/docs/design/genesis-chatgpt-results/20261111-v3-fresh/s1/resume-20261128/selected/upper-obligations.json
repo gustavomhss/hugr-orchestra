@@ -1,0 +1,109 @@
+{
+  "schema": "genesis-s1-upper-obligations/v1",
+  "state": "FROZEN_BEFORE_REMAINING_UPPER_AUTHORSHIP",
+  "basis": "S1-CORE briefing, frozen sub-slice work queues, public contracts and existing reserved oracle references in oracle-index.json; this is no replacement oracle.",
+  "gate": "Only exact accepted required predecessors may supply new higher layers. Historical statements of acceptance and impact NO_CHANGE do not establish acceptance.",
+  "units": [
+    {
+      "key": "s1.l2.runtime-ownership",
+      "layer": 2,
+      "owner": "01-sessions",
+      "need": "component",
+      "existing_body": "s1.l2.runtime-ownership",
+      "purpose": "Rebind the recovered runtime/economy/boundaries synthesis to accepted current lower bodies, preserving limits and correcting demonstrated version drift."
+    },
+    {
+      "key": "s1.subslice01.session-lifecycle.l2",
+      "layer": 2,
+      "owner": "01-sessions",
+      "need": "flow",
+      "existing_body": null,
+      "purpose": "Connect accepted admission, execution, state, context, persistence and configuration contracts for local change and diagnosis."
+    },
+    {
+      "key": "s1.l3.session-provider-flow",
+      "layer": 3,
+      "owner": "01-sessions",
+      "need": "flow",
+      "existing_body": "s1.l3.session-provider-flow",
+      "purpose": "Reconcile the recovered cross-component flow against accepted current Session, provider and authority contracts."
+    },
+    {
+      "key": "s1.l4.safe-change",
+      "layer": 4,
+      "owner": "01-sessions",
+      "need": "maintenance",
+      "existing_body": "s1.l4.safe-change",
+      "purpose": "Reuse the recovered safe-change procedure with exact current predecessors and the required Session maintenance, verification and abstention obligations."
+    },
+    {
+      "key": "s1.subslice02.authority.l2",
+      "layer": 2,
+      "owner": "02-tools",
+      "need": "component",
+      "existing_body": null,
+      "purpose": "Local understanding of the accepted tool, permission, plugin and capability contracts; direct L2 authority use."
+    },
+    {
+      "key": "s1.subslice02.integration.l3",
+      "layer": 3,
+      "owner": "02-tools",
+      "need": "flow",
+      "existing_body": null,
+      "purpose": "Cross-component impact and the N01 host/plugin/capability responsibility boundary requested by Libraries."
+    },
+    {
+      "key": "s1.subslice02.ownership.l4",
+      "layer": 4,
+      "owner": "02-tools",
+      "need": "operational",
+      "existing_body": null,
+      "purpose": "Local ownership, safe change, operational diagnosis, two assigned maintenance cases and explicit abstention."
+    },
+    {
+      "key": "s1.subslice05.integration.l3",
+      "layer": 3,
+      "owner": "05-libraries",
+      "need": "flow",
+      "existing_body": null,
+      "purpose": "Existing frozen Libraries queue; R2 cross-domain dependencies must be accepted before authorship."
+    },
+    {
+      "key": "s1.subslice05.ownership.l4",
+      "layer": 4,
+      "owner": "05-libraries",
+      "need": "maintenance",
+      "existing_body": null,
+      "purpose": "Existing frozen Libraries ownership and maintenance queue over accepted lower layers."
+    },
+    {
+      "key": "s1.l3.ownership-impact-map",
+      "layer": 3,
+      "owner": "s1-union",
+      "need": "ownership",
+      "existing_body": "s1.l3.ownership-impact-map",
+      "purpose": "Reuse recovered ownership map, reconcile all five sub-slices and distinguish actual build dependencies from navigation."
+    },
+    {
+      "key": "s1.l4.ownership-entry",
+      "layer": 4,
+      "owner": "s1-union",
+      "need": "entry",
+      "existing_body": "s1.l4.ownership-entry",
+      "purpose": "Reuse recovered entry, expose a useful finite navigation across the complete selected union without counting depth as semantic coverage."
+    }
+  ],
+  "recovered_pending_disposition": [
+    {
+      "key": "s1.l3.persistence-evidence-failures",
+      "state": "RECOVERED_COMPARISON_REQUIRED",
+      "candidate_route": "Compare all material sections against current Session lifecycle, Libraries storage/integration and API/Auto impacts. Reuse/revise if those do not cover the need; supersession requires explicit section-to-accepted-body evidence."
+    },
+    {
+      "key": "s1.l4.diagnosis-maintenance",
+      "state": "RECOVERED_COMPARISON_REQUIRED",
+      "candidate_route": "Compare all material diagnostic sections against current five ownership/maintenance outputs. Preserve original; no silent exclusion or inferred acceptance."
+    }
+  ],
+  "public_cases": "Existing frozen public cases retain their exact questions, budgets and negative/maintenance obligations; authors never receive reserved expected answers."
+}

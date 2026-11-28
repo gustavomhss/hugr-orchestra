@@ -1,0 +1,24 @@
+{
+  "run_id": 46117489765,
+  "conclusion": "failure",
+  "stage": "original CLI dependency resolution",
+  "rows": [
+    {
+      "selection": "automation",
+      "log_sha256": "f1b034b3ac0db6ae19ef8898185196c673884b47f298739c234cb988cd0e1ef2",
+      "observed_error_lines": [
+        "2026-11-28T06:39:03.1586850Z GENESIS_S1_NATIVE_RECEIPT={\"argv\": [\"bun\", \"scripts/genesis-native.ts\", \"prepare\", \"/tmp/genesis-s1-native/automation\", \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json\", \"/home/runner/work/_temp/genesis-core-native-46117489765-1-automation/prepared.json\"], \"binding_created\": false, \"cwd\": \"/home/runner/work/_temp/genesis-core-runtime-46117489765-1-automation/modules/atlas\", \"ended_at_unix\": 1795847943.1578195, \"exit_code\": 1, \"operation\": \"prepare\", \"original_cli\": true, \"publication_attempted\": false, \"run_attempt\": \"1\", \"run_id\": \"46117489765\", \"runtime_modified\": false, \"runtime_release_commit\": \"09a4c4afc7aab2f9a153eb059d13df0ecf15595c\", \"runtime_release_git_blob\": \"7513fcca63664ca02094e9ed9b8fab090c20295d\", \"runtime_release_sha256\": \"6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016\", \"runtime_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\", \"schema\": \"genesis-s1-native-operation/v1\", \"selection\": \"automation\", \"started_at_unix\": 1795847943.1361725, \"stderr_sha256\": \"8f79112b7ce5803de0eea017d87d8dc353924f983fbde07ce06a3495d5e2c692\", \"stdout_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"workflow_revision\": \"429de37f53a3d399d50e71d97c37332c2b55aa0b\"}",
+        "2026-11-28T06:39:03.1590958Z error: Cannot find module '@atlas/knowledge' from '/home/runner/work/_temp/genesis-core-runtime-46117489765-1-automation/modules/atlas/scripts/genesis-native.ts'"
+      ]
+    },
+    {
+      "selection": "api",
+      "log_sha256": "cf68836585e9ea4381457c72d5d266cd93fd2a6250d1409f087fdbdb09da43a9",
+      "observed_error_lines": [
+        "2026-11-28T06:39:20.6497230Z GENESIS_S1_NATIVE_RECEIPT={\"argv\": [\"bun\", \"scripts/genesis-native.ts\", \"prepare\", \"/tmp/genesis-s1-native/api\", \"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json\", \"/home/runner/work/_temp/genesis-core-native-46117489765-1-api/prepared.json\"], \"binding_created\": false, \"cwd\": \"/home/runner/work/_temp/genesis-core-runtime-46117489765-1-api/modules/atlas\", \"ended_at_unix\": 1795847960.6483514, \"exit_code\": 1, \"operation\": \"prepare\", \"original_cli\": true, \"publication_attempted\": false, \"run_attempt\": \"1\", \"run_id\": \"46117489765\", \"runtime_modified\": false, \"runtime_release_commit\": \"09a4c4afc7aab2f9a153eb059d13df0ecf15595c\", \"runtime_release_git_blob\": \"7513fcca63664ca02094e9ed9b8fab090c20295d\", \"runtime_release_sha256\": \"6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016\", \"runtime_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\", \"schema\": \"genesis-s1-native-operation/v1\", \"selection\": \"api\", \"started_at_unix\": 1795847960.6311734, \"stderr_sha256\": \"25065c14d138cc661f5414d25f37553e90144bae9fa232e6ad4701c2a6a1ba7c\", \"stdout_sha256\": \"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\", \"workflow_revision\": \"429de37f53a3d399d50e71d97c37332c2b55aa0b\"}",
+        "2026-11-28T06:39:20.6504032Z error: Cannot find module '@atlas/knowledge' from '/home/runner/work/_temp/genesis-core-runtime-46117489765-1-api/modules/atlas/scripts/genesis-native.ts'"
+      ]
+    }
+  ],
+  "disposition": "Operator runtime setup omitted bun typecheck workspace build. Fixed in be539e76d05ab36ea401910c3c9241ce76b200c7; run46117651547 later passed. This is not proof of a runtime body-size defect."
+}

@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s1-cas-verification/v1",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "runtime_tracked_diff": "",
+  "candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8",
+  "argv": [
+    "bun",
+    "--eval",
+    "\nconst { readFileSync } = await import(\"node:fs\");\nconst { join } = await import(\"node:path\");\nconst { id } = await import(\"@atlas/kernel\");\nconst { observeOwnershipInput } = await import(\"./packages/adapter-io/src/ownership-input.ts\");\nconst prepared = JSON.parse(readFileSync(process.env.GENESIS_PREPARED_FILE, \"utf8\"));\nconst candidate = prepared.candidate;\nconst inventory = JSON.parse(readFileSync(process.env.GENESIS_CAS_INVENTORY, \"utf8\"));\nconst checks = [{kind:\"candidate\",actual:String(id(candidate)),expected:prepared.candidate_id}];\nfor (const entry of candidate.entries)\n  checks.push({kind:\"entry-inputs\",key:entry.key,actual:String(id({inputs:entry.inputs,dependencies:entry.dependencies})),expected:entry.inputs_id});\nfor (const observed of candidate.observations) {\n  const reobserved = observeOwnershipInput(candidate.repo_root, observed.key);\n  checks.push({kind:\"original-observer\",key:observed.key,state:reobserved.kind,actual:reobserved.kind === \"present\" ? reobserved.version : null,expected:observed.version});\n}\nfor (const object of inventory.objects) {\n  const value = JSON.parse(readFileSync(join(process.env.GENESIS_EVIDENCE_ROOT, object.path), \"utf8\"));\n  checks.push({kind:\"cas-object\",key:object.id,actual:String(id(value)),expected:object.id});\n}\nconsole.log(JSON.stringify({schema:\"genesis-s1-original-kernel-verification/v1\",checks}));\nif (checks.some(check => check.actual !== check.expected)) process.exitCode=1;\n"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "9d1e74757980180fb617ba04474697285e5155d5d433707623a675e6ecd4e19c",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "cas_inventory_sha256": "cdcdcd6c309ffc635516cb7fd3712fbc105c3fb449470b3fe10b2284dd0bcc47",
+  "cas_objects": 68,
+  "observer_checks": 354,
+  "membership_checks": 22,
+  "body_and_reference_bytes_verified": true,
+  "authority_or_projection_created": false
+}

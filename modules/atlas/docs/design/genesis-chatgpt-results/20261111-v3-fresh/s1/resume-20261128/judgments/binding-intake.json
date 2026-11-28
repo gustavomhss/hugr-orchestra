@@ -1,0 +1,1112 @@
+{
+  "purpose": "Read-only mechanical intake for distinct native runtime binding review; no semantic or binding verdict",
+  "judges": [
+    "/root/review_coordinator/judge_j1",
+    "/root/review_coordinator/judge_j2"
+  ],
+  "selections": [
+    {
+      "selection": "automation",
+      "candidate_id": "0ff5e4144f7ec153a51ca9615b233219a3ec0bf83b4ee62593921646e64bcb56",
+      "contract": "3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "transport": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+        "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+        "body": "30b5300a9b8c27d670d984554fe6193f01f3f44c582e186e3a1a1fb38e4b6b8b"
+      },
+      "implementation": {
+        "adapter": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+        "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+        "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+        "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+      },
+      "criteria": [
+        "GO-A1",
+        "GO-A2",
+        "GO-A3",
+        "GO-A4",
+        "GO-A5",
+        "GO-A6",
+        "GO-A7",
+        "GO-I1",
+        "GO-I2",
+        "GO-I3",
+        "GO-I4",
+        "GO-I5",
+        "GO-I6",
+        "GO-I7",
+        "GO-I8",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08",
+        "AC-09",
+        "AC-10",
+        "CC-1",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "CC-5",
+        "CC-6",
+        "CC-7",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-4",
+        "SC-5",
+        "QS-1",
+        "QS-2",
+        "QS-3",
+        "QS-4",
+        "QS-5",
+        "QS-6",
+        "DOD-1",
+        "DOD-2",
+        "DOD-3",
+        "DOD-4",
+        "DOD-5",
+        "DOD-6",
+        "DOD-7",
+        "runtime-import-binding"
+      ],
+      "roots": {
+        "entry": "s1.subslice03.entry",
+        "component": "s1.core.research",
+        "flow": "s1.subslice03.automation-flow",
+        "operational": "s1.subslice03.automation-impact",
+        "maintenance": "s1.subslice03.automation-maintenance"
+      },
+      "required_artifact_keys": [
+        "s1.core.automation",
+        "s1.core.research",
+        "s1.core.boundaries",
+        "s1.subslice03.support",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "observations": 694,
+      "materialization_reference_checks": 1054,
+      "receipt": {
+        "schema": "genesis-s1-native-operation/v1",
+        "operation": "prepare",
+        "selection": "automation",
+        "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "runtime_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7",
+        "runtime_release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+        "runtime_release_git_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+        "argv": [
+          "bun",
+          "scripts/genesis-native.ts",
+          "prepare",
+          "/tmp/genesis-s1-native/automation",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+          "/home/runner/work/_temp/genesis-core-native-46117651547-1-automation/prepared.json"
+        ],
+        "cwd": "/home/runner/work/_temp/genesis-core-runtime-46117651547-1-automation/modules/atlas",
+        "exit_code": 0,
+        "started_at_unix": 1795848137.8566656,
+        "ended_at_unix": 1795848141.7316551,
+        "run_id": "46117651547",
+        "run_attempt": "1",
+        "workflow_revision": "be539e76d05ab36ea401910c3c9241ce76b200c7",
+        "stdout_sha256": "544f632558e52bf324db007eea9416a038cafb4ed7db03bbd37a2079d7022429",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "original_cli": true,
+        "runtime_modified": false,
+        "binding_created": false,
+        "publication_attempted": false,
+        "candidate_id": "0ff5e4144f7ec153a51ca9615b233219a3ec0bf83b4ee62593921646e64bcb56",
+        "contract": "3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3",
+        "prepared_sha256": "29d6ec5b5c40b99a963b31811f77d4ed5381deac1bfc8b26b276753b8e269b43",
+        "entries": 12,
+        "observations": 694
+      },
+      "objects_not_exported_in_this_artifact": "Contract, OwnershipResult and reference/body/review CAS bytes; principal arranging identical-candidate reexecution with CAS export",
+      "entries": [
+        {
+          "key": "s1.core.automation",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.automation",
+            "scope": "orchestra.s1",
+            "title": "Actions, Board e agendamento: contratos da implementação",
+            "layer": 1,
+            "need": "flow",
+            "result": "df7153cd1284979027eab7f88f84ec33058256d4fdbd3a04777c989682c49964",
+            "navigation": []
+          },
+          "inputs_id": "2589ae54ae8e120cddb08e7cf4589ca543fe568f86868b6de5aa28b719e1fd48",
+          "inputs_count": 263,
+          "dependencies": []
+        },
+        {
+          "key": "s1.core.research",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.research",
+            "scope": "orchestra.s1",
+            "title": "Research e toolkits: contratos, prontidão e autoridade da evidência",
+            "layer": 1,
+            "need": "component",
+            "result": "c7a53821ed54955000f71e85642576249d4cd76f0e993f219aac269ff062bd56",
+            "navigation": []
+          },
+          "inputs_id": "896af2651981a2fd36bb9f2b3834c2e45b42c122890dcaf86d6eb532d29f4f9d",
+          "inputs_count": 168,
+          "dependencies": []
+        },
+        {
+          "key": "s1.core.boundaries",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.boundaries",
+            "scope": "orchestra.s1",
+            "title": "Fronteiras Core para Atlas, Relay, control plane e RAG",
+            "layer": 1,
+            "need": "component",
+            "result": "5d4949c1a9a096fe8be50eadca3d713e4872166503b5569eee438e494f7e4c3f",
+            "navigation": []
+          },
+          "inputs_id": "dfb66e852e94af117d0719ab0606ac95926ef8e7422b5ed86c8f5f353dcdef17",
+          "inputs_count": 69,
+          "dependencies": []
+        },
+        {
+          "key": "s1.subslice03.support",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.support",
+            "scope": "orchestra.s1",
+            "title": "Suporte de entrada, ferramentas, história e fixtures dos104 paths",
+            "layer": 1,
+            "need": "entry",
+            "result": "2319a7e198487efe7ba13148e68524af67297a9403dc0c0c6f735d2473f3f4a5",
+            "navigation": []
+          },
+          "inputs_id": "63e0f68ae57a4b76de7067765ae66a7d27fdcebe012bbf7fe0c417b57623b780",
+          "inputs_count": 140,
+          "dependencies": []
+        },
+        {
+          "key": "s1.subslice03.automation-flow",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.automation-flow",
+            "scope": "orchestra.s1",
+            "title": "Entendimento local do ciclo de comando, Board e admissão agendada",
+            "layer": 2,
+            "need": "flow",
+            "result": "6a18d19d775fb2b09ff29ed57091cfd1e8d807579a46ac13be1bae09b6a84b12",
+            "navigation": []
+          },
+          "inputs_id": "b84bf40798ba29a235c70b9e8a06be8f4296e4403b9dc5bf21c8e3ca90569bf3",
+          "inputs_count": 31,
+          "dependencies": [
+            {
+              "key": "s1.core.automation",
+              "result": "df7153cd1284979027eab7f88f84ec33058256d4fdbd3a04777c989682c49964"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.research-flow",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.research-flow",
+            "scope": "orchestra.s1",
+            "title": "Entendimento local da aquisição, índice, custódia e investigação",
+            "layer": 2,
+            "need": "flow",
+            "result": "1848dfb18d7872b7a9b76775f2fd2027a28b39c36e8286d29740b4689758843a",
+            "navigation": []
+          },
+          "inputs_id": "9492ce5a527580f31aaa627dc7eccdcf02d7aab45475f5903095f6f785f15ffb",
+          "inputs_count": 45,
+          "dependencies": [
+            {
+              "key": "s1.core.research",
+              "result": "c7a53821ed54955000f71e85642576249d4cd76f0e993f219aac269ff062bd56"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.boundary-flow",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.boundary-flow",
+            "scope": "orchestra.s1",
+            "title": "Encadeamento e limites do lado Core das portas externas",
+            "layer": 2,
+            "need": "flow",
+            "result": "00dc9160ec8122a349b10e875c996800411eecbfefe6524b68b90490e3bb7722",
+            "navigation": []
+          },
+          "inputs_id": "9d86f4a24d849d3234ea2ab9c110d4f8d7818b6ca2286f1610e967159d584064",
+          "inputs_count": 28,
+          "dependencies": [
+            {
+              "key": "s1.core.boundaries",
+              "result": "5d4949c1a9a096fe8be50eadca3d713e4872166503b5569eee438e494f7e4c3f"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.automation-impact",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.automation-impact",
+            "scope": "orchestra.s1",
+            "title": "Impacto de mudanças de contrato e separação de famílias independentes",
+            "layer": 3,
+            "need": "operational",
+            "result": "63d3aaebe7d6dd67ccb2889702ddf1846b878788e6b7dfa420c1bee571eb3d3d",
+            "navigation": []
+          },
+          "inputs_id": "06a365f71c5bc6441c3a77c55142548402f89d5f67d8ec60041fefc2562ed38c",
+          "inputs_count": 43,
+          "dependencies": [
+            {
+              "key": "s1.subslice03.automation-flow",
+              "result": "6a18d19d775fb2b09ff29ed57091cfd1e8d807579a46ac13be1bae09b6a84b12"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.research-impact",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.research-impact",
+            "scope": "orchestra.s1",
+            "title": "Impacto de mudanças em receitas, índice, custódia e autoridade",
+            "layer": 3,
+            "need": "operational",
+            "result": "a4e896942715a7e8cd6cf54b60fd0b39b653f46527ddf5907f32ad972cc9c6b4",
+            "navigation": []
+          },
+          "inputs_id": "f0c760764da05e56828956d49d99b64ce7a0d523f7d06bfb87daefdecbc91863",
+          "inputs_count": 58,
+          "dependencies": [
+            {
+              "key": "s1.subslice03.research-flow",
+              "result": "1848dfb18d7872b7a9b76775f2fd2027a28b39c36e8286d29740b4689758843a"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.automation-maintenance",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.automation-maintenance",
+            "scope": "orchestra.s1",
+            "title": "Manutenção, diagnóstico, verificação e encaminhamento da automação",
+            "layer": 4,
+            "need": "maintenance",
+            "result": "02c4640247c4f833053afc55c162f7cc6eb0dfe9498e87c0194918b5847655e7",
+            "navigation": []
+          },
+          "inputs_id": "67c1c9138c082e09ba38c433b90ee8ec895f8c736f677bd057721c85d2009d09",
+          "inputs_count": 48,
+          "dependencies": [
+            {
+              "key": "s1.subslice03.automation-impact",
+              "result": "63d3aaebe7d6dd67ccb2889702ddf1846b878788e6b7dfa420c1bee571eb3d3d"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.research-maintenance",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.research-maintenance",
+            "scope": "orchestra.s1",
+            "title": "Manutenção e diagnóstico de research/toolkits e suas evidências",
+            "layer": 4,
+            "need": "maintenance",
+            "result": "fe529f83eaae1b29e5c67b9a2b39833375df48d3b25820b1e31ad08ab378c585",
+            "navigation": []
+          },
+          "inputs_id": "03759513bf2e39a89189ce23d9b97dffa649766c9285816db8066c6193b87c51",
+          "inputs_count": 65,
+          "dependencies": [
+            {
+              "key": "s1.subslice03.research-impact",
+              "result": "a4e896942715a7e8cd6cf54b60fd0b39b653f46527ddf5907f32ad972cc9c6b4"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice03.entry",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice03.entry",
+            "scope": "orchestra.s1",
+            "title": "Entrada local rasa e aprofundamento com proposta de navegação para a união",
+            "layer": 4,
+            "need": "entry",
+            "result": "3c42f7efba9a40c72cd9aca0a0001c5faba6078b6dc2bf3bb543cb9f20fb9422",
+            "navigation": [
+              "s1.core.automation",
+              "s1.core.research",
+              "s1.core.boundaries",
+              "s1.subslice03.support",
+              "s1.subslice03.automation-flow",
+              "s1.subslice03.research-flow",
+              "s1.subslice03.boundary-flow",
+              "s1.subslice03.automation-impact",
+              "s1.subslice03.research-impact",
+              "s1.subslice03.automation-maintenance",
+              "s1.subslice03.research-maintenance"
+            ]
+          },
+          "inputs_id": "0338b9e3d81fdeede36798736f6d54649382b84189f33db6d37e9937096ab7fa",
+          "inputs_count": 21,
+          "dependencies": [
+            {
+              "key": "s1.subslice03.support",
+              "result": "2319a7e198487efe7ba13148e68524af67297a9403dc0c0c6f735d2473f3f4a5"
+            },
+            {
+              "key": "s1.subslice03.boundary-flow",
+              "result": "00dc9160ec8122a349b10e875c996800411eecbfefe6524b68b90490e3bb7722"
+            },
+            {
+              "key": "s1.subslice03.automation-maintenance",
+              "result": "02c4640247c4f833053afc55c162f7cc6eb0dfe9498e87c0194918b5847655e7"
+            },
+            {
+              "key": "s1.subslice03.research-maintenance",
+              "result": "fe529f83eaae1b29e5c67b9a2b39833375df48d3b25820b1e31ad08ab378c585"
+            }
+          ]
+        }
+      ],
+      "file_identities": [
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/automation/prepared.json",
+          "bytes": 464012,
+          "sha256": "29d6ec5b5c40b99a963b31811f77d4ed5381deac1bfc8b26b276753b8e269b43"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/automation/materialization.json",
+          "bytes": 682684,
+          "sha256": "39faa71d14828fe0efa449dd750a6cf725bfd90c648e4385117f8511b2870822"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/automation/prepare-receipt.json",
+          "bytes": 1636,
+          "sha256": "aab6d2936c08265f230a0883d8aeb5a96ccbfdf9dfb93073f928d16684acc31c"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/automation/runtime-release.json",
+          "bytes": 19736,
+          "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1"
+        }
+      ]
+    },
+    {
+      "selection": "api",
+      "candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8",
+      "contract": "3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "transport": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+        "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442",
+        "body": "68e0c7926102fd393ca63c03c74920dcbbfac8665a424b7c0e9c0d2204a68469"
+      },
+      "implementation": {
+        "adapter": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+        "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+        "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+        "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+      },
+      "criteria": [
+        "GO-A1",
+        "GO-A2",
+        "GO-A3",
+        "GO-A4",
+        "GO-A5",
+        "GO-A6",
+        "GO-A7",
+        "GO-I1",
+        "GO-I2",
+        "GO-I3",
+        "GO-I4",
+        "GO-I5",
+        "GO-I6",
+        "GO-I7",
+        "GO-I8",
+        "AC-01",
+        "AC-02",
+        "AC-03",
+        "AC-04",
+        "AC-05",
+        "AC-06",
+        "AC-07",
+        "AC-08",
+        "AC-09",
+        "AC-10",
+        "CC-1",
+        "CC-2",
+        "CC-3",
+        "CC-4",
+        "CC-5",
+        "CC-6",
+        "CC-7",
+        "SC-1",
+        "SC-2",
+        "SC-3",
+        "SC-4",
+        "SC-5",
+        "QS-1",
+        "QS-2",
+        "QS-3",
+        "QS-4",
+        "QS-5",
+        "QS-6",
+        "DOD-1",
+        "DOD-2",
+        "DOD-3",
+        "DOD-4",
+        "DOD-5",
+        "DOD-6",
+        "DOD-7",
+        "runtime-import-binding"
+      ],
+      "roots": {
+        "entry": "s1.api.surface-disposition",
+        "ownership": "s1.api.boundaries",
+        "component": "s1.subslice04.local-contracts",
+        "flow": "s1.subslice04.integrated-impact",
+        "operational": "s1.api.server-edge",
+        "maintenance": "s1.subslice04.maintenance",
+        "evidence": "s1.core.persistence"
+      },
+      "required_artifact_keys": [
+        "s1.api.boundaries",
+        "s1.api.schema-contracts",
+        "s1.api.session-contract",
+        "s1.api.server-edge",
+        "s1.api.stream-contract",
+        "s1.api.client-projection",
+        "s1.api.codegen",
+        "s1.api.sdk-composition",
+        "s1.api.surface-disposition",
+        "s1.subslice04.domains",
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence",
+        "s1.subslice04.local-contracts",
+        "s1.subslice04.integrated-impact",
+        "s1.subslice04.maintenance"
+      ],
+      "observations": 354,
+      "materialization_reference_checks": 845,
+      "receipt": {
+        "schema": "genesis-s1-native-operation/v1",
+        "operation": "prepare",
+        "selection": "api",
+        "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "runtime_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7",
+        "runtime_release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+        "runtime_release_git_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+        "argv": [
+          "bun",
+          "scripts/genesis-native.ts",
+          "prepare",
+          "/tmp/genesis-s1-native/api",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+          "/home/runner/work/_temp/genesis-core-native-46117651547-1-api/prepared.json"
+        ],
+        "cwd": "/home/runner/work/_temp/genesis-core-runtime-46117651547-1-api/modules/atlas",
+        "exit_code": 0,
+        "started_at_unix": 1795848172.6773458,
+        "ended_at_unix": 1795848175.4111302,
+        "run_id": "46117651547",
+        "run_attempt": "1",
+        "workflow_revision": "be539e76d05ab36ea401910c3c9241ce76b200c7",
+        "stdout_sha256": "f75a2450cf5addaf260c006652c227ab28c9b50ad33e57c4c4353c4c728676af",
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "original_cli": true,
+        "runtime_modified": false,
+        "binding_created": false,
+        "publication_attempted": false,
+        "candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8",
+        "contract": "3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3",
+        "prepared_sha256": "d2e68acaa95aca1ad5301d7357955b712052a3954d61ac204415f7d1efaf8cb3",
+        "entries": 16,
+        "observations": 354
+      },
+      "objects_not_exported_in_this_artifact": "Contract, OwnershipResult and reference/body/review CAS bytes; principal arranging identical-candidate reexecution with CAS export",
+      "entries": [
+        {
+          "key": "s1.api.boundaries",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.boundaries",
+            "scope": "orchestra.s1",
+            "title": "Package authority and runtime boundaries",
+            "layer": 1,
+            "need": "ownership",
+            "result": "3cb30b12b70084e0bb31447cd386602a70685048c370767b0ff7e0f3ab2ca1ea",
+            "navigation": [
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "d8417883beae854336a62ebc585f9c0cad5c56d341b3e58d5cbf735ddd321c08",
+          "inputs_count": 39,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.schema-contracts",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.schema-contracts",
+            "scope": "orchestra.s1",
+            "title": "Shared DTO and event schema contracts",
+            "layer": 1,
+            "need": "component",
+            "result": "9aace74eb6d7cc4f16866c28ed75a207abda923e69f91a50054c804c67cb9078",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "3679fadcc47b07f25792929a278bca8a7193253809bddc1dcfaaa28c1e643d3e",
+          "inputs_count": 128,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.session-contract",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.session-contract",
+            "scope": "orchestra.s1",
+            "title": "Session HTTP admission and pages",
+            "layer": 1,
+            "need": "flow",
+            "result": "a0f99a837c74e924437510099a0f20f1a203884c1c635b4c19068efd3d39f903",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "3dc745c863355060d41480f1b3204488c278ec712fcf062c72e621788ecc0e06",
+          "inputs_count": 23,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.server-edge",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.server-edge",
+            "scope": "orchestra.s1",
+            "title": "Server errors, authorization and location",
+            "layer": 1,
+            "need": "operational",
+            "result": "c62e033802bc00afaad7a3079f548ecf091d84eaf5e8ccf3c19936699c7fcd85",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "2d0f719fc0d21b1dfd35e046efb5e9cc0e5adeedadb55500bddba62f18a03c43",
+          "inputs_count": 40,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.stream-contract",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.stream-contract",
+            "scope": "orchestra.s1",
+            "title": "Live SSE and durable session streams",
+            "layer": 1,
+            "need": "flow",
+            "result": "22f8605239cf2c7348b73ce99d0ef39e5adcaf99e1aba8993d5390946f244b41",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "deebd7081224c97b9ee93f0a561b6f0423665a930e28242da44f05268f9b5121",
+          "inputs_count": 24,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.client-projection",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.client-projection",
+            "scope": "orchestra.s1",
+            "title": "Client projections and raw transfer boundary",
+            "layer": 1,
+            "need": "component",
+            "result": "8de43a180101a2998fa7fa4afa99e3156db8207d58b9e0a0c2df1388912f3700",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "5d3e3b8750cf48202fe865497570a5f25807b4dd6e27d8def4bba4d7f023143f",
+          "inputs_count": 42,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.codegen",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.codegen",
+            "scope": "orchestra.s1",
+            "title": "HTTP client generation authority",
+            "layer": 1,
+            "need": "maintenance",
+            "result": "e526e6d56c0dc0bf5709d0ebf18e99549d010471aa3d3b2aeacb648d89742906",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "609dcef91c4b0bc30dd9373daea0ef1297fdeca961a4129b9f1374b158d8cf0e",
+          "inputs_count": 30,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.sdk-composition",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.sdk-composition",
+            "scope": "orchestra.s1",
+            "title": "Embedded SDK and operator transport",
+            "layer": 1,
+            "need": "component",
+            "result": "d887017aab41b9307142ce9e91eb1d04effa4b28a4b796a4e6581af4cae7a3a7",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "4568b99ce092714f725dc4b5dcb4cff09cad99d5541f1c30242f5bae2ce3433d",
+          "inputs_count": 24,
+          "dependencies": []
+        },
+        {
+          "key": "s1.api.surface-disposition",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.api.surface-disposition",
+            "scope": "orchestra.s1",
+            "title": "Assigned API population and evidence depth",
+            "layer": 1,
+            "need": "entry",
+            "result": "13491b724c409ecd63f5612d43b50dbc4e4de5c8251261622b55ca1346fd5b4c",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition"
+            ]
+          },
+          "inputs_id": "2fd145027375d34e63b4035c6802a7808443335a6425d77a3ed388be4fb0ecd9",
+          "inputs_count": 312,
+          "dependencies": []
+        },
+        {
+          "key": "s1.subslice04.domains",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice04.domains",
+            "scope": "orchestra.s1",
+            "title": "Domain-level API dispositions: 24 domains and 190 members",
+            "layer": 1,
+            "need": "component",
+            "result": "0bbcd935bc3f9ea7d9b08b08a2a497169a61f373880f4d439e4ae0af072d3b27",
+            "navigation": [
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition"
+            ]
+          },
+          "inputs_id": "2a0493ac30194fd38b66203d3173f604683d5cc78190bf932ca72ad4e5e4405e",
+          "inputs_count": 196,
+          "dependencies": [
+            {
+              "key": "s1.api.server-edge",
+              "result": "c62e033802bc00afaad7a3079f548ecf091d84eaf5e8ccf3c19936699c7fcd85"
+            },
+            {
+              "key": "s1.api.stream-contract",
+              "result": "22f8605239cf2c7348b73ce99d0ef39e5adcaf99e1aba8993d5390946f244b41"
+            },
+            {
+              "key": "s1.api.sdk-composition",
+              "result": "d887017aab41b9307142ce9e91eb1d04effa4b28a4b796a4e6581af4cae7a3a7"
+            }
+          ]
+        },
+        {
+          "key": "s1.core.session-admission",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.session-admission",
+            "scope": "orchestra.s1",
+            "title": "Session identity and durable prompt admission",
+            "layer": 1,
+            "need": "component",
+            "result": "59ed56c04651200bad4dc1b5978bc08d44a8531afeb10c95362701bd63021051",
+            "navigation": []
+          },
+          "inputs_id": "3e4c492b4fdd1b141d7fb8be06348d12d250be83c55f244d5233791cf8d777bb",
+          "inputs_count": 12,
+          "dependencies": []
+        },
+        {
+          "key": "s1.core.session-execution",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.session-execution",
+            "scope": "orchestra.s1",
+            "title": "Local Session execution, continuation and interruption",
+            "layer": 1,
+            "need": "flow",
+            "result": "7b3e1570b990cbdf804b454f1844b42974b23f1add0bd4c2fd0ff5aed0a01ea8",
+            "navigation": []
+          },
+          "inputs_id": "76fbea7010b05da404ffa69af7c22905ee3d1945ba7e0e18b48da22492cf0052",
+          "inputs_count": 7,
+          "dependencies": []
+        },
+        {
+          "key": "s1.core.persistence",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.core.persistence",
+            "scope": "orchestra.s1",
+            "title": "Event persistence, projection and database contracts",
+            "layer": 1,
+            "need": "evidence",
+            "result": "195e6395a57d52dc3c95a7749a48770d3d1acf33026adbda736f319a198225be",
+            "navigation": []
+          },
+          "inputs_id": "1db8e325d037363c64ec33f5a2436c6fbf13c71d0a86cdff1615dff651a83f7e",
+          "inputs_count": 13,
+          "dependencies": []
+        },
+        {
+          "key": "s1.subslice04.local-contracts",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice04.local-contracts",
+            "scope": "orchestra.s1",
+            "title": "Mapa local de contratos públicos",
+            "layer": 2,
+            "need": "component",
+            "result": "999217f28fcf2aa5dc52fd2c932b84a8b3c6820941536a0d639d790f18cf9fb1",
+            "navigation": [
+              "s1.api.codegen",
+              "s1.api.boundaries",
+              "s1.api.client-projection",
+              "s1.api.server-edge",
+              "s1.api.stream-contract",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.sdk-composition",
+              "s1.api.surface-disposition",
+              "s1.subslice04.domains"
+            ]
+          },
+          "inputs_id": "399fce6142d33e7aa4a0971c2dfa667f8969d7646d02eee8035f73fcea8f7719",
+          "inputs_count": 5,
+          "dependencies": [
+            {
+              "key": "s1.api.codegen",
+              "result": "e526e6d56c0dc0bf5709d0ebf18e99549d010471aa3d3b2aeacb648d89742906"
+            },
+            {
+              "key": "s1.api.boundaries",
+              "result": "3cb30b12b70084e0bb31447cd386602a70685048c370767b0ff7e0f3ab2ca1ea"
+            },
+            {
+              "key": "s1.api.client-projection",
+              "result": "8de43a180101a2998fa7fa4afa99e3156db8207d58b9e0a0c2df1388912f3700"
+            },
+            {
+              "key": "s1.api.server-edge",
+              "result": "c62e033802bc00afaad7a3079f548ecf091d84eaf5e8ccf3c19936699c7fcd85"
+            },
+            {
+              "key": "s1.api.stream-contract",
+              "result": "22f8605239cf2c7348b73ce99d0ef39e5adcaf99e1aba8993d5390946f244b41"
+            },
+            {
+              "key": "s1.api.schema-contracts",
+              "result": "9aace74eb6d7cc4f16866c28ed75a207abda923e69f91a50054c804c67cb9078"
+            },
+            {
+              "key": "s1.api.session-contract",
+              "result": "a0f99a837c74e924437510099a0f20f1a203884c1c635b4c19068efd3d39f903"
+            },
+            {
+              "key": "s1.api.sdk-composition",
+              "result": "d887017aab41b9307142ce9e91eb1d04effa4b28a4b796a4e6581af4cae7a3a7"
+            },
+            {
+              "key": "s1.api.surface-disposition",
+              "result": "13491b724c409ecd63f5612d43b50dbc4e4de5c8251261622b55ca1346fd5b4c"
+            },
+            {
+              "key": "s1.subslice04.domains",
+              "result": "0bbcd935bc3f9ea7d9b08b08a2a497169a61f373880f4d439e4ae0af072d3b27"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice04.integrated-impact",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice04.integrated-impact",
+            "scope": "orchestra.s1",
+            "title": "Impacto integrado de contratos e receitas",
+            "layer": 3,
+            "need": "flow",
+            "result": "5959085ab25260ea9fc1aa64ad4299dc55d0b2715cf29395445d1178e0c70da3",
+            "navigation": [
+              "s1.subslice04.local-contracts",
+              "s1.api.boundaries",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.client-projection",
+              "s1.api.codegen",
+              "s1.api.stream-contract",
+              "s1.api.sdk-composition",
+              "s1.subslice04.domains",
+              "s1.core.session-admission",
+              "s1.core.session-execution",
+              "s1.core.persistence"
+            ]
+          },
+          "inputs_id": "1edfc98705fcffb7556037f4fb22fbad9b4e0079f811af9706fd1d00231ec733",
+          "inputs_count": 5,
+          "dependencies": [
+            {
+              "key": "s1.subslice04.local-contracts",
+              "result": "999217f28fcf2aa5dc52fd2c932b84a8b3c6820941536a0d639d790f18cf9fb1"
+            },
+            {
+              "key": "s1.api.boundaries",
+              "result": "3cb30b12b70084e0bb31447cd386602a70685048c370767b0ff7e0f3ab2ca1ea"
+            },
+            {
+              "key": "s1.api.schema-contracts",
+              "result": "9aace74eb6d7cc4f16866c28ed75a207abda923e69f91a50054c804c67cb9078"
+            },
+            {
+              "key": "s1.api.session-contract",
+              "result": "a0f99a837c74e924437510099a0f20f1a203884c1c635b4c19068efd3d39f903"
+            },
+            {
+              "key": "s1.api.client-projection",
+              "result": "8de43a180101a2998fa7fa4afa99e3156db8207d58b9e0a0c2df1388912f3700"
+            },
+            {
+              "key": "s1.api.codegen",
+              "result": "e526e6d56c0dc0bf5709d0ebf18e99549d010471aa3d3b2aeacb648d89742906"
+            },
+            {
+              "key": "s1.core.session-admission",
+              "result": "59ed56c04651200bad4dc1b5978bc08d44a8531afeb10c95362701bd63021051"
+            },
+            {
+              "key": "s1.core.session-execution",
+              "result": "7b3e1570b990cbdf804b454f1844b42974b23f1add0bd4c2fd0ff5aed0a01ea8"
+            },
+            {
+              "key": "s1.core.persistence",
+              "result": "195e6395a57d52dc3c95a7749a48770d3d1acf33026adbda736f319a198225be"
+            }
+          ]
+        },
+        {
+          "key": "s1.subslice04.maintenance",
+          "artifact": {
+            "kind": "ownership-artifact",
+            "version": 1,
+            "key": "s1.subslice04.maintenance",
+            "scope": "orchestra.s1",
+            "title": "Procedimento local de ownership e manutenção",
+            "layer": 4,
+            "need": "maintenance",
+            "result": "f0db4bdd4779d4b05041c995710eb4cc16bb4c8e640f962327758f3f5f5a688e",
+            "navigation": [
+              "s1.subslice04.local-contracts",
+              "s1.subslice04.integrated-impact",
+              "s1.api.boundaries",
+              "s1.api.codegen",
+              "s1.api.schema-contracts",
+              "s1.api.session-contract",
+              "s1.api.server-edge",
+              "s1.api.client-projection",
+              "s1.api.stream-contract",
+              "s1.subslice04.domains",
+              "s1.core.session-admission",
+              "s1.core.session-execution",
+              "s1.core.persistence"
+            ]
+          },
+          "inputs_id": "724dc8a39d911515ef0c0206b8294e9995b29b6533c3b05600bfb1441d0e5f1a",
+          "inputs_count": 5,
+          "dependencies": [
+            {
+              "key": "s1.subslice04.integrated-impact",
+              "result": "5959085ab25260ea9fc1aa64ad4299dc55d0b2715cf29395445d1178e0c70da3"
+            },
+            {
+              "key": "s1.subslice04.local-contracts",
+              "result": "999217f28fcf2aa5dc52fd2c932b84a8b3c6820941536a0d639d790f18cf9fb1"
+            },
+            {
+              "key": "s1.api.boundaries",
+              "result": "3cb30b12b70084e0bb31447cd386602a70685048c370767b0ff7e0f3ab2ca1ea"
+            },
+            {
+              "key": "s1.api.codegen",
+              "result": "e526e6d56c0dc0bf5709d0ebf18e99549d010471aa3d3b2aeacb648d89742906"
+            },
+            {
+              "key": "s1.core.session-admission",
+              "result": "59ed56c04651200bad4dc1b5978bc08d44a8531afeb10c95362701bd63021051"
+            },
+            {
+              "key": "s1.core.session-execution",
+              "result": "7b3e1570b990cbdf804b454f1844b42974b23f1add0bd4c2fd0ff5aed0a01ea8"
+            },
+            {
+              "key": "s1.core.persistence",
+              "result": "195e6395a57d52dc3c95a7749a48770d3d1acf33026adbda736f319a198225be"
+            }
+          ]
+        }
+      ],
+      "file_identities": [
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/api/prepared.json",
+          "bytes": 291994,
+          "sha256": "d2e68acaa95aca1ad5301d7357955b712052a3954d61ac204415f7d1efaf8cb3"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/api/materialization.json",
+          "bytes": 470857,
+          "sha256": "bdd9272ae78d1e177b62f3a6c306a53cc67195e0a476db47d2a3d10d7131e898"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/api/prepare-receipt.json",
+          "bytes": 1601,
+          "sha256": "0432b6eb1824e22871027a8f3cdb99c427e79ec57b329e9a7c389bdb05790839"
+        },
+        {
+          "path": "outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native-46117651547/api/runtime-release.json",
+          "bytes": 19736,
+          "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "original_sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
+  "candidate_sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+  "candidate_bytes": 6974,
+  "changes": 5,
+  "exact_replay": true,
+  "nonjudgment": true
+}

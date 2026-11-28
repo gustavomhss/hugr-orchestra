@@ -1,0 +1,22 @@
+[
+  {
+    "selection": "automation",
+    "candidate_id": "0ff5e4144f7ec153a51ca9615b233219a3ec0bf83b4ee62593921646e64bcb56",
+    "same_prepared_bytes": true,
+    "objects": 89,
+    "kernel_checks": 796,
+    "members": 0,
+    "zip_sha256": "062df05bf98a1a77e4457a3fafc30b71bcac9edaa66e35382f07c88ce2fba9f2",
+    "zip_bytes": 1045259
+  },
+  {
+    "selection": "api",
+    "candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8",
+    "same_prepared_bytes": true,
+    "objects": 68,
+    "kernel_checks": 439,
+    "members": 22,
+    "zip_sha256": "3aabd8535acd33e77668d620ce5b8319b1562cd7cbe7518b644357bf3e0d5b1d",
+    "zip_bytes": 721273
+  }
+]

@@ -1,0 +1,98 @@
+L01 — complemento normativo literal para os 50 IDs do contrato de Bibliotecas. O escopo desta rodada é aceite semântico local L2; demais obrigações continuam nas fases próprias e não são satisfeitas por esta revisão. Julgue o alcance das alegações, dê disposição explícita aos critérios operacionais diferidos; não crie veto por exigir execução operacional antes da aceitação semântica, nem promova local PASS a conclusão global. A frase histórica sobre ausência de autorização de avaliação no documento original é dado do baseline; a execução atual autoriza este par de julgamentos.
+
+BEGIN PROTOCOL PRINCIPLES — protocolo ee2521a5b966bd505cc95bd1c733e09e12f33531
+# Princípios e critérios que orientam a execução
+
+Usar estes princípios para decidir e verificar. Não criar um documento, agente,
+aprovação ou gate adicional para cada item. Cada tarefa herda este contrato e cita
+somente os IDs pertinentes; especializar o que muda no seu domínio.
+
+A fonte normativa é `modules/atlas/docs/design/genesis-ownership-plan.md` no baseline
+`1cde2ff7a71bcf7aecb5d030917b577165135d38`. As famílias abaixo preservam seus 50 IDs;
+o texto original decide detalhes. A autorização atual amplia escopo e topologia,
+sem substituir provas por declarações. [Registro](criteria.json).
+
+## Axiomas — como escolher o caminho
+
+- **GO-A1:** entregar entendimento transferível de código e produto: propósito, comportamento, contratos, decisões, impacto e manutenção.
+- **GO-A2:** construir cumulativamente; conhecimento intermediário persiste e precisa ser útil.
+- **GO-A3:** começar a consulta pelo necessário e aprofundar pelo índice; skills prescrevem ações e quando buscar evidência.
+- **GO-A4:** manter conhecimento e fonte juntos; reutilizar o que continua válido e reconstruir os afetados.
+- **GO-A5:** separar atualidade, validade semântica e autoridade; Git e gates sustentam essas relações.
+- **GO-A6:** mecanizar o determinístico; usar modelos para interpretação, com trabalho delimitado e resultados preservados.
+- **GO-A7:** estender o Atlas existente com o mínimo necessário; nenhuma plataforma paralela de conhecimento ou orquestração.
+
+## Quality standards — o que caracteriza uma entrega boa
+
+- **QS-1 Fidelidade:** afirmações rastreáveis; intenção, observação, interpretação e lacuna identificadas.
+- **QS-2 Utilidade:** um consumidor consegue agir; instruções claras, contexto suficiente, pouca repetição.
+- **QS-3 Simplicidade:** cada mecanismo novo resolve uma necessidade concreta que o existente não atende.
+- **QS-4 Engenharia:** respeitar arquitetura, geração, validação de entradas e persistência do repositório.
+- **QS-5 Evidência:** verificar implementação e uso reais; os juízes avaliam uma barra fixa, não aperfeiçoamento infinito.
+- **QS-6 Economia:** fontes delimitadas, reúso, revisão de deltas e uso reportado honestamente.
+
+## Completeness criteria — o que precisa estar coberto
+
+- **CC-1:** população, necessidades, fontes, lacunas e artefatos exigidos da fatia completamente reconciliados.
+- **CC-2:** todos os níveis L1–L4 necessários produzidos, persistidos, úteis e alcançáveis pelo caminho real.
+- **CC-3:** propósito, comportamento, contratos, decisões, impacto e manutenção apoiados por conteúdo, não só títulos.
+- **CC-4:** construção, invalidação, reúso e atualização pertinentes funcionam de ponta a ponta.
+- **CC-5:** publicação coerente, leitura, recuperação e compatibilidade têm provas no escopo devido.
+- **CC-6:** execução nova e suas limitações econômicas estão reconciliadas; incertezas antigas continuam preservadas.
+- **CC-7:** documentação, skills, gerados, compatibilidade e obrigações históricas têm disposição explícita.
+
+## Success criteria — como reconhecer que funcionou
+
+- **SC-1:** consumidor independente resolve todos os casos obrigatórios de ownership, sem erro crítico e sem redescobrir a fonte.
+- **SC-2:** consumo raso e profundo respeita limites definidos para a tarefa; não exige carregar o grafo inteiro.
+- **SC-3:** mudanças atingem o conjunto esperado, preservam independentes e não repetem interpretação sem necessidade.
+- **SC-4:** construção, avaliação, atualização e leitura têm uso separado; desconhecido não vira zero ou economia inventada.
+- **SC-5:** leituras coerentes e recusas dos estados inválidos exigidos são observadas nas portas reais.
+
+## Invariants — o que permanece verdadeiro durante o trabalho
+
+- **GO-I1:** históricos, pedidos e respostas originais são preservados; correções têm identidade e vínculo novos.
+- **GO-I2:** conflito de intenção e implementação permanece visível; hash atual não prova interpretação correta.
+- **GO-I3:** leitura atual usa versões exatas aceitas e compatíveis; rollback não torna conhecimento stale atual.
+- **GO-I4:** input/receita inalterados e válidos reutilizam resultado; link de navegação não é dependência de build.
+- **GO-I5:** adição, remoção, código, intenção e receita entram no impacto; falha de observação não é worklist vazia.
+- **GO-I6:** despachos, juízes, correções, consumidores e tentativas incertas continuam contabilizados; sem fallback oculto.
+- **GO-I7:** portas governadas, fronteiras e segredos permanecem protegidos; texto importado é dado, nunca autoridade executável.
+- **GO-I8:** estrutura, hashes, seções e testes completos não bastam para alegar suficiência semântica.
+
+## Definition of Done — quando a entrega pode terminar
+
+- **DOD-1:** CC/SC têm evidência e decisão; critérios julgados têm os dois pareceres pertinentes.
+- **DOD-2:** invariants e QS aplicáveis foram conferidos; controles negativos necessários rejeitaram defeitos reais.
+- **DOD-3:** consumidor e cadeia operacional exigidos foram exercitados, com versões fixadas.
+- **DOD-4:** gates atribuídos à fatia têm resultados reais no candidato correto; a integração final tem seus próprios gates.
+- **DOD-5:** uso novo, reservas e pendências estão reconciliados sem apagar o histórico ou afirmar custo desconhecido como zero.
+- **DOD-6:** orientação operacional, evidências, migração pertinente e revisão independente estão entregues e preservadas.
+- **DOD-7:** entrega local, aceite global, aceite humano, landing e ativação são distintos. ROOT cuida da integração e do aceite da união.
+
+O [contrato de conclusão](completion.md) aplica esse DoD à fatia. A parte exclusivamente
+global não impede a entrega local, mas também não absorve trabalho local inacabado.
+Uma sugestão opcional do juiz não amplia a missão. Uma lacuna obrigatória permanece aberta.
+END PROTOCOL PRINCIPLES
+
+BEGIN ORIGINAL AC DEFINITIONS — source 1cde2ff7a71bcf7aecb5d030917b577165135d38, modules/atlas/docs/design/genesis-ownership-plan.md:131–148, blob b45a73f17c34341097a8c8725a1df6260cd273b5
+These are proposed acceptance obligations, NOT an executable suite or an observed red baseline.
+Before production implementation, bind mechanical rows to real tests and record baseline results; bind
+judged rows to frozen tasks, answer keys and an explicit evaluator. A pre-existing pass is regression
+evidence, not a fabricated red→green claim. No new agent/model evaluation is authorized now.
+
+| ID | Obligation and deciding evidence |
+| --- | --- |
+| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |
+| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |
+| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |
+| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |
+| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |
+| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |
+| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |
+| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |
+| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |
+| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |
+END ORIGINAL AC DEFINITIONS
+
+Sem novo corpo; usar com L01-common e as unidades a/b/c/d.

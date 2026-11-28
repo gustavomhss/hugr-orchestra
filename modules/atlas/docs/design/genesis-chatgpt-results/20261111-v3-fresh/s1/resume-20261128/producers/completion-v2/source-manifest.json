@@ -1,0 +1,270 @@
+{
+  "schema": "genesis-correction-source-capture/v1",
+  "unit": "C02",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "new_github_fetches": 3,
+  "sources": [
+    {
+      "id": "admission_409_510",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/economy/admission.ts",
+        "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/admission_409_510.json",
+        "sha256": "13c5bfea3c672c2b13c060c96db84200de22ef1c31bd101bcc66fdfa65f88379"
+      },
+      "wrapper_identity": {
+        "byte_length": 8084,
+        "sha256": "13c5bfea3c672c2b13c060c96db84200de22ef1c31bd101bcc66fdfa65f88379"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 409,
+        "end_line": 510,
+        "requested_end_line": 510,
+        "byte_length": 7280,
+        "sha256": "e3270fce4a25d80ceaa1c2d1e7634174c27d351a02fcabf35b2c9c2d66c90add"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "new pinned GitHub fetch in C02",
+      "copied_from": null,
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "admission_589_699",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/economy/admission.ts",
+        "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/admission_589_699.json",
+        "sha256": "8fa708fdae3dea2deb33dbf2582888befc2adba0a9be5af7602529c428b634ed"
+      },
+      "wrapper_identity": {
+        "byte_length": 6029,
+        "sha256": "8fa708fdae3dea2deb33dbf2582888befc2adba0a9be5af7602529c428b634ed"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 589,
+        "end_line": 699,
+        "requested_end_line": 699,
+        "byte_length": 5208,
+        "sha256": "e962a657769881ef002e6dcb4d61f6a80b1533a4f90efa67eaf150cb0549cb10"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "new pinned GitHub fetch in C02",
+      "copied_from": null,
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "executor",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/economy/executor.ts",
+        "git_blob_sha": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+        "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/executor.json",
+        "sha256": "84f81edc586d62d1a98b358d5b1dbb28756b116b04a6d51471a582178fa95ecd"
+      },
+      "wrapper_identity": {
+        "byte_length": 20323,
+        "sha256": "84f81edc586d62d1a98b358d5b1dbb28756b116b04a6d51471a582178fa95ecd"
+      },
+      "literal_code": {
+        "kind": "full_file",
+        "start_line": 1,
+        "end_line": 429,
+        "requested_end_line": null,
+        "byte_length": 19112,
+        "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "new pinned GitHub fetch in C02",
+      "copied_from": null,
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/executor.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "pty_constants",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/pty_constants.json",
+        "sha256": "e28f9bca72e86223ca4cbb6293cb9c58fee19502d6b7170d2956c7b4c99f432d"
+      },
+      "wrapper_identity": {
+        "byte_length": 1405,
+        "sha256": "e28f9bca72e86223ca4cbb6293cb9c58fee19502d6b7170d2956c7b4c99f432d"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 23,
+        "end_line": 39,
+        "requested_end_line": 39,
+        "byte_length": 772,
+        "sha256": "c525904f312d540754677900367dae49125195f813a08bde469cc79e9abde69f"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_constants.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "pty_create",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/pty_create.json",
+        "sha256": "4fb5d2cb44a847aa394df40d82d8b30b4427b773a98d3b6961155115d56abecc"
+      },
+      "wrapper_identity": {
+        "byte_length": 3029,
+        "sha256": "4fb5d2cb44a847aa394df40d82d8b30b4427b773a98d3b6961155115d56abecc"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 229,
+        "end_line": 270,
+        "requested_end_line": 270,
+        "byte_length": 2346,
+        "sha256": "3f5cc81f10cafe1ed8a067b55b3f838865bad5323b6be5f4851ecff8cfec1721"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_create.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "pty_attach",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/pty_attach.json",
+        "sha256": "6251eda7984321b024a35c13532e2a96f5ff27abc1a3b4d1b265326fd7d5533e"
+      },
+      "wrapper_identity": {
+        "byte_length": 2892,
+        "sha256": "6251eda7984321b024a35c13532e2a96f5ff27abc1a3b4d1b265326fd7d5533e"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 370,
+        "end_line": 423,
+        "requested_end_line": 423,
+        "byte_length": 2217,
+        "sha256": "8e8213003527a288fe327c56c79178e9131a5cbef85c7404e2750e1993ba3ad4"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_attach.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "pty_exit",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/pty_exit.json",
+        "sha256": "4e2a285375171c6dc284abf206286fd6f7b946e5efb7cfb2e131b024bcd65079"
+      },
+      "wrapper_identity": {
+        "byte_length": 2231,
+        "sha256": "4e2a285375171c6dc284abf206286fd6f7b946e5efb7cfb2e131b024bcd65079"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 330,
+        "end_line": 369,
+        "requested_end_line": 369,
+        "byte_length": 1623,
+        "sha256": "b62c37ddefdf0e1759c896c01ab1cfb8f4e82cfddd3c8046ab47ddaea12df38d"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_exit.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "pty_protocol",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty/protocol.ts",
+        "git_blob_sha": "cca1266bd0235f21bbac04454824c04b5c839aeb"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/pty_protocol.json",
+        "sha256": "dd748c7aad5a2e9543eaffecd4e920b19258d54e0b0f463e2b9da5922f250a84"
+      },
+      "wrapper_identity": {
+        "byte_length": 2862,
+        "sha256": "dd748c7aad5a2e9543eaffecd4e920b19258d54e0b0f463e2b9da5922f250a84"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 1,
+        "end_line": 58,
+        "requested_end_line": 100,
+        "byte_length": 2216,
+        "sha256": "4a2994a10c0bbae3d471962c494d013fba76c3551531ba51e57d9dcc76e9c95c"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_protocol.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty/protocol.ts",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    },
+    {
+      "id": "terminal_skill",
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+        "git_blob_sha": "610fa93e3ec385790509b0c7fd0181fd30adc727"
+      },
+      "wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/sources/terminal_skill.json",
+        "sha256": "3b169aa7cf909c70abc75cfae210e0b7c16188414942496ea67973ba153c96d0"
+      },
+      "wrapper_identity": {
+        "byte_length": 3007,
+        "sha256": "3b169aa7cf909c70abc75cfae210e0b7c16188414942496ea67973ba153c96d0"
+      },
+      "literal_code": {
+        "kind": "excerpt",
+        "start_line": 10,
+        "end_line": 29,
+        "requested_end_line": 29,
+        "byte_length": 2380,
+        "sha256": "ebbdc36c5cb04cd84c16c45ac8fd167cd51865841ce54c5a14e646db784bbc89"
+      },
+      "read_depth": "full literal code transported for this source; unchanged C01 families not re-audited",
+      "capture": "exact byte copy of previously captured pure source, reread in C02",
+      "copied_from": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-terminal_skill.json",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/terminal-maintenance/SKILL.md",
+      "hash_note": "SHA-256 on a ranged capture identifies literal excerpt bytes; complete-source Git blob remains separately explicit."
+    }
+  ]
+}

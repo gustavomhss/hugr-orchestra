@@ -3,8 +3,8 @@
   "parts": [
     {
       "path": "reviews/requests/l01-common.txt",
-      "bytes": 21710,
-      "sha256": "d884619e7faa7b9d27cbc0711938418225536d7bfbce85c46d954ba6f4a90f2e",
+      "bytes": 21712,
+      "sha256": "2b733f0ba569ed4a7e0fdf2d9817ad4f6f9b8f628c871220dd33efa065b9ce0d",
       "state": "PREPARED_NOT_SENT"
     },
     {
@@ -65,6 +65,12 @@
       "path": "reviews/requests/l01d-evidence-02.txt",
       "bytes": 20133,
       "sha256": "471cf72f4322001843d4b719c6d2e7fdc7f797e2c8c3413f98f03c5c724d7fb2",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01-criteria.txt",
+      "bytes": 11535,
+      "sha256": "4c81ff69ba2889d6f34189e3fe997f7019407d24d2b3d3e4b446a101205b8a03",
       "state": "PREPARED_NOT_SENT"
     }
   ]

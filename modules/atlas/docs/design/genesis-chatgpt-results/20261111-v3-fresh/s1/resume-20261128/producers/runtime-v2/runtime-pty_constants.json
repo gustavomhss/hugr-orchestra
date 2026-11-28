@@ -1,0 +1,23 @@
+{
+  "id": "pty_constants",
+  "start_line": 23,
+  "end_line": 39,
+  "path": "packages/core/src/pty.ts",
+  "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "// Exited sessions stay observable (status, exit code, retained output) until removed explicitly.\n// Cap retention so abandoned terminals do not accumulate unbounded buffers.\nconst EXITED_LIMIT = 25\nconst pty = lazy(() => import(\"#pty\"))\nconst omniPty = lazy(() => import(\"./pty/omni\").then((mod) => mod.load()))\n// How long an omni tree gets to wind down when its session goes, and how long the layer finalizer waits for every\n// pending stop: above ConPTY's declared 6 s close (integration plan, WP2).\nconst STOP_GRACE_MS = 2000\nconst FINALIZE_CAP = \"7 seconds\"\n\ntype Subscriber = {\n  readonly onData: (chunk: string) => void\n  readonly onEnd: (event: { exitCode?: number }) => void\n  active: boolean\n  detached: boolean\n  pending: string[]\n  end?: { exitCode?: number }",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

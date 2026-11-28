@@ -2,8 +2,8 @@
   "schema": "genesis-s1-selection/v1",
   "state": "IN_PROGRESS",
   "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
-  "package_sha256": "6821a3b6102c4a5088452432a5e9db5034202ce7a6a041beb07c354328021c80",
-  "artifact_count": 55,
+  "package_sha256": "ab4a5e7d28d82dfa25089bfb31253bf1db3dc31ef54375d58836e089dae2ba03",
+  "artifact_count": 58,
   "origins": {
     "s1.core.tools": {
       "owner": "02-tools",
@@ -114,13 +114,14 @@
       "body_git_blob_sha": "c46ed58dcd9b25dd0999d6cf54e8a5d09a07fc65"
     },
     "s1.core.runtime": {
-      "owner": "01-sessions",
-      "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
-      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/runtime.md",
-      "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
-      "package_sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030",
-      "body_sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
-      "body_git_blob_sha": "44ef32de284c75a7e56619229bda2d1c95a3245b"
+      "owner": "S1-resume",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/body.md",
+      "sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+      "byte_length": 6974,
+      "version": 2,
+      "body_sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+      "body_git_blob_sha": "fe85aa084e9077ff18ef1db2117cf02872e71147",
+      "supersedes_body_sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534"
     },
     "s1.subslice01.config-project-supplement": {
       "owner": "01-sessions",
@@ -499,6 +500,36 @@
       "body_git_blob_sha": "63254948b61bb801a63e93e4b6d1256543745de1",
       "package_path": null,
       "new_producer": "/root/produce_libraries"
+    },
+    "s1.subslice02.tools-security-completion": {
+      "owner": "02-tools",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/tools-security-completion.md",
+      "sha256": "12c5f838030d624ba23071adefabbee9a317c6f6191a693a825a8d2c38f2ceb8",
+      "byte_length": 14338,
+      "producer": "/root/produce_tools",
+      "version": "v1",
+      "body_sha256": "12c5f838030d624ba23071adefabbee9a317c6f6191a693a825a8d2c38f2ceb8",
+      "body_git_blob_sha": "9d63c603b2a95217bae07fe8ce4af90a55451be2"
+    },
+    "s1.subslice02.extensions-completion": {
+      "owner": "02-tools",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/extensions-completion.md",
+      "sha256": "ba632793c4d1843e5c71baa6e342cd18641fb5a1e600d64085fa1f41f6030f43",
+      "byte_length": 12114,
+      "producer": "/root/produce_tools",
+      "version": "v1",
+      "body_sha256": "ba632793c4d1843e5c71baa6e342cd18641fb5a1e600d64085fa1f41f6030f43",
+      "body_git_blob_sha": "9e93cd39264fe4d5172c02035012e3945c70af2f"
+    },
+    "s1.subslice02.capability-completion": {
+      "owner": "02-tools",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/capability-completion.md",
+      "sha256": "cf6c36fde73bb6c191cb4d8e7b3bf82b121009b3390c16b1941667c1d40dac89",
+      "byte_length": 16742,
+      "producer": "/root/produce_tools",
+      "version": "v1",
+      "body_sha256": "cf6c36fde73bb6c191cb4d8e7b3bf82b121009b3390c16b1941667c1d40dac89",
+      "body_git_blob_sha": "bd75e2ceb4fbcb8f4ec9814c38a4ead4fd0c22df"
     }
   },
   "transport_changes": [
@@ -905,6 +936,22 @@
   "new_bodies_accepted": false,
   "new_exact_semantic_acceptances": [
     "s1.core.economy",
-    "s1.core.models"
+    "s1.core.models",
+    "s1.core.runtime",
+    "s1.subslice05.llm-contracts.l2"
+  ],
+  "required_count": 69,
+  "missing_required_artifact_keys": [
+    "s1.subslice05.integration.l3",
+    "s1.subslice05.ownership.l4",
+    "s1.l2.runtime-ownership",
+    "s1.subslice01.session-lifecycle.l2",
+    "s1.l3.session-provider-flow",
+    "s1.l4.safe-change",
+    "s1.subslice02.authority.l2",
+    "s1.subslice02.integration.l3",
+    "s1.subslice02.ownership.l4",
+    "s1.l3.ownership-impact-map",
+    "s1.l4.ownership-entry"
   ]
 }

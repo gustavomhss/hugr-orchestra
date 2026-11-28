@@ -1,0 +1,24 @@
+{
+  "coverage_rows": 235,
+  "inventory_rows": 555,
+  "selected_rows": 235,
+  "all_paths_unique": true,
+  "all_selected_git_blobs_match": true,
+  "lossless_reconstruction_equals_original_objects": true,
+  "factored_bytes": 242417,
+  "factored_sha256": "37dce363f87a6017992357d6602e469e9b22e72ebfc82c549b93357eb49e89cd",
+  "selected_previous_artifact_counts": {
+    "s1.core.runtime": 150,
+    "s1.core.models": 80,
+    "s1.core.economy": 5
+  },
+  "outside_counts": {
+    "s1.core.project": 61,
+    "s1.core.configuration": 62,
+    "s1.core.session-execution": 64,
+    "s1.core.persistence": 111,
+    "s1.core.context": 16,
+    "s1.core.session-admission": 6
+  },
+  "semantics": "NOT_JUDGED; no body/source reading or PASS inferred from mapping"
+}

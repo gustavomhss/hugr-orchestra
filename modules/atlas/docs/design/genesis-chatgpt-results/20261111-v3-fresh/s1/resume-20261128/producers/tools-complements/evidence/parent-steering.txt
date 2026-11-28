@@ -1,0 +1,11 @@
+Message Type: MESSAGE
+Sender: /root
+Recipient: /root/produce_tools
+Payload:
+Lote mínimo3 aprovado dentro da missão já autorizada, sem novo consentimento necessário. Preserve not_read versus leitura nova e classifique tests/metadados/gerados por contrato pertinente sem fingir leitura. Consulte somente fontes decisivas para necessidades obrigatórias, expandindo dependências quando código exigir. Registre exposição incidental S1-01, que não é oracle Ferramentas; não use para esta autoria. Não há slot extra para filhos enquanto coordenação e par atuam; siga solo. Pode agrupar consultas GitHub independentes via Promise.allSettled, conferir todas, preservar cópias exatas. Avise lacuna concreta de acesso, não mera quantidade.
+
+Message Type: MESSAGE
+Sender: /root
+Recipient: /root/produce_tools
+Payload:
+Use payload_path final modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/{body filenames,recipe.json,request.txt,response.md}. Body.path relativo ao native-package será resume-20261128/producers/tools-complements/<filename>. Não invente commit; refs payload_path com hashes exatos. Preserve fragmento local e original das leituras. Feche sem L2+ antes dos aceites. Ótimos achados concretos; mantenha limites unknown e explicite disposição das fontes não lidas.

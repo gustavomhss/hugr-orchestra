@@ -1,0 +1,43 @@
+{
+  "schema": "genesis-native-projection-change/v1",
+  "source_fragment_sha256": "f8613025192868600a3ad39e8c22cda69e63ec12a72c8dd2d3d9668691e59b60",
+  "changes": [
+    {
+      "key": "s1.subslice02.tools-security-completion",
+      "body_changed": false,
+      "authority_projection": "Only schema-permitted scope/basis; every additional producer boundary is preserved verbatim as JSON text appended to basis, and original fragment remains exact.",
+      "evidence_projection": "Objects serialized as exact-data JSON strings.",
+      "source_ref_projection": "Native four identity fields; byte lengths and read ranges retained in exact source manifest/original fragment.",
+      "validity": "blocked until actual exact two-judge semantic decision; producer supported claim remains explicit in original fragment.",
+      "removed_native_extra_fields": [
+        "local_body_path",
+        "validity_meaning"
+      ]
+    },
+    {
+      "key": "s1.subslice02.extensions-completion",
+      "body_changed": false,
+      "authority_projection": "Only schema-permitted scope/basis; every additional producer boundary is preserved verbatim as JSON text appended to basis, and original fragment remains exact.",
+      "evidence_projection": "Objects serialized as exact-data JSON strings.",
+      "source_ref_projection": "Native four identity fields; byte lengths and read ranges retained in exact source manifest/original fragment.",
+      "validity": "blocked until actual exact two-judge semantic decision; producer supported claim remains explicit in original fragment.",
+      "removed_native_extra_fields": [
+        "local_body_path",
+        "validity_meaning"
+      ]
+    },
+    {
+      "key": "s1.subslice02.capability-completion",
+      "body_changed": false,
+      "authority_projection": "Only schema-permitted scope/basis; every additional producer boundary is preserved verbatim as JSON text appended to basis, and original fragment remains exact.",
+      "evidence_projection": "Objects serialized as exact-data JSON strings.",
+      "source_ref_projection": "Native four identity fields; byte lengths and read ranges retained in exact source manifest/original fragment.",
+      "validity": "blocked until actual exact two-judge semantic decision; producer supported claim remains explicit in original fragment.",
+      "removed_native_extra_fields": [
+        "local_body_path",
+        "validity_meaning"
+      ]
+    }
+  ],
+  "claim": "Mechanical projection only, no semantic acceptance or runtime binding."
+}

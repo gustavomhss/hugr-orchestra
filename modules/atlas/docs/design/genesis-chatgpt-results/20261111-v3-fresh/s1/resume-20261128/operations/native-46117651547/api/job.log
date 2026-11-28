@@ -1,0 +1,1278 @@
+﻿2026-11-28T06:40:46.5724389Z Current runner version: '2.338.2'
+2026-11-28T06:40:46.5748804Z ##[group]Runner Image Provisioner
+2026-11-28T06:40:46.5750149Z Hosted Compute Agent
+2026-11-28T06:40:46.5750813Z Version: 20261111.635
+2026-11-28T06:40:46.5751436Z Commit: b8a594ea514ff44cadb5342986c68b1eac6e22ed
+2026-11-28T06:40:46.5752265Z Build Date: 2026-11-11T01:49:01Z
+2026-11-28T06:40:46.5752981Z Worker ID: {5b5fa3af-5cbe-464c-acb8-3a871241a24e}
+2026-11-28T06:40:46.5753795Z Region: westus
+2026-11-28T06:40:46.5754365Z Cloud: Azure
+2026-11-28T06:40:46.5754901Z ##[endgroup]
+2026-11-28T06:40:46.5756781Z ##[group]Operating System
+2026-11-28T06:40:46.5757462Z Ubuntu
+2026-11-28T06:40:46.5758035Z 24.04.5
+2026-11-28T06:40:46.5758567Z LTS
+2026-11-28T06:40:46.5759083Z ##[endgroup]
+2026-11-28T06:40:46.5760385Z ##[group]Runner Image
+2026-11-28T06:40:46.5761156Z Image: ubuntu-24.04
+2026-11-28T06:40:46.5761714Z Version: 20261122.23.1
+2026-11-28T06:40:46.5763066Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20261122.23/images/ubuntu/Ubuntu2404-Readme.md
+2026-11-28T06:40:46.5764731Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20261122.23
+2026-11-28T06:40:46.5765745Z ##[endgroup]
+2026-11-28T06:40:46.5766915Z ##[group]GITHUB_TOKEN Permissions
+2026-11-28T06:40:46.5769032Z Contents: read
+2026-11-28T06:40:46.5770113Z Metadata: read
+2026-11-28T06:40:46.5770778Z ##[endgroup]
+2026-11-28T06:40:46.5773062Z Secret source: Actions
+2026-11-28T06:40:46.5774103Z Cache mode: write
+2026-11-28T06:40:46.5774801Z Prepare workflow directory
+2026-11-28T06:40:46.6119904Z Prepare all required actions
+2026-11-28T06:40:46.6171075Z Getting action download info
+2026-11-28T06:40:47.0018189Z Download action repository 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+2026-11-28T06:40:47.1963260Z Download action repository 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' (SHA:ea165f8d65b6e75b540449e92b4886f43607fa02)
+2026-11-28T06:40:47.4621354Z Complete job name: original-native (api)
+2026-11-28T06:40:47.5621943Z ##[group]Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+2026-11-28T06:40:47.5623262Z with:
+2026-11-28T06:40:47.5623680Z   fetch-depth: 0
+2026-11-28T06:40:47.5624129Z   persist-credentials: false
+2026-11-28T06:40:47.5624671Z   repository: gustavomhss/hugr-orchestra
+2026-11-28T06:40:47.5628709Z   token: ***
+2026-11-28T06:40:47.5629134Z   ssh-strict: true
+2026-11-28T06:40:47.5629782Z   ssh-user: git
+2026-11-28T06:40:47.5630311Z   clean: true
+2026-11-28T06:40:47.5630746Z   sparse-checkout-cone-mode: true
+2026-11-28T06:40:47.5631267Z   fetch-tags: false
+2026-11-28T06:40:47.5631694Z   show-progress: true
+2026-11-28T06:40:47.5632126Z   lfs: false
+2026-11-28T06:40:47.5632527Z   submodules: false
+2026-11-28T06:40:47.5632962Z   set-safe-directory: true
+2026-11-28T06:40:47.5633749Z ##[endgroup]
+2026-11-28T06:40:47.8358978Z Syncing repository: gustavomhss/hugr-orchestra
+2026-11-28T06:40:47.8361630Z ##[group]Getting Git version info
+2026-11-28T06:40:47.8362498Z Working directory is '/home/runner/work/hugr-orchestra/hugr-orchestra'
+2026-11-28T06:40:47.8363603Z [command]/usr/bin/git version
+2026-11-28T06:40:47.8455686Z git version 2.56.1
+2026-11-28T06:40:47.8476566Z ##[endgroup]
+2026-11-28T06:40:47.8492349Z Temporarily overriding HOME='/home/runner/work/_temp/413651be-69a6-4ee2-9f84-b6defeaefb29' before making global git config changes
+2026-11-28T06:40:47.8494792Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-28T06:40:47.8498170Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/hugr-orchestra/hugr-orchestra
+2026-11-28T06:40:47.8550603Z Deleting the contents of '/home/runner/work/hugr-orchestra/hugr-orchestra'
+2026-11-28T06:40:47.8578933Z ##[group]Initializing the repository
+2026-11-28T06:40:47.8584534Z [command]/usr/bin/git init /home/runner/work/hugr-orchestra/hugr-orchestra
+2026-11-28T06:40:47.8700839Z hint: Using 'master' as the name for the initial branch. This default branch name
+2026-11-28T06:40:47.8702999Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+2026-11-28T06:40:47.8704617Z hint: to use in all of your new repositories, which will suppress this warning,
+2026-11-28T06:40:47.8706107Z hint: call:
+2026-11-28T06:40:47.8706913Z hint:
+2026-11-28T06:40:47.8707861Z hint: 	git config --global init.defaultBranch <name>
+2026-11-28T06:40:47.8708997Z hint:
+2026-11-28T06:40:47.8710346Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+2026-11-28T06:40:47.8712107Z hint: 'development'. The just-created branch can be renamed via this command:
+2026-11-28T06:40:47.8713563Z hint:
+2026-11-28T06:40:47.8714379Z hint: 	git branch -m <name>
+2026-11-28T06:40:47.8715349Z hint:
+2026-11-28T06:40:47.8716523Z hint: Disable this message with "git config set advice.defaultBranchName false"
+2026-11-28T06:40:47.8718539Z Initialized empty Git repository in /home/runner/work/hugr-orchestra/hugr-orchestra/.git/
+2026-11-28T06:40:47.8722839Z [command]/usr/bin/git remote add origin https://github.com/gustavomhss/hugr-orchestra
+2026-11-28T06:40:47.8788329Z ##[endgroup]
+2026-11-28T06:40:47.8790013Z ##[group]Disabling automatic garbage collection
+2026-11-28T06:40:47.8792175Z [command]/usr/bin/git config --local gc.auto 0
+2026-11-28T06:40:47.8829012Z ##[endgroup]
+2026-11-28T06:40:47.8830406Z ##[group]Setting up auth
+2026-11-28T06:40:47.8837269Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-28T06:40:47.8875234Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-28T06:40:47.9321528Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-28T06:40:47.9367993Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-28T06:40:47.9703838Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-28T06:40:47.9750178Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-28T06:40:47.9992674Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+2026-11-28T06:40:48.0041173Z ##[endgroup]
+2026-11-28T06:40:48.0041972Z ##[group]Fetching the repository
+2026-11-28T06:40:48.0054620Z [command]/usr/bin/git -c protocol.version=2 fetch --prune --no-recurse-submodules origin +refs/heads/*:refs/remotes/origin/* +refs/tags/*:refs/tags/*
+2026-11-28T06:41:31.4207895Z From https://github.com/gustavomhss/hugr-orchestra
+2026-11-28T06:41:31.4209124Z  * [new branch]            a11y-motion-roles       -> origin/a11y-motion-roles
+2026-11-28T06:41:31.4210277Z  * [new branch]            ac01-need-map           -> origin/ac01-need-map
+2026-11-28T06:41:31.4211303Z  * [new branch]            ac02-oracle-map         -> origin/ac02-oracle-map
+2026-11-28T06:41:31.4212205Z  * [new branch]            ac03-direct-mine        -> origin/ac03-direct-mine
+2026-11-28T06:41:31.4213150Z  * [new branch]            ac03-gap-matrix         -> origin/ac03-gap-matrix
+2026-11-28T06:41:31.4214002Z  * [new branch]            ac03-reader-proof       -> origin/ac03-reader-proof
+2026-11-28T06:41:31.4215026Z  * [new branch]            ac04-construction-map   -> origin/ac04-construction-map
+2026-11-28T06:41:31.4215967Z  * [new branch]            ac05-reuse-map          -> origin/ac05-reuse-map
+2026-11-28T06:41:31.4216899Z  * [new branch]            ac06-increment-map      -> origin/ac06-increment-map
+2026-11-28T06:41:31.4217808Z  * [new branch]            ac07-recovery-map       -> origin/ac07-recovery-map
+2026-11-28T06:41:31.4218738Z  * [new branch]            ac08-economy-map        -> origin/ac08-economy-map
+2026-11-28T06:41:31.4219810Z  * [new branch]            ac09-host-map           -> origin/ac09-host-map
+2026-11-28T06:41:31.4221399Z  * [new branch]            ac10-inventory          -> origin/ac10-inventory
+2026-11-28T06:41:31.4222681Z  * [new branch]            actionlint-pin-close    -> origin/actionlint-pin-close
+2026-11-28T06:41:31.4223681Z  * [new branch]            actions-exercise        -> origin/actions-exercise
+2026-11-28T06:41:31.4224669Z  * [new branch]            actions-live-proof      -> origin/actions-live-proof
+2026-11-28T06:41:31.4225688Z  * [new branch]            activity-action-ledger  -> origin/activity-action-ledger
+2026-11-28T06:41:31.4226679Z  * [new branch]            activity-cache-browser  -> origin/activity-cache-browser
+2026-11-28T06:41:31.4227616Z  * [new branch]            activity-cache-core     -> origin/activity-cache-core
+2026-11-28T06:41:31.4228547Z  * [new branch]            activity-cache-panel    -> origin/activity-cache-panel
+2026-11-28T06:41:31.4229474Z  * [new branch]            activity-cache-service  -> origin/activity-cache-service
+2026-11-28T06:41:31.4230758Z  * [new branch]            activity-disk-trim      -> origin/activity-disk-trim
+2026-11-28T06:41:31.4231654Z  * [new branch]            activity-empty-gate     -> origin/activity-empty-gate
+2026-11-28T06:41:31.4232548Z  * [new branch]            activity-footprint      -> origin/activity-footprint
+2026-11-28T06:41:31.4233460Z  * [new branch]            activity-format-effects -> origin/activity-format-effects
+2026-11-28T06:41:31.4234447Z  * [new branch]            activity-format-refactor -> origin/activity-format-refactor
+2026-11-28T06:41:31.4235790Z  * [new branch]            activity-human-approval -> origin/activity-human-approval
+2026-11-28T06:41:31.4236714Z  * [new branch]            activity-monitor        -> origin/activity-monitor
+2026-11-28T06:41:31.4237661Z  * [new branch]            activity-native         -> origin/activity-native
+2026-11-28T06:41:31.4238371Z  * [new branch]            activity-native-effects -> origin/activity-native-effects
+2026-11-28T06:41:31.4239242Z  * [new branch]            activity-native-format  -> origin/activity-native-format
+2026-11-28T06:41:31.4240151Z  * [new branch]            activity-native-identity -> origin/activity-native-identity
+2026-11-28T06:41:31.4240761Z  * [new branch]            activity-next-integration -> origin/activity-next-integration
+2026-11-28T06:41:31.4241531Z  * [new branch]            activity-observation    -> origin/activity-observation
+2026-11-28T06:41:31.4242555Z  * [new branch]            activity-private-channel -> origin/activity-private-channel
+2026-11-28T06:41:31.4243239Z  * [new branch]            activity-proof-core     -> origin/activity-proof-core
+2026-11-28T06:41:31.4243901Z  * [new branch]            activity-proof-panel    -> origin/activity-proof-panel
+2026-11-28T06:41:31.4244477Z  * [new branch]            activity-proof-service  -> origin/activity-proof-service
+2026-11-28T06:41:31.4245037Z  * [new branch]            activity-read-wave      -> origin/activity-read-wave
+2026-11-28T06:41:31.4245612Z  * [new branch]            activity-relay-gate     -> origin/activity-relay-gate
+2026-11-28T06:41:31.4246163Z  * [new branch]            activity-rename-gate    -> origin/activity-rename-gate
+2026-11-28T06:41:31.4246748Z  * [new branch]            activity-source-recovery -> origin/activity-source-recovery
+2026-11-28T06:41:31.4247358Z  * [new branch]            activity-stop-approval  -> origin/activity-stop-approval
+2026-11-28T06:41:31.4247968Z  * [new branch]            activity-suspension-marks -> origin/activity-suspension-marks
+2026-11-28T06:41:31.4248639Z  * [new branch]            activity-tree-telemetry -> origin/activity-tree-telemetry
+2026-11-28T06:41:31.4249374Z  * [new branch]            advanced-binding-tests  -> origin/advanced-binding-tests
+2026-11-28T06:41:31.4250170Z  * [new branch]            advanced-proof-dispatch -> origin/advanced-proof-dispatch
+2026-11-28T06:41:31.4251013Z  * [new branch]            app-check-fail          -> origin/app-check-fail
+2026-11-28T06:41:31.4251807Z  * [new branch]            app-final               -> origin/app-final
+2026-11-28T06:41:31.4252632Z  * [new branch]            app-model-execution     -> origin/app-model-execution
+2026-11-28T06:41:31.4253191Z  * [new branch]            app-shell-bundle        -> origin/app-shell-bundle
+2026-11-28T06:41:31.4253695Z  * [new branch]            app-test-lanes          -> origin/app-test-lanes
+2026-11-28T06:41:31.4254175Z  * [new branch]            app-ux-proof            -> origin/app-ux-proof
+2026-11-28T06:41:31.4254664Z  * [new branch]            approval-currency       -> origin/approval-currency
+2026-11-28T06:41:31.4255168Z  * [new branch]            apt-mirror-fallback     -> origin/apt-mirror-fallback
+2026-11-28T06:41:31.4255673Z  * [new branch]            archive-stops-run       -> origin/archive-stops-run
+2026-11-28T06:41:31.4256180Z  * [new branch]            artifact-audit-cut      -> origin/artifact-audit-cut
+2026-11-28T06:41:31.4256671Z  * [new branch]            artifact-smoke          -> origin/artifact-smoke
+2026-11-28T06:41:31.4257171Z  * [new branch]            asar-treesitter         -> origin/asar-treesitter
+2026-11-28T06:41:31.4257676Z  * [new branch]            astra-j1-environment    -> origin/astra-j1-environment
+2026-11-28T06:41:31.4258176Z  * [new branch]            astra-rag-start         -> origin/astra-rag-start
+2026-11-28T06:41:31.4258646Z  * [new branch]            async-ci-run            -> origin/async-ci-run
+2026-11-28T06:41:31.4259201Z  * [new branch]            atlas-runtime-fix       -> origin/atlas-runtime-fix
+2026-11-28T06:41:31.4260176Z  * [new branch]            audit-background        -> origin/audit-background
+2026-11-28T06:41:31.4260708Z  * [new branch]            audit-boundaries        -> origin/audit-boundaries
+2026-11-28T06:41:31.4261200Z  * [new branch]            audit-doc-close         -> origin/audit-doc-close
+2026-11-28T06:41:31.4261687Z  * [new branch]            audit-fixes             -> origin/audit-fixes
+2026-11-28T06:41:31.4262484Z  * [new branch]            audit-mcp               -> origin/audit-mcp
+2026-11-28T06:41:31.4262976Z  * [new branch]            audit-oauth             -> origin/audit-oauth
+2026-11-28T06:41:31.4263481Z  * [new branch]            audit-release-docs      -> origin/audit-release-docs
+2026-11-28T06:41:31.4263986Z  * [new branch]            audit-remainder         -> origin/audit-remainder
+2026-11-28T06:41:31.4264867Z  * [new branch]            audit-remediation       -> origin/audit-remediation
+2026-11-28T06:41:31.4265803Z  * [new branch]            audit-serve             -> origin/audit-serve
+2026-11-28T06:41:31.4266633Z  * [new branch]            audit-uninstall         -> origin/audit-uninstall
+2026-11-28T06:41:31.4267425Z  * [new branch]            audit-updater           -> origin/audit-updater
+2026-11-28T06:41:31.4268134Z  * [new branch]            audit-workspaces        -> origin/audit-workspaces
+2026-11-28T06:41:31.4269042Z  * [new branch]            auto-accept-fail        -> origin/auto-accept-fail
+2026-11-28T06:41:31.4270129Z  * [new branch]            behavior-read-fail      -> origin/behavior-read-fail
+2026-11-28T06:41:31.4271056Z  * [new branch]            board-browser-fixture   -> origin/board-browser-fixture
+2026-11-28T06:41:31.4271943Z  * [new branch]            board-j1-history        -> origin/board-j1-history
+2026-11-28T06:41:31.4272783Z  * [new branch]            board-j1-polish         -> origin/board-j1-polish
+2026-11-28T06:41:31.4273599Z  * [new branch]            board-spend             -> origin/board-spend
+2026-11-28T06:41:31.4274411Z  * [new branch]            board-thread            -> origin/board-thread
+2026-11-28T06:41:31.4275237Z  * [new branch]            board-title-hints       -> origin/board-title-hints
+2026-11-28T06:41:31.4276109Z  * [new branch]            board-title-probes      -> origin/board-title-probes
+2026-11-28T06:41:31.4276987Z  * [new branch]            bounded-file-read       -> origin/bounded-file-read
+2026-11-28T06:41:31.4277849Z  * [new branch]            bounded-inputs          -> origin/bounded-inputs
+2026-11-28T06:41:31.4279015Z  * [new branch]            bounded-read-probes     -> origin/bounded-read-probes
+2026-11-28T06:41:31.4280146Z  * [new branch]            bundle-file-list        -> origin/bundle-file-list
+2026-11-28T06:41:31.4281176Z  * [new branch]            cache-consumers         -> origin/cache-consumers
+2026-11-28T06:41:31.4282109Z  * [new branch]            cache-diagnosis         -> origin/cache-diagnosis
+2026-11-28T06:41:31.4283025Z  * [new branch]            cache-qualification     -> origin/cache-qualification
+2026-11-28T06:41:31.4283895Z  * [new branch]            cache-storage           -> origin/cache-storage
+2026-11-28T06:41:31.4284756Z  * [new branch]            cache-test-types        -> origin/cache-test-types
+2026-11-28T06:41:31.4285583Z  * [new branch]            campaign-closeout       -> origin/campaign-closeout
+2026-11-28T06:41:31.4286419Z  * [new branch]            campaign-final          -> origin/campaign-final
+2026-11-28T06:41:31.4287359Z  * [new branch]            capability-layer-notes  -> origin/capability-layer-notes
+2026-11-28T06:41:31.4288309Z  * [new branch]            cards-depth             -> origin/cards-depth
+2026-11-28T06:41:31.4289165Z  * [new branch]            cargo-io-check          -> origin/cargo-io-check
+2026-11-28T06:41:31.4290373Z  * [new branch]            cargo-lock-binding      -> origin/cargo-lock-binding
+2026-11-28T06:41:31.4291290Z  * [new branch]            cargo-native-check      -> origin/cargo-native-check
+2026-11-28T06:41:31.4292177Z  * [new branch]            cargo-path-check        -> origin/cargo-path-check
+2026-11-28T06:41:31.4292703Z  * [new branch]            cas-repair              -> origin/cas-repair
+2026-11-28T06:41:31.4293212Z  * [new branch]            changed-line-mutants    -> origin/changed-line-mutants
+2026-11-28T06:41:31.4293725Z  * [new branch]            chapter-headers         -> origin/chapter-headers
+2026-11-28T06:41:31.4294202Z  * [new branch]            ci-lanes                -> origin/ci-lanes
+2026-11-28T06:41:31.4294938Z  * [new branch]            ci-run-both-mwcl7f4s-f16770f -> origin/ci-run-both-mwcl7f4s-f16770f
+2026-11-28T06:41:31.4295718Z  * [new branch]            ci-run-both-mwclfl1h-85ab490 -> origin/ci-run-both-mwclfl1h-85ab490
+2026-11-28T06:41:31.4297090Z  * [new branch]            ci-run-linux-board-j1-schema-000133-e60ab0f2 -> origin/ci-run-linux-board-j1-schema-000133-e60ab0f2
+2026-11-28T06:41:31.4298345Z  * [new branch]            ci-run-linux-mwckwtgq-78129de -> origin/ci-run-linux-mwckwtgq-78129de
+2026-11-28T06:41:31.4299028Z  * [new branch]            ci-run-windows-mwckgyt7-97cea39 -> origin/ci-run-windows-mwckgyt7-97cea39
+2026-11-28T06:41:31.4299963Z  * [new branch]            ci-run-windows-mwcktm1d-e36572e -> origin/ci-run-windows-mwcktm1d-e36572e
+2026-11-28T06:41:31.4300715Z  * [new branch]            ci-ux-663d78b           -> origin/ci-ux-663d78b
+2026-11-28T06:41:31.4301564Z  * [new branch]            ci-ux-f014480           -> origin/ci-ux-f014480
+2026-11-28T06:41:31.4302406Z  * [new branch]            claude-background       -> origin/claude-background
+2026-11-28T06:41:31.4303255Z  * [new branch]            claude-media            -> origin/claude-media
+2026-11-28T06:41:31.4304117Z  * [new branch]            claude-mode-feedback    -> origin/claude-mode-feedback
+2026-11-28T06:41:31.4305016Z  * [new branch]            claude-setup-guide      -> origin/claude-setup-guide
+2026-11-28T06:41:31.4305901Z  * [new branch]            clear-stale-default     -> origin/clear-stale-default
+2026-11-28T06:41:31.4306780Z  * [new branch]            close-debts             -> origin/close-debts
+2026-11-28T06:41:31.4307672Z  * [new branch]            codegen-windows-tests   -> origin/codegen-windows-tests
+2026-11-28T06:41:31.4308597Z  * [new branch]            codemode-deadline       -> origin/codemode-deadline
+2026-11-28T06:41:31.4309533Z  * [new branch]            compaction-app-probes   -> origin/compaction-app-probes
+2026-11-28T06:41:31.4310700Z  * [new branch]            compaction-app-red      -> origin/compaction-app-red
+2026-11-28T06:41:31.4311851Z  * [new branch]            compaction-seam         -> origin/compaction-seam
+2026-11-28T06:41:31.4312759Z  * [new branch]            compaction-seam-red     -> origin/compaction-seam-red
+2026-11-28T06:41:31.4313714Z  * [new branch]            compaction-start-red    -> origin/compaction-start-red
+2026-11-28T06:41:31.4314709Z  * [new branch]            compaction-terminal-app -> origin/compaction-terminal-app
+2026-11-28T06:41:31.4315733Z  * [new branch]            compaction-terminal-core -> origin/compaction-terminal-core
+2026-11-28T06:41:31.4316771Z  * [new branch]            compaction-terminal-tests -> origin/compaction-terminal-tests
+2026-11-28T06:41:31.4317776Z  * [new branch]            compaction-validation   -> origin/compaction-validation
+2026-11-28T06:41:31.4318675Z  * [new branch]            compare-span            -> origin/compare-span
+2026-11-28T06:41:31.4319542Z  * [new branch]            conceal-hide-fail       -> origin/conceal-hide-fail
+2026-11-28T06:41:31.4320889Z  * [new branch]            config-reload-fail      -> origin/config-reload-fail
+2026-11-28T06:41:31.4321815Z  * [new branch]            config-spec-notes       -> origin/config-spec-notes
+2026-11-28T06:41:31.4322675Z  * [new branch]            config-trust            -> origin/config-trust
+2026-11-28T06:41:31.4323631Z  * [new branch]            context-admission-coverage -> origin/context-admission-coverage
+2026-11-28T06:41:31.4324679Z  * [new branch]            context-admission-tests -> origin/context-admission-tests
+2026-11-28T06:41:31.4325653Z  * [new branch]            context-binding-tests   -> origin/context-binding-tests
+2026-11-28T06:41:31.4326591Z  * [new branch]            context-directories     -> origin/context-directories
+2026-11-28T06:41:31.4327579Z  * [new branch]            context-directory-runtime -> origin/context-directory-runtime
+2026-11-28T06:41:31.4328575Z  * [new branch]            context-documentation   -> origin/context-documentation
+2026-11-28T06:41:31.4329885Z  * [new branch]            context-http-auth       -> origin/context-http-auth
+2026-11-28T06:41:31.4330886Z  * [new branch]            context-http-final      -> origin/context-http-final
+2026-11-28T06:41:31.4331806Z  * [new branch]            context-http-prep       -> origin/context-http-prep
+2026-11-28T06:41:31.4332732Z  * [new branch]            context-http-runtime    -> origin/context-http-runtime
+2026-11-28T06:41:31.4333746Z  * [new branch]            context-lifecycle-coverage -> origin/context-lifecycle-coverage
+2026-11-28T06:41:31.4334800Z  * [new branch]            context-lifecycle-tests -> origin/context-lifecycle-tests
+2026-11-28T06:41:31.4335781Z  * [new branch]            context-macos-fixture   -> origin/context-macos-fixture
+2026-11-28T06:41:31.4336827Z  * [new branch]            context-publication-tests -> origin/context-publication-tests
+2026-11-28T06:41:31.4337826Z  * [new branch]            context-qualification   -> origin/context-qualification
+2026-11-28T06:41:31.4338753Z  * [new branch]            context-recovery        -> origin/context-recovery
+2026-11-28T06:41:31.4339848Z  * [new branch]            context-recovery-tests  -> origin/context-recovery-tests
+2026-11-28T06:41:31.4340854Z  * [new branch]            context-service-runtime -> origin/context-service-runtime
+2026-11-28T06:41:31.4341810Z  * [new branch]            converge-rag-slices     -> origin/converge-rag-slices
+2026-11-28T06:41:31.4342790Z  * [new branch]            coordinator-pending-wake -> origin/coordinator-pending-wake
+2026-11-28T06:41:31.4343728Z  * [new branch]            core-dead-code          -> origin/core-dead-code
+2026-11-28T06:41:31.4344605Z  * [new branch]            core-docs-accuracy      -> origin/core-docs-accuracy
+2026-11-28T06:41:31.4345469Z  * [new branch]            core-turn-cost          -> origin/core-turn-cost
+2026-11-28T06:41:31.4346322Z  * [new branch]            crashed-tab-hide        -> origin/crashed-tab-hide
+2026-11-28T06:41:31.4347232Z  * [new branch]            credential-hash-slot    -> origin/credential-hash-slot
+2026-11-28T06:41:31.4348338Z  * [new branch]            credential-key          -> origin/credential-key
+2026-11-28T06:41:31.4349221Z  * [new branch]            darwin-arm-runner       -> origin/darwin-arm-runner
+2026-11-28T06:41:31.4350295Z  * [new branch]            dead-code-sweep         -> origin/dead-code-sweep
+2026-11-28T06:41:31.4351168Z  * [new branch]            dead-flags-keys         -> origin/dead-flags-keys
+2026-11-28T06:41:31.4352046Z  * [new branch]            default-open-fail       -> origin/default-open-fail
+2026-11-28T06:41:31.4352937Z  * [new branch]            default-read-fail       -> origin/default-read-fail
+2026-11-28T06:41:31.4353846Z  * [new branch]            default-server-fail     -> origin/default-server-fail
+2026-11-28T06:41:31.4445357Z  * [new branch]            default-write-type      -> origin/default-write-type
+2026-11-28T06:41:31.4446608Z  * [new branch]            dependabot/bun/npm-8932c35304 -> origin/dependabot/bun/npm-8932c35304
+2026-11-28T06:41:31.4448074Z  * [new branch]            dependabot/github_actions/actions-54f9336fb6 -> origin/dependabot/github_actions/actions-54f9336fb6
+2026-11-28T06:41:31.4450229Z  * [new branch]            dependabot/npm_and_yarn/modules/app-dock/modelcontextprotocol/sdk-1.32.0 -> origin/dependabot/npm_and_yarn/modules/app-dock/modelcontextprotocol/sdk-1.32.0
+2026-11-28T06:41:31.4452155Z  * [new branch]            dependabot/npm_and_yarn/modules/atlas/hono-4.13.18 -> origin/dependabot/npm_and_yarn/modules/atlas/hono-4.13.18
+2026-11-28T06:41:31.4453856Z  * [new branch]            dependabot/npm_and_yarn/modules/atlas/hono/node-server-2.1.8 -> origin/dependabot/npm_and_yarn/modules/atlas/hono/node-server-2.1.8
+2026-11-28T06:41:31.4455408Z  * [new branch]            dependabot/npm_and_yarn/modules/maestro/coordination/fast-xml-parser-5.12.0 -> origin/dependabot/npm_and_yarn/modules/maestro/coordination/fast-xml-parser-5.12.0
+2026-11-28T06:41:31.4457506Z  * [new branch]            dependabot/npm_and_yarn/native/omni/qa/vite/vite-6.4.4 -> origin/dependabot/npm_and_yarn/native/omni/qa/vite/vite-6.4.4
+2026-11-28T06:41:31.4459285Z  * [new branch]            dependabot/npm_and_yarn/packages/core/minimatch-11.0.1 -> origin/dependabot/npm_and_yarn/packages/core/minimatch-11.0.1
+2026-11-28T06:41:31.4461299Z  * [new branch]            dependabot/pip/modules/capability-assets/pytest-9.0.3 -> origin/dependabot/pip/modules/capability-assets/pytest-9.0.3
+2026-11-28T06:41:31.4462566Z  * [new branch]            desktop-ipc-hardening   -> origin/desktop-ipc-hardening
+2026-11-28T06:41:31.4463196Z  * [new branch]            desktop-startup-path    -> origin/desktop-startup-path
+2026-11-28T06:41:31.4463730Z  * [new branch]            dev                     -> origin/dev
+2026-11-28T06:41:31.4464182Z  * [new branch]            dialog-safety           -> origin/dialog-safety
+2026-11-28T06:41:31.4464667Z  * [new branch]            dock-hide-fail          -> origin/dock-hide-fail
+2026-11-28T06:41:31.4465195Z  * [new branch]            dock-rpc-guidance       -> origin/dock-rpc-guidance
+2026-11-28T06:41:31.4465715Z  * [new branch]            docker-acceptance       -> origin/docker-acceptance
+2026-11-28T06:41:31.4466215Z  * [new branch]            docker-collector        -> origin/docker-collector
+2026-11-28T06:41:31.4466706Z  * [new branch]            docker-contract         -> origin/docker-contract
+2026-11-28T06:41:31.4467492Z  * [new branch]            docker-http             -> origin/docker-http
+2026-11-28T06:41:31.4468326Z  * [new branch]            docker-tab              -> origin/docker-tab
+2026-11-28T06:41:31.4469144Z  * [new branch]            docs-banner-final       -> origin/docs-banner-final
+2026-11-28T06:41:31.4469894Z  * [new branch]            docs-closure            -> origin/docs-closure
+2026-11-28T06:41:31.4470393Z  * [new branch]            docs-cwd-final          -> origin/docs-cwd-final
+2026-11-28T06:41:31.4470867Z  * [new branch]            docs-final              -> origin/docs-final
+2026-11-28T06:41:31.4471338Z  * [new branch]            docs-guides             -> origin/docs-guides
+2026-11-28T06:41:31.4472022Z  * [new branch]            docs-port-final         -> origin/docs-port-final
+2026-11-28T06:41:31.4472512Z  * [new branch]            docs-publish            -> origin/docs-publish
+2026-11-28T06:41:31.4472981Z  * [new branch]            drive-download          -> origin/drive-download
+2026-11-28T06:41:31.4473460Z  * [new branch]            drop-dead-code          -> origin/drop-dead-code
+2026-11-28T06:41:31.4473959Z  * [new branch]            duplication-adapter     -> origin/duplication-adapter
+2026-11-28T06:41:31.4474496Z  * [new branch]            duplication-parser      -> origin/duplication-parser
+2026-11-28T06:41:31.4475026Z  * [new branch]            duplication-routing     -> origin/duplication-routing
+2026-11-28T06:41:31.4475548Z  * [new branch]            durable-event-pages     -> origin/durable-event-pages
+2026-11-28T06:41:31.4476082Z  * [new branch]            durable-type-narrowing  -> origin/durable-type-narrowing
+2026-11-28T06:41:31.4476609Z  * [new branch]            e6-closure              -> origin/e6-closure
+2026-11-28T06:41:31.4477084Z  * [new branch]            embedded-custody        -> origin/embedded-custody
+2026-11-28T06:41:31.4477593Z  * [new branch]            empty-format-ci         -> origin/empty-format-ci
+2026-11-28T06:41:31.4478098Z  * [new branch]            empty-record-codegen    -> origin/empty-record-codegen
+2026-11-28T06:41:31.4478587Z  * [new branch]            epic-fixes              -> origin/epic-fixes
+2026-11-28T06:41:31.4479167Z  * [new branch]            epic-red-fixes          -> origin/epic-red-fixes
+2026-11-28T06:41:31.4480028Z  * [new branch]            event-cancel-order      -> origin/event-cancel-order
+2026-11-28T06:41:31.4480560Z  * [new branch]            event-envelope          -> origin/event-envelope
+2026-11-28T06:41:31.4481065Z  * [new branch]            event-maintenance       -> origin/event-maintenance
+2026-11-28T06:41:31.4481735Z  * [new branch]            event-notify-order      -> origin/event-notify-order
+2026-11-28T06:41:31.4482275Z  * [new branch]            event-residual-tests    -> origin/event-residual-tests
+2026-11-28T06:41:31.4482778Z  * [new branch]            event-transact          -> origin/event-transact
+2026-11-28T06:41:31.4483291Z  * [new branch]            exclusive-clean-tests   -> origin/exclusive-clean-tests
+2026-11-28T06:41:31.4483851Z  * [new branch]            exclusive-failure-probes -> origin/exclusive-failure-probes
+2026-11-28T06:41:31.4484394Z  * [new branch]            export-load-fail        -> origin/export-load-fail
+2026-11-28T06:41:31.4484888Z  * [new branch]            fabric-attempts         -> origin/fabric-attempts
+2026-11-28T06:41:31.4485375Z  * [new branch]            fabric-cache            -> origin/fabric-cache
+2026-11-28T06:41:31.4485857Z  * [new branch]            fabric-callback         -> origin/fabric-callback
+2026-11-28T06:41:31.4486331Z  * [new branch]            fabric-codec            -> origin/fabric-codec
+2026-11-28T06:41:31.4486813Z  * [new branch]            fabric-compiler         -> origin/fabric-compiler
+2026-11-28T06:41:31.4487295Z  * [new branch]            fabric-context          -> origin/fabric-context
+2026-11-28T06:41:31.4487799Z  * [new branch]            fabric-declaration      -> origin/fabric-declaration
+2026-11-28T06:41:31.4488336Z  * [new branch]            fabric-declaration-base -> origin/fabric-declaration-base
+2026-11-28T06:41:31.4488868Z  * [new branch]            fabric-dispatch         -> origin/fabric-dispatch
+2026-11-28T06:41:31.4489351Z  * [new branch]            fabric-engine           -> origin/fabric-engine
+2026-11-28T06:41:31.4490118Z  * [new branch]            fabric-entry-tests      -> origin/fabric-entry-tests
+2026-11-28T06:41:31.4490616Z  * [new branch]            fabric-exchange         -> origin/fabric-exchange
+2026-11-28T06:41:31.4491118Z  * [new branch]            fabric-identity         -> origin/fabric-identity
+2026-11-28T06:41:31.4491602Z  * [new branch]            fabric-jwks             -> origin/fabric-jwks
+2026-11-28T06:41:31.4492224Z  * [new branch]            fabric-listener         -> origin/fabric-listener
+2026-11-28T06:41:31.4492698Z  * [new branch]            fabric-msal             -> origin/fabric-msal
+2026-11-28T06:41:31.4493177Z  * [new branch]            fabric-parser           -> origin/fabric-parser
+2026-11-28T06:41:31.4493648Z  * [new branch]            fabric-pkce             -> origin/fabric-pkce
+2026-11-28T06:41:31.4494125Z  * [new branch]            fabric-portable         -> origin/fabric-portable
+2026-11-28T06:41:31.4494609Z  * [new branch]            fabric-profiles         -> origin/fabric-profiles
+2026-11-28T06:41:31.4495088Z  * [new branch]            fabric-publish          -> origin/fabric-publish
+2026-11-28T06:41:31.4495559Z  * [new branch]            fabric-token            -> origin/fabric-token
+2026-11-28T06:41:31.4496070Z  * [new branch]            fallback-index-refresh  -> origin/fallback-index-refresh
+2026-11-28T06:41:31.4496620Z  * [new branch]            fetch-redirect-guard    -> origin/fetch-redirect-guard
+2026-11-28T06:41:31.4497144Z  * [new branch]            fix-qa25-attention      -> origin/fix-qa25-attention
+2026-11-28T06:41:31.4497632Z  * [new branch]            flag-followups          -> origin/flag-followups
+2026-11-28T06:41:31.4498105Z  * [new branch]            g3-disposition          -> origin/g3-disposition
+2026-11-28T06:41:31.4498583Z  * [new branch]            g3-empty-payload        -> origin/g3-empty-payload
+2026-11-28T06:41:31.4499060Z  * [new branch]            g3-red-suite            -> origin/g3-red-suite
+2026-11-28T06:41:31.4499542Z  * [new branch]            g4-citation-matrix      -> origin/g4-citation-matrix
+2026-11-28T06:41:31.4500342Z  * [new branch]            g5-coverage             -> origin/g5-coverage
+2026-11-28T06:41:31.4500840Z  * [new branch]            gated-interleave        -> origin/gated-interleave
+2026-11-28T06:41:31.4501354Z  * [new branch]            generator-db-proof      -> origin/generator-db-proof
+2026-11-28T06:41:31.4502031Z  * [new branch]            generator-db-safety     -> origin/generator-db-safety
+2026-11-28T06:41:31.4502590Z  * [new branch]            genesis-b15-judging-prep -> origin/genesis-b15-judging-prep
+2026-11-28T06:41:31.4503270Z  * [new branch]            genesis-campaign-s1-economy-impact-1 -> origin/genesis-campaign-s1-economy-impact-1
+2026-11-28T06:41:31.4504070Z  * [new branch]            genesis-campaign-s1-economy-impact-2 -> origin/genesis-campaign-s1-economy-impact-2
+2026-11-28T06:41:31.4504832Z  * [new branch]            genesis-campaign-s4-tail-precision -> origin/genesis-campaign-s4-tail-precision
+2026-11-28T06:41:31.4505541Z  * [new branch]            genesis-cas-boundary-ci -> origin/genesis-cas-boundary-ci
+2026-11-28T06:41:31.4506093Z  * [new branch]            genesis-chatgpt-kit     -> origin/genesis-chatgpt-kit
+2026-11-28T06:41:31.4506610Z  * [new branch]            genesis-chatgpt-s1      -> origin/genesis-chatgpt-s1
+2026-11-28T06:41:31.4507128Z  * [new branch]            genesis-chatgpt-s2      -> origin/genesis-chatgpt-s2
+2026-11-28T06:41:31.4507636Z  * [new branch]            genesis-chatgpt-s3      -> origin/genesis-chatgpt-s3
+2026-11-28T06:41:31.4508129Z  * [new branch]            genesis-chatgpt-s4      -> origin/genesis-chatgpt-s4
+2026-11-28T06:41:31.4508628Z  * [new branch]            genesis-chatgpt-s5      -> origin/genesis-chatgpt-s5
+2026-11-28T06:41:31.4509138Z  * [new branch]            genesis-checkpoints     -> origin/genesis-checkpoints
+2026-11-28T06:41:31.4509874Z  * [new branch]            genesis-claim-reducer   -> origin/genesis-claim-reducer
+2026-11-28T06:41:31.4510431Z  * [new branch]            genesis-claim-staging   -> origin/genesis-claim-staging
+2026-11-28T06:41:31.4511106Z  * [new branch]            genesis-control-reconciliation-20261114 -> origin/genesis-control-reconciliation-20261114
+2026-11-28T06:41:31.4511782Z  * [new branch]            genesis-core-resume     -> origin/genesis-core-resume
+2026-11-28T06:41:31.4512377Z  * [new branch]            genesis-courier-synthetic-v5 -> origin/genesis-courier-synthetic-v5
+2026-11-28T06:41:31.4513117Z  * [new branch]            genesis-economy-green   -> origin/genesis-economy-green
+2026-11-28T06:41:31.4513649Z  * [new branch]            genesis-eval-recovery   -> origin/genesis-eval-recovery
+2026-11-28T06:41:31.4514324Z  * [new branch]            genesis-evaluation-attachment-batch-ci -> origin/genesis-evaluation-attachment-batch-ci
+2026-11-28T06:41:31.4515166Z  * [new branch]            genesis-evaluation-maintenance-caller-ci -> origin/genesis-evaluation-maintenance-caller-ci
+2026-11-28T06:41:31.4515995Z  * [new branch]            genesis-evaluation-maintenance-host-ci -> origin/genesis-evaluation-maintenance-host-ci
+2026-11-28T06:41:31.4516780Z  * [new branch]            genesis-external-integration-static -> origin/genesis-external-integration-static
+2026-11-28T06:41:31.4517458Z  * [new branch]            genesis-external-omni-393 -> origin/genesis-external-omni-393
+2026-11-28T06:41:31.4518150Z  * [new branch]            genesis-external-platform-remainder -> origin/genesis-external-platform-remainder
+2026-11-28T06:41:31.4518806Z  * [new branch]            genesis-facts-contract  -> origin/genesis-facts-contract
+2026-11-28T06:41:31.4519338Z  * [new branch]            genesis-fresh-final     -> origin/genesis-fresh-final
+2026-11-28T06:41:31.4520199Z  * [new branch]            genesis-fresh-s1        -> origin/genesis-fresh-s1
+2026-11-28T06:41:31.4520729Z  * [new branch]            genesis-fresh-s2        -> origin/genesis-fresh-s2
+2026-11-28T06:41:31.4521235Z  * [new branch]            genesis-fresh-s3        -> origin/genesis-fresh-s3
+2026-11-28T06:41:31.4521723Z  * [new branch]            genesis-fresh-s4        -> origin/genesis-fresh-s4
+2026-11-28T06:41:31.4522204Z  * [new branch]            genesis-fresh-s5        -> origin/genesis-fresh-s5
+2026-11-28T06:41:31.4522783Z  * [new branch]            genesis-fresh-s5-runtime-probe -> origin/genesis-fresh-s5-runtime-probe
+2026-11-28T06:41:31.4523533Z  * [new branch]            genesis-hotspot         -> origin/genesis-hotspot
+2026-11-28T06:41:31.4524088Z  * [new branch]            genesis-interfaces-resume -> origin/genesis-interfaces-resume
+2026-11-28T06:41:31.4524652Z  * [new branch]            genesis-judge-index     -> origin/genesis-judge-index
+2026-11-28T06:41:31.4525176Z  * [new branch]            genesis-judge-source    -> origin/genesis-judge-source
+2026-11-28T06:41:31.4525731Z  * [new branch]            genesis-knowledge-resume -> origin/genesis-knowledge-resume
+2026-11-28T06:41:31.4526380Z  * [new branch]            genesis-lazy-signals    -> origin/genesis-lazy-signals
+2026-11-28T06:41:31.4527529Z  * [new branch]            genesis-local-loader-integration-ci -> origin/genesis-local-loader-integration-ci
+2026-11-28T06:41:31.4528350Z  * [new branch]            genesis-maintenance-descriptor-loader-ci -> origin/genesis-maintenance-descriptor-loader-ci
+2026-11-28T06:41:31.4529115Z  * [new branch]            genesis-omni-review-1-20261114 -> origin/genesis-omni-review-1-20261114
+2026-11-28T06:41:31.4530003Z  * [new branch]            genesis-omni-review-2-20261114 -> origin/genesis-omni-review-2-20261114
+2026-11-28T06:41:31.4530918Z  * [new branch]            genesis-omni-review-3-20261114 -> origin/genesis-omni-review-3-20261114
+2026-11-28T06:41:31.4531814Z  * [new branch]            genesis-omni-review-4-20261114 -> origin/genesis-omni-review-4-20261114
+2026-11-28T06:41:31.4532784Z  * [new branch]            genesis-omni-review-5-20261114 -> origin/genesis-omni-review-5-20261114
+2026-11-28T06:41:31.4533414Z  * [new branch]            genesis-omni-small-20261114 -> origin/genesis-omni-small-20261114
+2026-11-28T06:41:31.4534037Z  * [new branch]            genesis-omni-unit-36-20261114 -> origin/genesis-omni-unit-36-20261114
+2026-11-28T06:41:31.4534663Z  * [new branch]            genesis-omni-unit-37-20261114 -> origin/genesis-omni-unit-37-20261114
+2026-11-28T06:41:31.4535277Z  * [new branch]            genesis-omni-unit-38-20261114 -> origin/genesis-omni-unit-38-20261114
+2026-11-28T06:41:31.4536092Z  * [new branch]            genesis-omni-unit-c15-20261114 -> origin/genesis-omni-unit-c15-20261114
+2026-11-28T06:41:31.4536741Z  * [new branch]            genesis-omni-unit-c16-20261114 -> origin/genesis-omni-unit-c16-20261114
+2026-11-28T06:41:31.4537444Z  * [new branch]            genesis-omni-unit-surface-03-20261114 -> origin/genesis-omni-unit-surface-03-20261114
+2026-11-28T06:41:31.4538104Z  * [new branch]            genesis-origin-codec    -> origin/genesis-origin-codec
+2026-11-28T06:41:31.4538642Z  * [new branch]            genesis-owner-options   -> origin/genesis-owner-options
+2026-11-28T06:41:31.4539179Z  * [new branch]            genesis-policy-guard    -> origin/genesis-policy-guard
+2026-11-28T06:41:31.4540022Z  * [new branch]            genesis-pool-bound      -> origin/genesis-pool-bound
+2026-11-28T06:41:31.4540624Z  * [new branch]            genesis-preservation-helper -> origin/genesis-preservation-helper
+2026-11-28T06:41:31.4541236Z  * [new branch]            genesis-reader-broker-v3 -> origin/genesis-reader-broker-v3
+2026-11-28T06:41:31.4541952Z  * [new branch]            genesis-reader-broker-v4-precheck -> origin/genesis-reader-broker-v4-precheck
+2026-11-28T06:41:31.4542856Z  * [new branch]            genesis-reader-broker-v5-lifecycle -> origin/genesis-reader-broker-v5-lifecycle
+2026-11-28T06:41:31.4543511Z  * [new branch]            genesis-realdata-eval   -> origin/genesis-realdata-eval
+2026-11-28T06:41:31.4544054Z  * [new branch]            genesis-retain-import   -> origin/genesis-retain-import
+2026-11-28T06:41:31.4544569Z  * [new branch]            genesis-run-fix         -> origin/genesis-run-fix
+2026-11-28T06:41:31.4545082Z  * [new branch]            genesis-runtime-resume  -> origin/genesis-runtime-resume
+2026-11-28T06:41:31.4545599Z  * [new branch]            genesis-s1-api          -> origin/genesis-s1-api
+2026-11-28T06:41:31.4546105Z  * [new branch]            genesis-s1-automation   -> origin/genesis-s1-automation
+2026-11-28T06:41:31.4546911Z  * [new branch]            genesis-s1-b15-reconciliation-20261113 -> origin/genesis-s1-b15-reconciliation-20261113
+2026-11-28T06:41:31.4547579Z  * [new branch]            genesis-s1-libraries    -> origin/genesis-s1-libraries
+2026-11-28T06:41:31.4548088Z  * [new branch]            genesis-s1-sessions     -> origin/genesis-s1-sessions
+2026-11-28T06:41:31.4548583Z  * [new branch]            genesis-s1-tools        -> origin/genesis-s1-tools
+2026-11-28T06:41:31.4549079Z  * [new branch]            genesis-s2-publish      -> origin/genesis-s2-publish
+2026-11-28T06:41:31.4549935Z  * [new branch]            genesis-s2-receipt-recovery-20261114 -> origin/genesis-s2-receipt-recovery-20261114
+2026-11-28T06:41:31.4550678Z  * [new branch]            genesis-s2-resume-unit-20261114 -> origin/genesis-s2-resume-unit-20261114
+2026-11-28T06:41:31.4551264Z  * [new branch]            genesis-s3-resume       -> origin/genesis-s3-resume
+2026-11-28T06:41:31.4551842Z  * [new branch]            genesis-s3-resume-unit-20261114 -> origin/genesis-s3-resume-unit-20261114
+2026-11-28T06:41:31.4552460Z  * [new branch]            genesis-s3-small-20261114 -> origin/genesis-s3-small-20261114
+2026-11-28T06:41:31.4553064Z  * [new branch]            genesis-s4-l4-dispatch-v3-ci -> origin/genesis-s4-l4-dispatch-v3-ci
+2026-11-28T06:41:31.4553768Z  * [new branch]            genesis-s4-release-selection-20261114 -> origin/genesis-s4-release-selection-20261114
+2026-11-28T06:41:31.4554476Z  * [new branch]            genesis-s4-resume-unit-20261114 -> origin/genesis-s4-resume-unit-20261114
+2026-11-28T06:41:31.4555315Z  * [new branch]            genesis-secret-scan     -> origin/genesis-secret-scan
+2026-11-28T06:41:31.4556242Z  * [new branch]            genesis-single-pass     -> origin/genesis-single-pass
+2026-11-28T06:41:31.4557249Z  * [new branch]            genesis-source-export-s3 -> origin/genesis-source-export-s3
+2026-11-28T06:41:31.4557877Z  * [new branch]            genesis-source-router   -> origin/genesis-source-router
+2026-11-28T06:41:31.4558649Z  * [new branch]            genesis-staged-metrics  -> origin/genesis-staged-metrics
+2026-11-28T06:41:31.4559289Z  * [new branch]            genesis-support-01-finalize-alias -> origin/genesis-support-01-finalize-alias
+2026-11-28T06:41:31.4560348Z  * [new branch]            genesis-support-02-courier-checker -> origin/genesis-support-02-courier-checker
+2026-11-28T06:41:31.4561181Z  * [new branch]            genesis-support-03-attachment-differential -> origin/genesis-support-03-attachment-differential
+2026-11-28T06:41:31.4561963Z  * [new branch]            genesis-support-04-caller-dag -> origin/genesis-support-04-caller-dag
+2026-11-28T06:41:31.4562620Z  * [new branch]            genesis-support-05-caller-caps -> origin/genesis-support-05-caller-caps
+2026-11-28T06:41:31.4563328Z  * [new branch]            genesis-support-06-caller-toolchain -> origin/genesis-support-06-caller-toolchain
+2026-11-28T06:41:31.4564082Z  * [new branch]            genesis-support-07-overlay-verifier -> origin/genesis-support-07-overlay-verifier
+2026-11-28T06:41:31.4564897Z  * [new branch]            genesis-support-08-reader-error-redaction -> origin/genesis-support-08-reader-error-redaction
+2026-11-28T06:41:31.4565653Z  * [new branch]            genesis-support-08b-retention -> origin/genesis-support-08b-retention
+2026-11-28T06:41:31.4566389Z  * [new branch]            genesis-support-09-courier-descendants -> origin/genesis-support-09-courier-descendants
+2026-11-28T06:41:31.4567141Z  * [new branch]            genesis-support-10-binding-index -> origin/genesis-support-10-binding-index
+2026-11-28T06:41:31.4567762Z  * [new branch]            glass-material-tokens   -> origin/glass-material-tokens
+2026-11-28T06:41:31.4568274Z  * [new branch]            go-live-fixes           -> origin/go-live-fixes
+2026-11-28T06:41:31.4568742Z  * [new branch]            guards-ci               -> origin/guards-ci
+2026-11-28T06:41:31.4569201Z  * [new branch]            guards-deps             -> origin/guards-deps
+2026-11-28T06:41:31.4570015Z  * [new branch]            guards-engine           -> origin/guards-engine
+2026-11-28T06:41:31.4570647Z  * [new branch]            guards-engine-2         -> origin/guards-engine-2
+2026-11-28T06:41:31.4571504Z  * [new branch]            guards-hygiene          -> origin/guards-hygiene
+2026-11-28T06:41:31.4572168Z  * [new branch]            guards-migrations       -> origin/guards-migrations
+2026-11-28T06:41:31.4572676Z  * [new branch]            guards-more             -> origin/guards-more
+2026-11-28T06:41:31.4573156Z  * [new branch]            guards-suppress         -> origin/guards-suppress
+2026-11-28T06:41:31.4573637Z  * [new branch]            guards-tests            -> origin/guards-tests
+2026-11-28T06:41:31.4574269Z  * [new branch]            guards-trim             -> origin/guards-trim
+2026-11-28T06:41:31.4574786Z  * [new branch]            guards-wiring           -> origin/guards-wiring
+2026-11-28T06:41:31.4575518Z  * [new branch]            guards-workflows        -> origin/guards-workflows
+2026-11-28T06:41:31.4576325Z  * [new branch]            guide-followups         -> origin/guide-followups
+2026-11-28T06:41:31.4576902Z  * [new branch]            guides-accuracy         -> origin/guides-accuracy
+2026-11-28T06:41:31.4577405Z  * [new branch]            health-hook-proof       -> origin/health-hook-proof
+2026-11-28T06:41:31.4577909Z  * [new branch]            heartbeat-cadence       -> origin/heartbeat-cadence
+2026-11-28T06:41:31.4578392Z  * [new branch]            holder-transfer         -> origin/holder-transfer
+2026-11-28T06:41:31.4578886Z  * [new branch]            home-meetings-fail      -> origin/home-meetings-fail
+2026-11-28T06:41:31.4579404Z  * [new branch]            host-call-pairing       -> origin/host-call-pairing
+2026-11-28T06:41:31.4580121Z  * [new branch]            host-clause-tests       -> origin/host-clause-tests
+2026-11-28T06:41:31.4580615Z  * [new branch]            host-filesystem         -> origin/host-filesystem
+2026-11-28T06:41:31.4581118Z  * [new branch]            host-pair-probes        -> origin/host-pair-probes
+2026-11-28T06:41:31.4581791Z  * [new branch]            host-pair-tests         -> origin/host-pair-tests
+2026-11-28T06:41:31.4582306Z  * [new branch]            hosted-file-authority   -> origin/hosted-file-authority
+2026-11-28T06:41:31.4582824Z  * [new branch]            hotkey-write-fail       -> origin/hotkey-write-fail
+2026-11-28T06:41:31.4583348Z  * [new branch]            http-context-lifecycle  -> origin/http-context-lifecycle
+2026-11-28T06:41:31.4583884Z  * [new branch]            idle-transcript         -> origin/idle-transcript
+2026-11-28T06:41:31.4584377Z  * [new branch]            inbox-audit-fixes       -> origin/inbox-audit-fixes
+2026-11-28T06:41:31.4584880Z  * [new branch]            inbox-board-scope       -> origin/inbox-board-scope
+2026-11-28T06:41:31.4585359Z  * [new branch]            inbox-clean             -> origin/inbox-clean
+2026-11-28T06:41:31.4585910Z  * [new branch]            inbox-doc-review        -> origin/inbox-doc-review
+2026-11-28T06:41:31.4586534Z  * [new branch]            inbox-open-pull         -> origin/inbox-open-pull
+2026-11-28T06:41:31.4587030Z  * [new branch]            inbox-origin-draft      -> origin/inbox-origin-draft
+2026-11-28T06:41:31.4587522Z  * [new branch]            inbox-skills            -> origin/inbox-skills
+2026-11-28T06:41:31.4588005Z  * [new branch]            inbox-type-adopt        -> origin/inbox-type-adopt
+2026-11-28T06:41:31.4588490Z  * [new branch]            inbox-unmounted         -> origin/inbox-unmounted
+2026-11-28T06:41:31.4588981Z  * [new branch]            installation-http       -> origin/installation-http
+2026-11-28T06:41:31.4589499Z  * [new branch]            integer-proof           -> origin/integer-proof
+2026-11-28T06:41:31.4590270Z  * [new branch]            integrations-header     -> origin/integrations-header
+2026-11-28T06:41:31.4590805Z  * [new branch]            intel-start-budget      -> origin/intel-start-budget
+2026-11-28T06:41:31.4591480Z  * [new branch]            interleave-proof-tests  -> origin/interleave-proof-tests
+2026-11-28T06:41:31.4592027Z  * [new branch]            inventory-retry         -> origin/inventory-retry
+2026-11-28T06:41:31.4592564Z  * [new branch]            janitor-session-placement -> origin/janitor-session-placement
+2026-11-28T06:41:31.4593126Z  * [new branch]            joint-memory-decision   -> origin/joint-memory-decision
+2026-11-28T06:41:31.4593635Z  * [new branch]            l9-types-5b875a07       -> origin/l9-types-5b875a07
+2026-11-28T06:41:31.4594120Z  * [new branch]            l9-types-625c3b1b       -> origin/l9-types-625c3b1b
+2026-11-28T06:41:31.4594614Z  * [new branch]            lifecycle-hold-red      -> origin/lifecycle-hold-red
+2026-11-28T06:41:31.4595131Z  * [new branch]            lifecycle-validation    -> origin/lifecycle-validation
+2026-11-28T06:41:31.4595649Z  * [new branch]            lifecycle-wake-hold     -> origin/lifecycle-wake-hold
+2026-11-28T06:41:31.4596152Z  * [new branch]            light-sidebar           -> origin/light-sidebar
+2026-11-28T06:41:31.4596669Z  * [new branch]            listener-host-aliases   -> origin/listener-host-aliases
+2026-11-28T06:41:31.4597183Z  * [new branch]            live-ipc-guidance       -> origin/live-ipc-guidance
+2026-11-28T06:41:31.4597670Z  * [new branch]            live-seat-fail          -> origin/live-seat-fail
+2026-11-28T06:41:31.4598160Z  * [new branch]            live-start-cancel       -> origin/live-start-cancel
+2026-11-28T06:41:31.4598667Z  * [new branch]            local-check-contract    -> origin/local-check-contract
+2026-11-28T06:41:31.4599174Z  * [new branch]            local-check-scope       -> origin/local-check-scope
+2026-11-28T06:41:31.4599942Z  * [new branch]            local-read-process      -> origin/local-read-process
+2026-11-28T06:41:31.4600468Z  * [new branch]            local-tool-pins         -> origin/local-tool-pins
+2026-11-28T06:41:31.4601090Z  * [new branch]            log-causal-order        -> origin/log-causal-order
+2026-11-28T06:41:31.4602034Z  * [new branch]            lucy-actionlint-source  -> origin/lucy-actionlint-source
+2026-11-28T06:41:31.4603311Z  * [new branch]            lucy-astgrep-build      -> origin/lucy-astgrep-build
+2026-11-28T06:41:31.4604205Z  * [new branch]            lucy-audit-plan         -> origin/lucy-audit-plan
+2026-11-28T06:41:31.4605062Z  * [new branch]            lucy-audit-tree         -> origin/lucy-audit-tree
+2026-11-28T06:41:31.4605937Z  * [new branch]            lucy-audit-variants     -> origin/lucy-audit-variants
+2026-11-28T06:41:31.4606729Z  * [new branch]            lucy-build-ceiling      -> origin/lucy-build-ceiling
+2026-11-28T06:41:31.4607397Z  * [new branch]            lucy-build-lane         -> origin/lucy-build-lane
+2026-11-28T06:41:31.4607897Z  * [new branch]            lucy-cancel-oracle      -> origin/lucy-cancel-oracle
+2026-11-28T06:41:31.4608421Z  * [new branch]            lucy-check-diagnostics  -> origin/lucy-check-diagnostics
+2026-11-28T06:41:31.4608948Z  * [new branch]            lucy-check-facts        -> origin/lucy-check-facts
+2026-11-28T06:41:31.4609477Z  * [new branch]            lucy-client-generation  -> origin/lucy-client-generation
+2026-11-28T06:41:31.4610259Z  * [new branch]            lucy-code-dispatch      -> origin/lucy-code-dispatch
+2026-11-28T06:41:31.4610773Z  * [new branch]            lucy-code-evidence      -> origin/lucy-code-evidence
+2026-11-28T06:41:31.4611275Z  * [new branch]            lucy-code-index         -> origin/lucy-code-index
+2026-11-28T06:41:31.4611797Z  * [new branch]            lucy-code-primitives    -> origin/lucy-code-primitives
+2026-11-28T06:41:31.4612316Z  * [new branch]            lucy-code-sources       -> origin/lucy-code-sources
+2026-11-28T06:41:31.4612838Z  * [new branch]            lucy-compliance-leaves  -> origin/lucy-compliance-leaves
+2026-11-28T06:41:31.4613359Z  * [new branch]            lucy-deep-slice         -> origin/lucy-deep-slice
+2026-11-28T06:41:31.4613868Z  * [new branch]            lucy-durable-evidence   -> origin/lucy-durable-evidence
+2026-11-28T06:41:31.4614550Z  * [new branch]            lucy-engagement         -> origin/lucy-engagement
+2026-11-28T06:41:31.4615071Z  * [new branch]            lucy-engagement-rows    -> origin/lucy-engagement-rows
+2026-11-28T06:41:31.4615588Z  * [new branch]            lucy-fix-admission      -> origin/lucy-fix-admission
+2026-11-28T06:41:31.4616080Z  * [new branch]            lucy-fix-review         -> origin/lucy-fix-review
+2026-11-28T06:41:31.4616559Z  * [new branch]            lucy-go-static          -> origin/lucy-go-static
+2026-11-28T06:41:31.4617031Z  * [new branch]            lucy-go-vet             -> origin/lucy-go-vet
+2026-11-28T06:41:31.4617522Z  * [new branch]            lucy-godfile-proof      -> origin/lucy-godfile-proof
+2026-11-28T06:41:31.4618012Z  * [new branch]            lucy-golangci           -> origin/lucy-golangci
+2026-11-28T06:41:31.4618493Z  * [new branch]            lucy-inode-control      -> origin/lucy-inode-control
+2026-11-28T06:41:31.4618996Z  * [new branch]            lucy-inode-proof        -> origin/lucy-inode-proof
+2026-11-28T06:41:31.4619486Z  * [new branch]            lucy-invoke             -> origin/lucy-invoke
+2026-11-28T06:41:31.4620131Z  * [new branch]            lucy-kubeconform-measure -> origin/lucy-kubeconform-measure
+2026-11-28T06:41:31.4620797Z  * [new branch]            lucy-kubeconform-prepare -> origin/lucy-kubeconform-prepare
+2026-11-28T06:41:31.4621502Z  * [new branch]            lucy-language-plan      -> origin/lucy-language-plan
+2026-11-28T06:41:31.4622172Z  * [new branch]            lucy-lenses-plan        -> origin/lucy-lenses-plan
+2026-11-28T06:41:31.4622817Z  * [new branch]            lucy-links-plan         -> origin/lucy-links-plan
+2026-11-28T06:41:31.4623316Z  * [new branch]            lucy-lsp-read           -> origin/lucy-lsp-read
+2026-11-28T06:41:31.4623918Z  * [new branch]            lucy-osv                -> origin/lucy-osv
+2026-11-28T06:41:31.4624509Z  * [new branch]            lucy-osv-refresh        -> origin/lucy-osv-refresh
+2026-11-28T06:41:31.4625349Z  * [new branch]            lucy-pack-license       -> origin/lucy-pack-license
+2026-11-28T06:41:31.4625869Z  * [new branch]            lucy-pr-contract        -> origin/lucy-pr-contract
+2026-11-28T06:41:31.4626502Z  * [new branch]            lucy-pr-fixtures        -> origin/lucy-pr-fixtures
+2026-11-28T06:41:31.4627105Z  * [new branch]            lucy-pr-guide           -> origin/lucy-pr-guide
+2026-11-28T06:41:31.4627643Z  * [new branch]            lucy-pr-retry           -> origin/lucy-pr-retry
+2026-11-28T06:41:31.4628202Z  * [new branch]            lucy-precision-facts    -> origin/lucy-precision-facts
+2026-11-28T06:41:31.4628858Z  * [new branch]            lucy-privacy-sources    -> origin/lucy-privacy-sources
+2026-11-28T06:41:31.4629477Z  * [new branch]            lucy-probe-race         -> origin/lucy-probe-race
+2026-11-28T06:41:31.4630230Z  * [new branch]            lucy-prove-race         -> origin/lucy-prove-race
+2026-11-28T06:41:31.4630864Z  * [new branch]            lucy-queue-receipts     -> origin/lucy-queue-receipts
+2026-11-28T06:41:31.4631492Z  * [new branch]            lucy-reconcile-doc      -> origin/lucy-reconcile-doc
+2026-11-28T06:41:31.4632158Z  * [new branch]            lucy-repository-analysis -> origin/lucy-repository-analysis
+2026-11-28T06:41:31.4632830Z  * [new branch]            lucy-rest-languages     -> origin/lucy-rest-languages
+2026-11-28T06:41:31.4633491Z  * [new branch]            lucy-review-foundation  -> origin/lucy-review-foundation
+2026-11-28T06:41:31.4634141Z  * [new branch]            lucy-round-generate     -> origin/lucy-round-generate
+2026-11-28T06:41:31.4634660Z  * [new branch]            lucy-ruff-sources       -> origin/lucy-ruff-sources
+2026-11-28T06:41:31.4635295Z  * [new branch]            lucy-search-coverage    -> origin/lucy-search-coverage
+2026-11-28T06:41:31.4635932Z  * [new branch]            lucy-source-capture     -> origin/lucy-source-capture
+2026-11-28T06:41:31.4636518Z  * [new branch]            lucy-source-regions     -> origin/lucy-source-regions
+2026-11-28T06:41:31.4637304Z  * [new branch]            lucy-sql-rule-sources   -> origin/lucy-sql-rule-sources
+2026-11-28T06:41:31.4637960Z  * [new branch]            lucy-squawk-sources     -> origin/lucy-squawk-sources
+2026-11-28T06:41:31.4638602Z  * [new branch]            lucy-type-aware         -> origin/lucy-type-aware
+2026-11-28T06:41:31.4639216Z  * [new branch]            lucy-types-1794596202   -> origin/lucy-types-1794596202
+2026-11-28T06:41:31.4640005Z  * [new branch]            lucy-types-1794596473   -> origin/lucy-types-1794596473
+2026-11-28T06:41:31.4640614Z  * [new branch]            lucy-types-1794596640   -> origin/lucy-types-1794596640
+2026-11-28T06:41:31.4641181Z  * [new branch]            lucy-types-1794597177   -> origin/lucy-types-1794597177
+2026-11-28T06:41:31.4641808Z  * [new branch]            lucy-types-1794597267   -> origin/lucy-types-1794597267
+2026-11-28T06:41:31.4642430Z  * [new branch]            lucy-types-1794597609   -> origin/lucy-types-1794597609
+2026-11-28T06:41:31.4642958Z  * [new branch]            lucy-types-1794598614   -> origin/lucy-types-1794598614
+2026-11-28T06:41:31.4643612Z  * [new branch]            lucy-types-1794599246   -> origin/lucy-types-1794599246
+2026-11-28T06:41:31.4644237Z  * [new branch]            lucy-types-1794600774   -> origin/lucy-types-1794600774
+2026-11-28T06:41:31.4644851Z  * [new branch]            lucy-types-1794601627   -> origin/lucy-types-1794601627
+2026-11-28T06:41:31.4645405Z  * [new branch]            lucy-undo-oracle        -> origin/lucy-undo-oracle
+2026-11-28T06:41:31.4646026Z  * [new branch]            lucy-undo-tests         -> origin/lucy-undo-tests
+2026-11-28T06:41:31.4646637Z  * [new branch]            lucy-wave-critic        -> origin/lucy-wave-critic
+2026-11-28T06:41:31.4647195Z  * [new branch]            lucy-wire-languages     -> origin/lucy-wire-languages
+2026-11-28T06:41:31.4647808Z  * [new branch]            lucy-wire-profiles      -> origin/lucy-wire-profiles
+2026-11-28T06:41:31.4648447Z  * [new branch]            lucy-wp-analyze         -> origin/lucy-wp-analyze
+2026-11-28T06:41:31.4649260Z  * [new branch]            lucy-wp-noise           -> origin/lucy-wp-noise
+2026-11-28T06:41:31.4650044Z  * [new branch]            lucy-wp-probe           -> origin/lucy-wp-probe
+2026-11-28T06:41:31.4650585Z  * [new branch]            lucy-wp-seat            -> origin/lucy-wp-seat
+2026-11-28T06:41:31.4651181Z  * [new branch]            lucy-wp-settings        -> origin/lucy-wp-settings
+2026-11-28T06:41:31.4651805Z  * [new branch]            macos-engine-floor      -> origin/macos-engine-floor
+2026-11-28T06:41:31.4652452Z  * [new branch]            maestro-claude-runtime  -> origin/maestro-claude-runtime
+2026-11-28T06:41:31.4653023Z  * [new branch]            maestro-claude-smoke    -> origin/maestro-claude-smoke
+2026-11-28T06:41:31.4653672Z  * [new branch]            maestro-dead-code       -> origin/maestro-dead-code
+2026-11-28T06:41:31.4654298Z  * [new branch]            mcp-identity            -> origin/mcp-identity
+2026-11-28T06:41:31.4654914Z  * [new branch]            meeting-delivery        -> origin/meeting-delivery
+2026-11-28T06:41:31.4655441Z  * [new branch]            memory-receipt-base     -> origin/memory-receipt-base
+2026-11-28T06:41:31.4656082Z  * [new branch]            memory-receipts         -> origin/memory-receipts
+2026-11-28T06:41:31.4656815Z  * [new branch]            migration-proof         -> origin/migration-proof
+2026-11-28T06:41:31.4657684Z  * [new branch]            migration-safety        -> origin/migration-safety
+2026-11-28T06:41:31.4658508Z  * [new branch]            mine-ac04               -> origin/mine-ac04
+2026-11-28T06:41:31.4659338Z  * [new branch]            mine-ac05               -> origin/mine-ac05
+2026-11-28T06:41:31.4660397Z  * [new branch]            mine-ac06               -> origin/mine-ac06
+2026-11-28T06:41:31.4661205Z  * [new branch]            mine-ac07               -> origin/mine-ac07
+2026-11-28T06:41:31.4662008Z  * [new branch]            mine-ac0809             -> origin/mine-ac0809
+2026-11-28T06:41:31.4663056Z  * [new branch]            model-consumers         -> origin/model-consumers
+2026-11-28T06:41:31.4663932Z  * [new branch]            model-eligibility       -> origin/model-eligibility
+2026-11-28T06:41:31.4664850Z  * [new branch]            model-variant-contract  -> origin/model-variant-contract
+2026-11-28T06:41:31.4665723Z  * [new branch]            model-wire              -> origin/model-wire
+2026-11-28T06:41:31.4666541Z  * [new branch]            module-doc-links        -> origin/module-doc-links
+2026-11-28T06:41:31.4667410Z  * [new branch]            module-service-docs     -> origin/module-service-docs
+2026-11-28T06:41:31.4668290Z  * [new branch]            multifact-adapter       -> origin/multifact-adapter
+2026-11-28T06:41:31.4669214Z  * [new branch]            multifact-adapter-tests -> origin/multifact-adapter-tests
+2026-11-28T06:41:31.4670337Z  * [new branch]            multifact-driver        -> origin/multifact-driver
+2026-11-28T06:41:31.4671141Z  * [new branch]            multifact-driver-tests  -> origin/multifact-driver-tests
+2026-11-28T06:41:31.4671967Z  * [new branch]            multifact-promote       -> origin/multifact-promote
+2026-11-28T06:41:31.4672812Z  * [new branch]            multifact-promote-tests -> origin/multifact-promote-tests
+2026-11-28T06:41:31.4673734Z  * [new branch]            mutation-proof-tests    -> origin/mutation-proof-tests
+2026-11-28T06:41:31.4674647Z  * [new branch]            native-capabilities     -> origin/native-capabilities
+2026-11-28T06:41:31.4675529Z  * [new branch]            native-input-api        -> origin/native-input-api
+2026-11-28T06:41:31.4676417Z  * [new branch]            native-input-contract   -> origin/native-input-contract
+2026-11-28T06:41:31.4677305Z  * [new branch]            native-menu-fail        -> origin/native-menu-fail
+2026-11-28T06:41:31.4678182Z  * [new branch]            normalize-rag-paths     -> origin/normalize-rag-paths
+2026-11-28T06:41:31.4679062Z  * [new branch]            notice-archives         -> origin/notice-archives
+2026-11-28T06:41:31.4680210Z  * [new branch]            oauth-authority         -> origin/oauth-authority
+2026-11-28T06:41:31.4681090Z  * [new branch]            old-producer-refusal    -> origin/old-producer-refusal
+2026-11-28T06:41:31.4681972Z  * [new branch]            oracle-gap-close        -> origin/oracle-gap-close
+2026-11-28T06:41:31.4682838Z  * [new branch]            oxlint-native-check     -> origin/oxlint-native-check
+2026-11-28T06:41:31.4683713Z  * [new branch]            pack-skip-repair        -> origin/pack-skip-repair
+2026-11-28T06:41:31.4684596Z  * [new branch]            palette-search-fail     -> origin/palette-search-fail
+2026-11-28T06:41:31.4685486Z  * [new branch]            payload-receipt         -> origin/payload-receipt
+2026-11-28T06:41:31.4686300Z  * [new branch]            perf-cut                -> origin/perf-cut
+2026-11-28T06:41:31.4687007Z  * [new branch]            perf-desktop            -> origin/perf-desktop
+2026-11-28T06:41:31.4687809Z  * [new branch]            perf-snapshots          -> origin/perf-snapshots
+2026-11-28T06:41:31.4688647Z  * [new branch]            perf-transcripts        -> origin/perf-transcripts
+2026-11-28T06:41:31.4689401Z  * [new branch]            permission-maintenance  -> origin/permission-maintenance
+2026-11-28T06:41:31.4690235Z  * [new branch]            permission-probes       -> origin/permission-probes
+2026-11-28T06:41:31.4690772Z  * [new branch]            permission-reply-fail   -> origin/permission-reply-fail
+2026-11-28T06:41:31.4691307Z  * [new branch]            picker-search-fail      -> origin/picker-search-fail
+2026-11-28T06:41:31.4691833Z  * [new branch]            pilot-check-1793922635  -> origin/pilot-check-1793922635
+2026-11-28T06:41:31.4692354Z  * [new branch]            pilot-check-1793923298  -> origin/pilot-check-1793923298
+2026-11-28T06:41:31.4692871Z  * [new branch]            pilot-check-1793923619  -> origin/pilot-check-1793923619
+2026-11-28T06:41:31.4693565Z  * [new branch]            pilot-check-1793929685  -> origin/pilot-check-1793929685
+2026-11-28T06:41:31.4694097Z  * [new branch]            pilot-check-1793959002  -> origin/pilot-check-1793959002
+2026-11-28T06:41:31.4694623Z  * [new branch]            pilot-check-1794245394  -> origin/pilot-check-1794245394
+2026-11-28T06:41:31.4695150Z  * [new branch]            pilot-check-1794245711  -> origin/pilot-check-1794245711
+2026-11-28T06:41:31.4695670Z  * [new branch]            pilot-check-1794245906  -> origin/pilot-check-1794245906
+2026-11-28T06:41:31.4696176Z  * [new branch]            pilot-check-1794246207  -> origin/pilot-check-1794246207
+2026-11-28T06:41:31.4696683Z  * [new branch]            pilot-check-1794246639  -> origin/pilot-check-1794246639
+2026-11-28T06:41:31.4697195Z  * [new branch]            pilot-check-1794248907  -> origin/pilot-check-1794248907
+2026-11-28T06:41:31.4697702Z  * [new branch]            pilot-check-1794249355  -> origin/pilot-check-1794249355
+2026-11-28T06:41:31.4698211Z  * [new branch]            pilot-check-1794250665  -> origin/pilot-check-1794250665
+2026-11-28T06:41:31.4698733Z  * [new branch]            pilot-check-1794251615  -> origin/pilot-check-1794251615
+2026-11-28T06:41:31.4699266Z  * [new branch]            pilot-check-1794252533  -> origin/pilot-check-1794252533
+2026-11-28T06:41:31.4700026Z  * [new branch]            pilot-check-1794252957  -> origin/pilot-check-1794252957
+2026-11-28T06:41:31.4700565Z  * [new branch]            pilot-check-1794253573  -> origin/pilot-check-1794253573
+2026-11-28T06:41:31.4701092Z  * [new branch]            pilot-check-1794256801  -> origin/pilot-check-1794256801
+2026-11-28T06:41:31.4701611Z  * [new branch]            pilot-check-1794258477  -> origin/pilot-check-1794258477
+2026-11-28T06:41:31.4702121Z  * [new branch]            pilot-check-1794259897  -> origin/pilot-check-1794259897
+2026-11-28T06:41:31.4702631Z  * [new branch]            pilot-check-1794261427  -> origin/pilot-check-1794261427
+2026-11-28T06:41:31.4703143Z  * [new branch]            pilot-close-1793927714  -> origin/pilot-close-1793927714
+2026-11-28T06:41:31.4703815Z  * [new branch]            pilot-close-1793931462  -> origin/pilot-close-1793931462
+2026-11-28T06:41:31.4704325Z  * [new branch]            pilot-close-1793933412  -> origin/pilot-close-1793933412
+2026-11-28T06:41:31.4704835Z  * [new branch]            pinch-write-fail        -> origin/pinch-write-fail
+2026-11-28T06:41:31.4705361Z  * [new branch]            pipeline-read-fail      -> origin/pipeline-read-fail
+2026-11-28T06:41:31.4705872Z  * [new branch]            planner-boundary        -> origin/planner-boundary
+2026-11-28T06:41:31.4706365Z  * [new branch]            playbook-inputs         -> origin/playbook-inputs
+2026-11-28T06:41:31.4706852Z  * [new branch]            preference-io           -> origin/preference-io
+2026-11-28T06:41:31.4707362Z  * [new branch]            preflight-next          -> origin/preflight-next
+2026-11-28T06:41:31.4707902Z  * [new branch]            prepare-review-checks   -> origin/prepare-review-checks
+2026-11-28T06:41:31.4708472Z  * [new branch]            projection-incremental  -> origin/projection-incremental
+2026-11-28T06:41:31.4709001Z  * [new branch]            promoter-tools          -> origin/promoter-tools
+2026-11-28T06:41:31.4709523Z  * [new branch]            prompt-estimate-length  -> origin/prompt-estimate-length
+2026-11-28T06:41:31.4710174Z  * [new branch]            prompt-retry            -> origin/prompt-retry
+2026-11-28T06:41:31.4710686Z  * [new branch]            property-proof-tests    -> origin/property-proof-tests
+2026-11-28T06:41:31.4711232Z  * [new branch]            protection-write-fail   -> origin/protection-write-fail
+2026-11-28T06:41:31.4711773Z  * [new branch]            provider-idle-bound     -> origin/provider-idle-bound
+2026-11-28T06:41:31.4712298Z  * [new branch]            pty-backpressure        -> origin/pty-backpressure
+2026-11-28T06:41:31.4712784Z  * [new branch]            qa-stories              -> origin/qa-stories
+2026-11-28T06:41:31.4713255Z  * [new branch]            qualified-deep          -> origin/qualified-deep
+2026-11-28T06:41:31.4713989Z  * [new branch]            quarantine-dispose-native -> origin/quarantine-dispose-native
+2026-11-28T06:41:31.4714545Z  * [new branch]            question-label          -> origin/question-label
+2026-11-28T06:41:31.4715028Z  * [new branch]            rag-cockpit             -> origin/rag-cockpit
+2026-11-28T06:41:31.4715501Z  * [new branch]            rag-parse-port          -> origin/rag-parse-port
+2026-11-28T06:41:31.4715989Z  * [new branch]            rag-proof-port          -> origin/rag-proof-port
+2026-11-28T06:41:31.4716472Z  * [new branch]            rag-search-port         -> origin/rag-search-port
+2026-11-28T06:41:31.4716951Z  * [new branch]            reach-receipt           -> origin/reach-receipt
+2026-11-28T06:41:31.4717456Z  * [new branch]            readiness-check-fail    -> origin/readiness-check-fail
+2026-11-28T06:41:31.4717964Z  * [new branch]            readme-accuracy         -> origin/readme-accuracy
+2026-11-28T06:41:31.4718443Z  * [new branch]            readme-paths            -> origin/readme-paths
+2026-11-28T06:41:31.4718935Z  * [new branch]            reconnect-gap-fix       -> origin/reconnect-gap-fix
+2026-11-28T06:41:31.4719452Z  * [new branch]            reconnect-gap-proof     -> origin/reconnect-gap-proof
+2026-11-28T06:41:31.4720078Z  * [new branch]            reconnect-tests         -> origin/reconnect-tests
+2026-11-28T06:41:31.4720587Z  * [new branch]            record-check-evidence   -> origin/record-check-evidence
+2026-11-28T06:41:31.4721161Z  * [new branch]            recovery-benchmark-control -> origin/recovery-benchmark-control
+2026-11-28T06:41:31.4721716Z  * [new branch]            recovery-ci-queue       -> origin/recovery-ci-queue
+2026-11-28T06:41:31.4722226Z  * [new branch]            recovery-integration    -> origin/recovery-integration
+2026-11-28T06:41:31.4722750Z  * [new branch]            redirect-dns-pinning    -> origin/redirect-dns-pinning
+2026-11-28T06:41:31.4723254Z  * [new branch]            regex-child             -> origin/regex-child
+2026-11-28T06:41:31.4723857Z  * [new branch]            regex-macos             -> origin/regex-macos
+2026-11-28T06:41:31.4724315Z  * [new branch]            regex-parser            -> origin/regex-parser
+2026-11-28T06:41:31.4724817Z  * [new branch]            register-local-checks   -> origin/register-local-checks
+2026-11-28T06:41:31.4725335Z  * [new branch]            reject-projection       -> origin/reject-projection
+2026-11-28T06:41:31.4725820Z  * [new branch]            release-0.3.6           -> origin/release-0.3.6
+2026-11-28T06:41:31.4726289Z  * [new branch]            release-0.3.7           -> origin/release-0.3.7
+2026-11-28T06:41:31.4726755Z  * [new branch]            release-0.3.8           -> origin/release-0.3.8
+2026-11-28T06:41:31.4727247Z  * [new branch]            release-byte-capture    -> origin/release-byte-capture
+2026-11-28T06:41:31.4727780Z  * [new branch]            release-capture-tests   -> origin/release-capture-tests
+2026-11-28T06:41:31.4728310Z  * [new branch]            release-jira-fixture    -> origin/release-jira-fixture
+2026-11-28T06:41:31.4728839Z  * [new branch]            release-oauth-fixture   -> origin/release-oauth-fixture
+2026-11-28T06:41:31.4729347Z  * [new branch]            release-promoter        -> origin/release-promoter
+2026-11-28T06:41:31.4730109Z  * [new branch]            release-promotion       -> origin/release-promotion
+2026-11-28T06:41:31.4730645Z  * [new branch]            release-proof-checks    -> origin/release-proof-checks
+2026-11-28T06:41:31.4731169Z  * [new branch]            release-proof-gate      -> origin/release-proof-gate
+2026-11-28T06:41:31.4731685Z  * [new branch]            release-proof-tests     -> origin/release-proof-tests
+2026-11-28T06:41:31.4732195Z  * [new branch]            release-recovery        -> origin/release-recovery
+2026-11-28T06:41:31.4732686Z  * [new branch]            removal-baseline        -> origin/removal-baseline
+2026-11-28T06:41:31.4733327Z  * [new branch]            removal-wake-tests      -> origin/removal-wake-tests
+2026-11-28T06:41:31.4733848Z  * [new branch]            rename-write-fail       -> origin/rename-write-fail
+2026-11-28T06:41:31.4734338Z  * [new branch]            replay-binding          -> origin/replay-binding
+2026-11-28T06:41:31.4734835Z  * [new branch]            replay-claim-bind       -> origin/replay-claim-bind
+2026-11-28T06:41:31.4735327Z  * [new branch]            replay-control          -> origin/replay-control
+2026-11-28T06:41:31.4735827Z  * [new branch]            replay-marker-tests     -> origin/replay-marker-tests
+2026-11-28T06:41:31.4736345Z  * [new branch]            replay-safety-proof     -> origin/replay-safety-proof
+2026-11-28T06:41:31.4736848Z  * [new branch]            reserve-ci-budget       -> origin/reserve-ci-budget
+2026-11-28T06:41:31.4737335Z  * [new branch]            residual-teeth          -> origin/residual-teeth
+2026-11-28T06:41:31.4737821Z  * [new branch]            restore-core-docs       -> origin/restore-core-docs
+2026-11-28T06:41:31.4738312Z  * [new branch]            restore-proof           -> origin/restore-proof
+2026-11-28T06:41:31.4738813Z  * [new branch]            retain-session-source   -> origin/retain-session-source
+2026-11-28T06:41:31.4739324Z  * [new branch]            review-closeout         -> origin/review-closeout
+2026-11-28T06:41:31.4739959Z  * [new branch]            review-deep-filter      -> origin/review-deep-filter
+2026-11-28T06:41:31.4740464Z  * [new branch]            review-diff-order       -> origin/review-diff-order
+2026-11-28T06:41:31.4740966Z  * [new branch]            review-epic-bundle      -> origin/review-epic-bundle
+2026-11-28T06:41:31.4741476Z  * [new branch]            review-impact-cache     -> origin/review-impact-cache
+2026-11-28T06:41:31.4742014Z  * [new branch]            review-impact-collector -> origin/review-impact-collector
+2026-11-28T06:41:31.4742535Z  * [new branch]            review-languages        -> origin/review-languages
+2026-11-28T06:41:31.4743031Z  * [new branch]            review-next-wave        -> origin/review-next-wave
+2026-11-28T06:41:31.4743785Z  * [new branch]            review-proof-catalog    -> origin/review-proof-catalog
+2026-11-28T06:41:31.4744308Z  * [new branch]            review-provision        -> origin/review-provision
+2026-11-28T06:41:31.4744791Z  * [new branch]            review-records          -> origin/review-records
+2026-11-28T06:41:31.4745283Z  * [new branch]            review-sampling         -> origin/review-sampling
+2026-11-28T06:41:31.4745762Z  * [new branch]            review-staging          -> origin/review-staging
+2026-11-28T06:41:31.4746240Z  * [new branch]            ripgrep-pins            -> origin/ripgrep-pins
+2026-11-28T06:41:31.4746728Z  * [new branch]            route-local-checks      -> origin/route-local-checks
+2026-11-28T06:41:31.4747217Z  * [new branch]            run-state-fail          -> origin/run-state-fail
+2026-11-28T06:41:31.4747716Z  * [new branch]            runner-durable-tests    -> origin/runner-durable-tests
+2026-11-28T06:41:31.4748246Z  * [new branch]            runner-probe-final      -> origin/runner-probe-final
+2026-11-28T06:41:31.4748745Z  * [new branch]            runtime-io-proof        -> origin/runtime-io-proof
+2026-11-28T06:41:31.4749245Z  * [new branch]            runtime-preflight       -> origin/runtime-preflight
+2026-11-28T06:41:31.4749848Z  * [new branch]            runtime-proof           -> origin/runtime-proof
+2026-11-28T06:41:31.4750347Z  * [new branch]            runtime-service-docs    -> origin/runtime-service-docs
+2026-11-28T06:41:31.4750848Z  * [new branch]            rustsec-command         -> origin/rustsec-command
+2026-11-28T06:41:31.4751331Z  * [new branch]            rustsec-delivery        -> origin/rustsec-delivery
+2026-11-28T06:41:31.4751841Z  * [new branch]            rustsec-native-proof    -> origin/rustsec-native-proof
+2026-11-28T06:41:31.4752342Z  * [new branch]            rustsec-pin             -> origin/rustsec-pin
+2026-11-28T06:41:31.4752813Z  * [new branch]            rustsec-refresh         -> origin/rustsec-refresh
+2026-11-28T06:41:31.4753456Z  * [new branch]            rustsec-refresh-proof   -> origin/rustsec-refresh-proof
+2026-11-28T06:41:31.4753979Z  * [new branch]            rustsec-report          -> origin/rustsec-report
+2026-11-28T06:41:31.4754460Z  * [new branch]            rustsec-review          -> origin/rustsec-review
+2026-11-28T06:41:31.4754963Z  * [new branch]            rustsec-runner-proof    -> origin/rustsec-runner-proof
+2026-11-28T06:41:31.4755461Z  * [new branch]            rustsec-state           -> origin/rustsec-state
+2026-11-28T06:41:31.4755975Z  * [new branch]            sandbox-cache-evidence  -> origin/sandbox-cache-evidence
+2026-11-28T06:41:31.4756492Z  * [new branch]            sandbox-evidence        -> origin/sandbox-evidence
+2026-11-28T06:41:31.4757052Z  * [new branch]            sandbox-fixed-qualification -> origin/sandbox-fixed-qualification
+2026-11-28T06:41:31.4757613Z  * [new branch]            sandbox-identity        -> origin/sandbox-identity
+2026-11-28T06:41:31.4758137Z  * [new branch]            sandbox-incident-doc    -> origin/sandbox-incident-doc
+2026-11-28T06:41:31.4758658Z  * [new branch]            sandbox-native-fixed    -> origin/sandbox-native-fixed
+2026-11-28T06:41:31.4759172Z  * [new branch]            sandbox-native-old      -> origin/sandbox-native-old
+2026-11-28T06:41:31.4759789Z  * [new branch]            sandbox-readme          -> origin/sandbox-readme
+2026-11-28T06:41:31.4760275Z  * [new branch]            sandbox-replay          -> origin/sandbox-replay
+2026-11-28T06:41:31.4760773Z  * [new branch]            sandbox-test-signal     -> origin/sandbox-test-signal
+2026-11-28T06:41:31.4761282Z  * [new branch]            saved-permissions       -> origin/saved-permissions
+2026-11-28T06:41:31.4761779Z  * [new branch]            scan-projection         -> origin/scan-projection
+2026-11-28T06:41:31.4762273Z  * [new branch]            schedule-authority      -> origin/schedule-authority
+2026-11-28T06:41:31.4762807Z  * [new branch]            schedule-commit-guard   -> origin/schedule-commit-guard
+2026-11-28T06:41:31.4763456Z  * [new branch]            schedule-screens        -> origin/schedule-screens
+2026-11-28T06:41:31.4763967Z  * [new branch]            security-dep-bumps      -> origin/security-dep-bumps
+2026-11-28T06:41:31.4764481Z  * [new branch]            server-host-policy      -> origin/server-host-policy
+2026-11-28T06:41:31.4764990Z  * [new branch]            server-input-limits     -> origin/server-input-limits
+2026-11-28T06:41:31.4765500Z  * [new branch]            server-skill-union      -> origin/server-skill-union
+2026-11-28T06:41:31.4765993Z  * [new branch]            session-events-404      -> origin/session-events-404
+2026-11-28T06:41:31.4766489Z  * [new branch]            session-integrity       -> origin/session-integrity
+2026-11-28T06:41:31.4766981Z  * [new branch]            session-lifecycle       -> origin/session-lifecycle
+2026-11-28T06:41:31.4767508Z  * [new branch]            session-list-projection -> origin/session-list-projection
+2026-11-28T06:41:31.4768083Z  * [new branch]            session-residual-probe  -> origin/session-residual-probe
+2026-11-28T06:41:31.4768597Z  * [new branch]            session-resync          -> origin/session-resync
+2026-11-28T06:41:31.4769111Z  * [new branch]            session-runtime-bundle  -> origin/session-runtime-bundle
+2026-11-28T06:41:31.4769824Z  * [new branch]            settings-cleanup        -> origin/settings-cleanup
+2026-11-28T06:41:31.4770363Z  * [new branch]            settings-read-fail      -> origin/settings-read-fail
+2026-11-28T06:41:31.4770858Z  * [new branch]            shell-suspense          -> origin/shell-suspense
+2026-11-28T06:41:31.4771359Z  * [new branch]            shfmt-check-adapter     -> origin/shfmt-check-adapter
+2026-11-28T06:41:31.4771889Z  * [new branch]            show-action-failures    -> origin/show-action-failures
+2026-11-28T06:41:31.4772402Z  * [new branch]            show-stop-refresh       -> origin/show-stop-refresh
+2026-11-28T06:41:31.4773029Z  * [new branch]            sitting-look            -> origin/sitting-look
+2026-11-28T06:41:31.4773529Z  * [new branch]            skill-bound-tests       -> origin/skill-bound-tests
+2026-11-28T06:41:31.4774017Z  * [new branch]            skill-bounds            -> origin/skill-bounds
+2026-11-28T06:41:31.4774493Z  * [new branch]            skill-cross-links       -> origin/skill-cross-links
+2026-11-28T06:41:31.4774987Z  * [new branch]            skill-followups         -> origin/skill-followups
+2026-11-28T06:41:31.4775477Z  * [new branch]            skill-miss-policy       -> origin/skill-miss-policy
+2026-11-28T06:41:31.4775984Z  * [new branch]            skill-validation        -> origin/skill-validation
+2026-11-28T06:41:31.4776473Z  * [new branch]            skills-accuracy         -> origin/skills-accuracy
+2026-11-28T06:41:31.4776970Z  * [new branch]            skills-accuracy-cut     -> origin/skills-accuracy-cut
+2026-11-28T06:41:31.4777484Z  * [new branch]            skills-prose-fixes      -> origin/skills-prose-fixes
+2026-11-28T06:41:31.4778006Z  * [new branch]            skills-ready-final      -> origin/skills-ready-final
+2026-11-28T06:41:31.4778503Z  * [new branch]            skills-usage-fixes      -> origin/skills-usage-fixes
+2026-11-28T06:41:31.4778999Z  * [new branch]            slack-cancel-fail       -> origin/slack-cancel-fail
+2026-11-28T06:41:31.4779557Z  * [new branch]            snapshot-board-rag-20261109 -> origin/snapshot-board-rag-20261109
+2026-11-28T06:41:31.4780294Z  * [new branch]            snapshot-genesis-20261109 -> origin/snapshot-genesis-20261109
+2026-11-28T06:41:31.4780901Z  * [new branch]            snapshot-lucy-audit-20261110 -> origin/snapshot-lucy-audit-20261110
+2026-11-28T06:41:31.4781589Z  * [new branch]            snapshot-lucy-phase5-ready-20261109 -> origin/snapshot-lucy-phase5-ready-20261109
+2026-11-28T06:41:31.4782214Z  * [new branch]            source-read-fail        -> origin/source-read-fail
+2026-11-28T06:41:31.4782723Z  * [new branch]            sse-attachment-limit    -> origin/sse-attachment-limit
+2026-11-28T06:41:31.4783418Z  * [new branch]            startup-dialog-i18n     -> origin/startup-dialog-i18n
+2026-11-28T06:41:31.4783928Z  * [new branch]            startup-guidance        -> origin/startup-guidance
+2026-11-28T06:41:31.4784431Z  * [new branch]            stop-clean-recovery     -> origin/stop-clean-recovery
+2026-11-28T06:41:31.4784940Z  * [new branch]            stop-tool-turn          -> origin/stop-tool-turn
+2026-11-28T06:41:31.4785425Z  * [new branch]            stop-validation         -> origin/stop-validation
+2026-11-28T06:41:31.4785914Z  * [new branch]            stream-integrity        -> origin/stream-integrity
+2026-11-28T06:41:31.4786401Z  * [new branch]            stream-resync           -> origin/stream-resync
+2026-11-28T06:41:31.4786885Z  * [new branch]            studio-sitting          -> origin/studio-sitting
+2026-11-28T06:41:31.4787376Z  * [new branch]            task-clause-tests       -> origin/task-clause-tests
+2026-11-28T06:41:31.4787879Z  * [new branch]            task-failure-test       -> origin/task-failure-test
+2026-11-28T06:41:31.4788408Z  * [new branch]            task-finish-parent      -> origin/task-finish-parent
+2026-11-28T06:41:31.4789010Z  * [new branch]            task-nofinish-characterization -> origin/task-nofinish-characterization
+2026-11-28T06:41:31.4789737Z  * [new branch]            task-skill-tools        -> origin/task-skill-tools
+2026-11-28T06:41:31.4790230Z  * [new branch]            task-validation         -> origin/task-validation
+2026-11-28T06:41:31.4790730Z  * [new branch]            task-worktree-tests     -> origin/task-worktree-tests
+2026-11-28T06:41:31.4791229Z  * [new branch]            terminal-accuracy       -> origin/terminal-accuracy
+2026-11-28T06:41:31.4791738Z  * [new branch]            terminal-theme-tests    -> origin/terminal-theme-tests
+2026-11-28T06:41:31.4792253Z  * [new branch]            test-flake-sweep        -> origin/test-flake-sweep
+2026-11-28T06:41:31.4792864Z  * [new branch]            test-sleeps             -> origin/test-sleeps
+2026-11-28T06:41:31.4793366Z  * [new branch]            timeline-frame-cost     -> origin/timeline-frame-cost
+2026-11-28T06:41:31.4793878Z  * [new branch]            timeline-rows-perf      -> origin/timeline-rows-perf
+2026-11-28T06:41:31.4794381Z  * [new branch]            title-scope-owner       -> origin/title-scope-owner
+2026-11-28T06:41:31.4794853Z  * [new branch]            tls-note                -> origin/tls-note
+2026-11-28T06:41:31.4795330Z  * [new branch]            toml-runtime-fix        -> origin/toml-runtime-fix
+2026-11-28T06:41:31.4795838Z  * [new branch]            tool-artifact-pins      -> origin/tool-artifact-pins
+2026-11-28T06:41:31.4796359Z  * [new branch]            tool-error-feedback     -> origin/tool-error-feedback
+2026-11-28T06:41:31.4797376Z  * [new branch]            tool-fact-ledger        -> origin/tool-fact-ledger
+2026-11-28T06:41:31.4797928Z  * [new branch]            tool-facts-four         -> origin/tool-facts-four
+2026-11-28T06:41:31.4798419Z  * [new branch]            tool-facts-one          -> origin/tool-facts-one
+2026-11-28T06:41:31.4798901Z  * [new branch]            tool-facts-three        -> origin/tool-facts-three
+2026-11-28T06:41:31.4799387Z  * [new branch]            tool-facts-two          -> origin/tool-facts-two
+2026-11-28T06:41:31.4800011Z  * [new branch]            tool-runtime-check      -> origin/tool-runtime-check
+2026-11-28T06:41:31.4800512Z  * [new branch]            tool-safety-guide       -> origin/tool-safety-guide
+2026-11-28T06:41:31.4801044Z  * [new branch]            transfer-header-probes  -> origin/transfer-header-probes
+2026-11-28T06:41:31.4801570Z  * [new branch]            transfer-headers        -> origin/transfer-headers
+2026-11-28T06:41:31.4802091Z  * [new branch]            transfer-route-inputs   -> origin/transfer-route-inputs
+2026-11-28T06:41:31.4802598Z  * [new branch]            trust-fixtures          -> origin/trust-fixtures
+2026-11-28T06:41:31.4803096Z  * [new branch]            tui-model-execution     -> origin/tui-model-execution
+2026-11-28T06:41:31.4803729Z  * [new branch]            tui-title-recovery      -> origin/tui-title-recovery
+2026-11-28T06:41:31.4804220Z  * [new branch]            ui-error-states         -> origin/ui-error-states
+2026-11-28T06:41:31.4804698Z  * [new branch]            ui-unit-skills          -> origin/ui-unit-skills
+2026-11-28T06:41:31.4805185Z  * [new branch]            ui-unit-skills-land     -> origin/ui-unit-skills-land
+2026-11-28T06:41:31.4805676Z  * [new branch]            undo-admission          -> origin/undo-admission
+2026-11-28T06:41:31.4806141Z  * [new branch]            undo-http               -> origin/undo-http
+2026-11-28T06:41:31.4806612Z  * [new branch]            updater-fixture         -> origin/updater-fixture
+2026-11-28T06:41:31.4807109Z  * [new branch]            v2-parity-opencode      -> origin/v2-parity-opencode
+2026-11-28T06:41:31.4807609Z  * [new branch]            variant-identity        -> origin/variant-identity
+2026-11-28T06:41:31.4808113Z  * [new branch]            variant-lowering        -> origin/variant-lowering
+2026-11-28T06:41:31.4808596Z  * [new branch]            variant-wire            -> origin/variant-wire
+2026-11-28T06:41:31.4809091Z  * [new branch]            wake-exclusive-tests    -> origin/wake-exclusive-tests
+2026-11-28T06:41:31.4809824Z  * [new branch]            wallpaper-themes        -> origin/wallpaper-themes
+2026-11-28T06:41:31.4810361Z  * [new branch]            warm-chapters           -> origin/warm-chapters
+2026-11-28T06:41:31.4810854Z  * [new branch]            watcher-head-scope      -> origin/watcher-head-scope
+2026-11-28T06:41:31.4811356Z  * [new branch]            windows-fixtures        -> origin/windows-fixtures
+2026-11-28T06:41:31.4811835Z  * [new branch]            windows-lanes           -> origin/windows-lanes
+2026-11-28T06:41:31.4812327Z  * [new branch]            windows-read-policy     -> origin/windows-read-policy
+2026-11-28T06:41:31.4812845Z  * [new branch]            windows-read-probes     -> origin/windows-read-probes
+2026-11-28T06:41:31.4813492Z  * [new branch]            worker-custody          -> origin/worker-custody
+2026-11-28T06:41:31.4813985Z  * [new branch]            workspace-guards        -> origin/workspace-guards
+2026-11-28T06:41:31.4814487Z  * [new branch]            zizmor-native-check     -> origin/zizmor-native-check
+2026-11-28T06:41:31.4814981Z  * [new branch]            zoom-write-fail         -> origin/zoom-write-fail
+2026-11-28T06:41:31.4815453Z  * [new tag]               desktop-latest          -> desktop-latest
+2026-11-28T06:41:31.4815890Z  * [new tag]               desktop-v0.1.0          -> desktop-v0.1.0
+2026-11-28T06:41:31.4816308Z  * [new tag]               desktop-v0.2.0          -> desktop-v0.2.0
+2026-11-28T06:41:31.4816727Z  * [new tag]               desktop-v0.2.1          -> desktop-v0.2.1
+2026-11-28T06:41:31.4817146Z  * [new tag]               desktop-v0.2.2          -> desktop-v0.2.2
+2026-11-28T06:41:31.4817562Z  * [new tag]               desktop-v0.3.0          -> desktop-v0.3.0
+2026-11-28T06:41:31.4817987Z  * [new tag]               desktop-v0.3.1          -> desktop-v0.3.1
+2026-11-28T06:41:31.4818397Z  * [new tag]               desktop-v0.3.2          -> desktop-v0.3.2
+2026-11-28T06:41:31.4818805Z  * [new tag]               desktop-v0.3.3          -> desktop-v0.3.3
+2026-11-28T06:41:31.4819218Z  * [new tag]               desktop-v0.3.4          -> desktop-v0.3.4
+2026-11-28T06:41:31.4819755Z  * [new tag]               desktop-v0.3.6          -> desktop-v0.3.6
+2026-11-28T06:41:31.4820183Z  * [new tag]               desktop-v0.3.7          -> desktop-v0.3.7
+2026-11-28T06:41:31.4820635Z  * [new tag]               tree-sitter-grammars-v1 -> tree-sitter-grammars-v1
+2026-11-28T06:41:31.4821076Z  * [new tag]               v0.1.0                  -> v0.1.0
+2026-11-28T06:41:31.4821461Z  * [new tag]               v0.2.0                  -> v0.2.0
+2026-11-28T06:41:31.4821834Z  * [new tag]               v0.2.1                  -> v0.2.1
+2026-11-28T06:41:31.4822206Z  * [new tag]               v0.3.0                  -> v0.3.0
+2026-11-28T06:41:31.4822718Z  * [new tag]               v0.3.1                  -> v0.3.1
+2026-11-28T06:41:31.4823086Z  * [new tag]               v0.3.6                  -> v0.3.6
+2026-11-28T06:41:31.4823454Z  * [new tag]               v0.3.7                  -> v0.3.7
+2026-11-28T06:41:31.4824630Z [command]/usr/bin/git branch --list --remote origin/genesis-core-resume
+2026-11-28T06:41:31.4825065Z   origin/genesis-core-resume
+2026-11-28T06:41:31.4825796Z [command]/usr/bin/git rev-parse refs/remotes/origin/genesis-core-resume
+2026-11-28T06:41:31.4826229Z be539e76d05ab36ea401910c3c9241ce76b200c7
+2026-11-28T06:41:31.4827078Z ##[endgroup]
+2026-11-28T06:41:31.4827509Z ##[group]Determining the checkout info
+2026-11-28T06:41:31.4827997Z ##[endgroup]
+2026-11-28T06:41:31.4828273Z [command]/usr/bin/git sparse-checkout disable
+2026-11-28T06:41:31.4829064Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+2026-11-28T06:41:31.4830163Z ##[group]Checking out the ref
+2026-11-28T06:41:31.4830741Z [command]/usr/bin/git checkout --progress --force -B genesis-core-resume refs/remotes/origin/genesis-core-resume
+2026-11-28T06:41:32.4883575Z Updating files:  73% (11181/15295)
+2026-11-28T06:41:32.5006166Z Updating files:  74% (11319/15295)
+2026-11-28T06:41:32.5119069Z Updating files:  75% (11472/15295)
+2026-11-28T06:41:32.5251618Z Updating files:  76% (11625/15295)
+2026-11-28T06:41:32.5361341Z Updating files:  77% (11778/15295)
+2026-11-28T06:41:32.5506791Z Updating files:  78% (11931/15295)
+2026-11-28T06:41:32.5623851Z Updating files:  79% (12084/15295)
+2026-11-28T06:41:32.5722328Z Updating files:  80% (12236/15295)
+2026-11-28T06:41:32.5807047Z Updating files:  81% (12389/15295)
+2026-11-28T06:41:32.5898505Z Updating files:  82% (12542/15295)
+2026-11-28T06:41:32.6002138Z Updating files:  83% (12695/15295)
+2026-11-28T06:41:32.6111177Z Updating files:  84% (12848/15295)
+2026-11-28T06:41:32.6195843Z Updating files:  85% (13001/15295)
+2026-11-28T06:41:32.6327161Z Updating files:  86% (13154/15295)
+2026-11-28T06:41:32.6398575Z Updating files:  87% (13307/15295)
+2026-11-28T06:41:32.6469064Z Updating files:  88% (13460/15295)
+2026-11-28T06:41:32.6536055Z Updating files:  89% (13613/15295)
+2026-11-28T06:41:32.6604115Z Updating files:  90% (13766/15295)
+2026-11-28T06:41:32.6673050Z Updating files:  91% (13919/15295)
+2026-11-28T06:41:32.6744719Z Updating files:  92% (14072/15295)
+2026-11-28T06:41:32.6816450Z Updating files:  93% (14225/15295)
+2026-11-28T06:41:32.6926780Z Updating files:  94% (14378/15295)
+2026-11-28T06:41:32.7042575Z Updating files:  95% (14531/15295)
+2026-11-28T06:41:32.7120585Z Updating files:  96% (14684/15295)
+2026-11-28T06:41:32.7234826Z Updating files:  97% (14837/15295)
+2026-11-28T06:41:32.7345593Z Updating files:  98% (14990/15295)
+2026-11-28T06:41:32.7579247Z Updating files:  99% (15143/15295)
+2026-11-28T06:41:32.7610486Z Updating files: 100% (15295/15295)
+2026-11-28T06:41:32.7610969Z Updating files: 100% (15295/15295), done.
+2026-11-28T06:41:32.7796522Z Switched to a new branch 'genesis-core-resume'
+2026-11-28T06:41:32.7802394Z branch 'genesis-core-resume' set up to track 'origin/genesis-core-resume'.
+2026-11-28T06:41:32.7897540Z ##[endgroup]
+2026-11-28T06:41:32.7961587Z [command]/usr/bin/git log -1 --format=%H
+2026-11-28T06:41:32.8001296Z be539e76d05ab36ea401910c3c9241ce76b200c7
+2026-11-28T06:41:32.8033465Z ##[group]Removing auth
+2026-11-28T06:41:32.8034108Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-28T06:41:32.8066742Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-28T06:41:32.8354146Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-28T06:41:32.8390481Z http.https://github.com/.extraheader
+2026-11-28T06:41:32.8400830Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-11-28T06:41:32.8471400Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-28T06:41:32.8735973Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-28T06:41:32.8778148Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-28T06:41:32.9034276Z ##[endgroup]
+2026-11-28T06:41:32.9415650Z Prepare all required actions
+2026-11-28T06:41:32.9416248Z Getting action download info
+2026-11-28T06:41:33.1164295Z Download action repository 'actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+2026-11-28T06:41:33.2527998Z Download action repository 'oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6' (SHA:0c5077e51419868618aeaa5fe8019c62421857d6)
+2026-11-28T06:41:33.5700353Z Download action repository 'actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830' (SHA:0057852bfaa89a56745cba8c7296529d2fc39830)
+2026-11-28T06:41:33.7618086Z ##[group]Run ./.github/actions/setup-bun
+2026-11-28T06:41:33.7618383Z with:
+2026-11-28T06:41:33.7618574Z ##[endgroup]
+2026-11-28T06:41:33.7682744Z ##[start-action display=Setup Node;id=__self.__actions_setup-node]
+2026-11-28T06:41:33.7768426Z ##[group]Run actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+2026-11-28T06:41:33.7768820Z with:
+2026-11-28T06:41:33.7769061Z   node-version: 24
+2026-11-28T06:41:33.7769274Z   always-auth: false
+2026-11-28T06:41:33.7769485Z   check-latest: false
+2026-11-28T06:41:33.7772471Z   token: ***
+2026-11-28T06:41:33.7772677Z ##[endgroup]
+2026-11-28T06:41:33.9801373Z Found in cache @ /opt/hostedtoolcache/node/24.22.3/x64
+2026-11-28T06:41:33.9807181Z (node:2468) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-28T06:41:33.9808195Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-28T06:41:33.9811903Z ##[group]Environment details
+2026-11-28T06:41:37.3525995Z node: v24.22.3
+2026-11-28T06:41:37.3526789Z npm: 11.19.1
+2026-11-28T06:41:37.3527152Z yarn: 1.22.22
+2026-11-28T06:41:37.3528009Z ##[endgroup]
+2026-11-28T06:41:37.3651170Z ##[end-action id=__self.__actions_setup-node;outcome=success;conclusion=success;duration_ms=3596]
+2026-11-28T06:41:37.3654401Z ##[start-action display=Get baseline download URL;id=__self.bun-url]
+2026-11-28T06:41:37.3690385Z ##[group]Run if [ "$RUNNER_ARCH" = "X64" ]; then
+2026-11-28T06:41:37.3690786Z [36;1mif [ "$RUNNER_ARCH" = "X64" ]; then[0m
+2026-11-28T06:41:37.3691236Z [36;1m  V=$(node -p "require('./package.json').packageManager.split('@')[1]")[0m
+2026-11-28T06:41:37.3691657Z [36;1m  case "$RUNNER_OS" in[0m
+2026-11-28T06:41:37.3691915Z [36;1m    macOS)   OS=darwin ;;[0m
+2026-11-28T06:41:37.3692173Z [36;1m    Linux)   OS=linux ;;[0m
+2026-11-28T06:41:37.3692429Z [36;1m    Windows) OS=windows ;;[0m
+2026-11-28T06:41:37.3692690Z [36;1m  esac[0m
+2026-11-28T06:41:37.3693195Z [36;1m  echo "url=https://github.com/oven-sh/bun/releases/download/bun-v${V}/bun-${OS}-x64-baseline.zip" >> "$GITHUB_OUTPUT"[0m
+2026-11-28T06:41:37.3693817Z [36;1melif [ "$RUNNER_OS-$RUNNER_ARCH" = "Windows-ARM64" ]; then[0m
+2026-11-28T06:41:37.3694314Z [36;1m  V=$(node -p "require('./package.json').packageManager.split('@')[1]")[0m
+2026-11-28T06:41:37.3694989Z [36;1m  echo "url=https://github.com/oven-sh/bun/releases/download/bun-v${V}/bun-windows-aarch64.zip" >> "$GITHUB_OUTPUT"[0m
+2026-11-28T06:41:37.3695541Z [36;1mfi[0m
+2026-11-28T06:41:37.3840306Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:41:37.3840665Z ##[endgroup]
+2026-11-28T06:41:37.4373927Z ##[end-action id=__self.bun-url;outcome=success;conclusion=success;duration_ms=71]
+2026-11-28T06:41:37.4378700Z ##[start-action display=Setup Bun;id=__self.__oven-sh_setup-bun]
+2026-11-28T06:41:37.4436310Z ##[group]Run oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+2026-11-28T06:41:37.4436883Z with:
+2026-11-28T06:41:37.4437327Z   bun-download-url: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64-baseline.zip
+2026-11-28T06:41:37.4437842Z   no-cache: false
+2026-11-28T06:41:37.4440726Z   token: ***
+2026-11-28T06:41:37.4440932Z ##[endgroup]
+2026-11-28T06:41:37.6203735Z Obtained version 1.3.14 from package.json
+2026-11-28T06:41:37.6210533Z Downloading a new version of Bun: https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-linux-x64-baseline.zip
+2026-11-28T06:41:38.3636306Z [command]/usr/bin/unzip -o -q /home/runner/work/_temp/95c158e2-59b3-4e86-8334-8277b68788f3.zip
+2026-11-28T06:41:39.0491199Z [command]/home/runner/.bun/bin/bun --revision
+2026-11-28T06:41:39.0560718Z 1.3.14+0d9b296af
+2026-11-28T06:41:39.0707298Z ##[end-action id=__self.__oven-sh_setup-bun;outcome=success;conclusion=success;duration_ms=1632]
+2026-11-28T06:41:39.0710267Z ##[start-action display=Get cache directory;id=__self.cache]
+2026-11-28T06:41:39.0728772Z ##[group]Run echo "dir=$(bun pm cache)" >> "$GITHUB_OUTPUT"
+2026-11-28T06:41:39.0729168Z [36;1mecho "dir=$(bun pm cache)" >> "$GITHUB_OUTPUT"[0m
+2026-11-28T06:41:39.0772064Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:41:39.0772410Z ##[endgroup]
+2026-11-28T06:41:39.0884593Z ##[end-action id=__self.cache;outcome=success;conclusion=success;duration_ms=17]
+2026-11-28T06:41:39.0887829Z ##[start-action display=Compute dependency cache keys;id=__self.keys]
+2026-11-28T06:41:39.2377662Z ##[group]Run echo "bun=Linux-X64-bun-v3-ca6b55b2afe77935031f9fdd65c3081e4f746b398a52772498374753711b4143" >> "$GITHUB_OUTPUT"
+2026-11-28T06:41:39.2378761Z [36;1mecho "bun=Linux-X64-bun-v3-ca6b55b2afe77935031f9fdd65c3081e4f746b398a52772498374753711b4143" >> "$GITHUB_OUTPUT"[0m
+2026-11-28T06:41:39.2380082Z [36;1mecho "modules=Linux-X64-modules-v4-fa444ed980703b8cea6b91640a7d9e678cb0032ca13bda76a078f713cb9283e3" >> "$GITHUB_OUTPUT"[0m
+2026-11-28T06:41:39.2423777Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:41:39.2424137Z ##[endgroup]
+2026-11-28T06:41:39.2500008Z ##[end-action id=__self.keys;outcome=success;conclusion=success;duration_ms=161]
+2026-11-28T06:41:39.2502270Z ##[start-action display=Restore node_modules;id=__self.modules-cache]
+2026-11-28T06:41:39.2539410Z ##[group]Run actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+2026-11-28T06:41:39.2540056Z with:
+2026-11-28T06:41:39.2540805Z   path: node_modules
+packages/*/node_modules
+packages/*/*/node_modules
+apps/*/node_modules
+modules/*/node_modules
+modules/*/*/node_modules
+tooling/*/node_modules
+native/*/*/node_modules
+native/*/*/*/node_modules
+
+2026-11-28T06:41:39.2542048Z   key: Linux-X64-modules-v4-fa444ed980703b8cea6b91640a7d9e678cb0032ca13bda76a078f713cb9283e3
+2026-11-28T06:41:39.2542545Z   enableCrossOsArchive: false
+2026-11-28T06:41:39.2542797Z   fail-on-cache-miss: false
+2026-11-28T06:41:39.2543027Z   lookup-only: false
+2026-11-28T06:41:39.2543234Z ##[endgroup]
+2026-11-28T06:41:39.3618145Z (node:2549) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-28T06:41:39.3619101Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-28T06:41:39.6118265Z Cache not found for input keys: Linux-X64-modules-v4-fa444ed980703b8cea6b91640a7d9e678cb0032ca13bda76a078f713cb9283e3
+2026-11-28T06:41:39.6184539Z ##[end-action id=__self.modules-cache;outcome=success;conclusion=success;duration_ms=368]
+2026-11-28T06:41:39.6187765Z ##[start-action display=Restore Bun dependencies;id=__self.bun-cache]
+2026-11-28T06:41:39.6241073Z ##[group]Run actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830
+2026-11-28T06:41:39.6241455Z with:
+2026-11-28T06:41:39.6241665Z   path: /home/runner/.bun/install/cache
+2026-11-28T06:41:39.6242112Z   key: Linux-X64-bun-v3-ca6b55b2afe77935031f9fdd65c3081e4f746b398a52772498374753711b4143
+2026-11-28T06:41:39.6242578Z   restore-keys: Linux-X64-bun-v3-
+
+2026-11-28T06:41:39.6243011Z   enableCrossOsArchive: false
+2026-11-28T06:41:39.6243259Z   fail-on-cache-miss: false
+2026-11-28T06:41:39.6243487Z   lookup-only: false
+2026-11-28T06:41:39.6243690Z ##[endgroup]
+2026-11-28T06:41:39.7325174Z (node:2562) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-28T06:41:39.7326093Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-28T06:41:39.9838405Z Cache hit for restore-key: Linux-X64-bun-v3-8d34e059bd8fdd2179a418cd3c28820747a52445b5ae634a8c0495e82507c376
+2026-11-28T06:41:39.9995643Z (node:2562) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-28T06:41:41.2784979Z Received 8388608 of 567266122 (1.5%), 8.0 MBs/sec
+2026-11-28T06:41:42.2802579Z Received 134217728 of 567266122 (23.7%), 63.9 MBs/sec
+2026-11-28T06:41:43.2841024Z Received 272629760 of 567266122 (48.1%), 86.6 MBs/sec
+2026-11-28T06:41:44.2816585Z Received 423624704 of 567266122 (74.7%), 100.9 MBs/sec
+2026-11-28T06:41:45.2865611Z Received 537905994 of 567266122 (94.8%), 102.4 MBs/sec
+2026-11-28T06:41:45.4520370Z Received 567266122 of 567266122 (100.0%), 104.6 MBs/sec
+2026-11-28T06:41:45.4524091Z Cache Size: ~541 MB (567266122 B)
+2026-11-28T06:41:45.4647176Z [command]/usr/bin/tar -xf /home/runner/work/_temp/c2478239-d5f7-42a3-920b-03bb25e35bb6/cache.tzst -P -C /home/runner/work/hugr-orchestra/hugr-orchestra --use-compress-program unzstd
+2026-11-28T06:41:52.5787638Z Cache restored successfully
+2026-11-28T06:41:52.6130678Z Cache restored from key: Linux-X64-bun-v3-8d34e059bd8fdd2179a418cd3c28820747a52445b5ae634a8c0495e82507c376
+2026-11-28T06:41:52.6267880Z ##[end-action id=__self.bun-cache;outcome=success;conclusion=success;duration_ms=13007]
+2026-11-28T06:41:52.6271923Z ##[start-action display=Install setuptools for distutils compatibility;id=__self.__run]
+2026-11-28T06:41:52.6309997Z ##[group]Run python3 -m pip install setuptools || pip install setuptools || true
+2026-11-28T06:41:52.6310601Z [36;1mpython3 -m pip install setuptools || pip install setuptools || true[0m
+2026-11-28T06:41:52.6352878Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:41:52.6353242Z ##[endgroup]
+2026-11-28T06:41:54.0105013Z Defaulting to user installation because normal site-packages is not writeable
+2026-11-28T06:41:55.1551738Z Requirement already satisfied: setuptools in /usr/lib/python3/dist-packages (68.1.2)
+2026-11-28T06:41:55.4561657Z ##[end-action id=__self.__run;outcome=success;conclusion=success;duration_ms=2828]
+2026-11-28T06:41:55.4565444Z ##[start-action display=Install dependencies;id=__self.__run_2]
+2026-11-28T06:41:55.4597900Z ##[group]Run # Workaround for patched peer variants
+2026-11-28T06:41:55.4598693Z [36;1m# Workaround for patched peer variants[0m
+2026-11-28T06:41:55.4599307Z [36;1m# e.g. ./patches/ for standard-openapi[0m
+2026-11-28T06:41:55.4599958Z [36;1m# https://github.com/oven-sh/bun/issues/28147[0m
+2026-11-28T06:41:55.4600348Z [36;1mif [ "$RUNNER_OS" = "Windows" ]; then[0m
+2026-11-28T06:41:55.4600754Z [36;1m  # Bun can leave a patched package directory half-renamed on Windows.[0m
+2026-11-28T06:41:55.4601349Z [36;1m  # The hoisted layout nests several copies of a patched package (e.g. @ai-sdk/openai-compatible),[0m
+2026-11-28T06:41:55.4602015Z [36;1m  # and Bun applies the patch once per copy; concurrent renames into the same cache entry race[0m
+2026-11-28T06:41:55.4602694Z [36;1m  # with ENOTEMPTY. Every attempt starts from an empty cache because the loser may leave it partial.[0m
+2026-11-28T06:41:55.4603205Z [36;1m  cache_dir="$PWD/.bun-install-cache"[0m
+2026-11-28T06:41:55.4603516Z [36;1m  trap 'rm -rf "$cache_dir"' EXIT[0m
+2026-11-28T06:41:55.4603800Z [36;1m  for attempt in 1 2 3 4 5; do[0m
+2026-11-28T06:41:55.4604078Z [36;1m    rm -rf "$cache_dir"[0m
+2026-11-28T06:41:55.4604334Z [36;1m    rm -rf node_modules[0m
+2026-11-28T06:41:55.4604925Z [36;1m    if bun install --no-cache --cache-dir "$cache_dir" --linker hoisted ; then[0m
+2026-11-28T06:41:55.4605327Z [36;1m      exit 0[0m
+2026-11-28T06:41:55.4605542Z [36;1m    fi[0m
+2026-11-28T06:41:55.4605956Z [36;1m    echo "::warning::bun install attempt $attempt failed on Windows; retrying from an empty cache"[0m
+2026-11-28T06:41:55.4606416Z [36;1m  done[0m
+2026-11-28T06:41:55.4606608Z [36;1m  exit 1[0m
+2026-11-28T06:41:55.4606810Z [36;1melse[0m
+2026-11-28T06:41:55.4607011Z [36;1m  bun install [0m
+2026-11-28T06:41:55.4607386Z [36;1mfi[0m
+2026-11-28T06:41:55.4651644Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:41:55.4652020Z ##[endgroup]
+2026-11-28T06:41:55.4790696Z bun install v1.3.14 (0d9b296a)
+2026-11-28T06:41:55.5127348Z Resolving dependencies
+2026-11-28T06:41:55.9001120Z Resolved, downloaded and extracted [44]
+2026-11-28T06:41:55.9002355Z warn: GET https://registry.npmjs.org/hugr-omni-darwin-x64 - 404
+2026-11-28T06:41:55.9003102Z 
+2026-11-28T06:41:55.9003833Z warn: GET https://registry.npmjs.org/hugr-omni-linux-arm64-musl - 404
+2026-11-28T06:41:55.9004585Z 
+2026-11-28T06:41:55.9005279Z warn: GET https://registry.npmjs.org/hugr-omni-linux-x64-musl - 404
+2026-11-28T06:41:55.9005874Z 
+2026-11-28T06:41:55.9006367Z warn: GET https://registry.npmjs.org/hugr-omni-darwin-arm64 - 404
+2026-11-28T06:41:55.9006911Z 
+2026-11-28T06:41:55.9007506Z warn: GET https://registry.npmjs.org/hugr-omni-linux-x64-gnu - 404
+2026-11-28T06:41:55.9008066Z 
+2026-11-28T06:41:55.9008602Z warn: GET https://registry.npmjs.org/hugr-omni-win32-x64-msvc - 404
+2026-11-28T06:41:55.9009155Z 
+2026-11-28T06:41:55.9009898Z warn: GET https://registry.npmjs.org/hugr-omni-win32-arm64-msvc - 404
+2026-11-28T06:41:55.9010531Z 
+2026-11-28T06:41:55.9011096Z warn: GET https://registry.npmjs.org/hugr-omni-linux-arm64-gnu - 404
+2026-11-28T06:42:28.7203843Z Saved lockfile
+2026-11-28T06:42:28.7204134Z 
+2026-11-28T06:42:28.7204459Z $ bun run --cwd packages/core fix-node-pty
+2026-11-28T06:42:28.7246229Z $ bun run script/fix-node-pty.ts
+2026-11-28T06:42:28.7446915Z $ husky
+2026-11-28T06:42:28.7879157Z 
+2026-11-28T06:42:28.7879953Z + @actions/artifact@5.0.1
+2026-11-28T06:42:28.7880345Z + @tsconfig/bun@1.0.9
+2026-11-28T06:42:28.7880630Z + @types/mime-types@3.0.1
+2026-11-28T06:42:28.7881012Z + @typescript/native-preview@7.0.0-dev.20251207.1
+2026-11-28T06:42:28.7881356Z + glob@13.0.5
+2026-11-28T06:42:28.7881566Z + husky@9.1.7
+2026-11-28T06:42:28.7881780Z + oxlint@1.60.0
+2026-11-28T06:42:28.7882026Z + oxlint-tsgolint@0.21.0
+2026-11-28T06:42:28.7882303Z + prettier@3.6.2
+2026-11-28T06:42:28.7882579Z + semver@7.8.1 (v7.8.6 available)
+2026-11-28T06:42:28.7882854Z + turbo@2.10.2
+2026-11-28T06:42:28.7883132Z + @ai-sdk/openai-compatible@2.0.41
+2026-11-28T06:42:28.7883448Z + heap-snapshot-toolkit@1.1.3
+2026-11-28T06:42:28.7883780Z + typescript@5.8.2 (v7.0.2 available)
+2026-11-28T06:42:28.7883976Z 
+2026-11-28T06:42:28.7884138Z 2899 packages installed [33.31s]
+2026-11-28T06:42:28.8014820Z ##[end-action id=__self.__run_2;outcome=success;conclusion=success;duration_ms=33344]
+2026-11-28T06:42:28.8017111Z ##[start-action display=Save Bun dependencies;id=__self.__actions_cache]
+2026-11-28T06:42:28.8032629Z ##[end-action id=__self.__actions_cache;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-11-28T06:42:28.8034734Z ##[start-action display=Save node_modules;id=__self.__actions_cache_2]
+2026-11-28T06:42:28.8042830Z ##[end-action id=__self.__actions_cache_2;outcome=skipped;conclusion=skipped;duration_ms=0]
+2026-11-28T06:42:28.8087293Z ##[group]Run set -euo pipefail
+2026-11-28T06:42:28.8087634Z [36;1mset -euo pipefail[0m
+2026-11-28T06:42:28.8088109Z [36;1mEVIDENCE_ROOT="$RUNNER_TEMP/genesis-core-native-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$SELECTION"[0m
+2026-11-28T06:42:28.8088840Z [36;1mRUNTIME_ROOT="$RUNNER_TEMP/genesis-core-runtime-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$SELECTION"[0m
+2026-11-28T06:42:28.8089405Z [36;1mecho "EVIDENCE_ROOT=$EVIDENCE_ROOT" >> "$GITHUB_ENV"[0m
+2026-11-28T06:42:28.8090115Z [36;1mecho "RUNTIME_ROOT=$RUNTIME_ROOT" >> "$GITHUB_ENV"[0m
+2026-11-28T06:42:28.8090737Z [36;1mecho "RUNTIME_REVISION=$RUNTIME_REVISION" >> "$GITHUB_ENV"[0m
+2026-11-28T06:42:28.8091161Z [36;1mecho "RELEASE_COMMIT=$RELEASE_COMMIT" >> "$GITHUB_ENV"[0m
+2026-11-28T06:42:28.8091516Z [36;1mtest ! -e "$EVIDENCE_ROOT"[0m
+2026-11-28T06:42:28.8091790Z [36;1mtest ! -e "$RUNTIME_ROOT"[0m
+2026-11-28T06:42:28.8092143Z [36;1mgit worktree add --detach "$RUNTIME_ROOT" "$RUNTIME_REVISION"[0m
+2026-11-28T06:42:28.8092600Z [36;1mnpm ci --prefix "$RUNTIME_ROOT/modules/atlas"[0m
+2026-11-28T06:42:28.8092930Z [36;1mcd "$RUNTIME_ROOT/modules/atlas"[0m
+2026-11-28T06:42:28.8093211Z [36;1mbun typecheck[0m
+2026-11-28T06:42:28.8134889Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:42:28.8135245Z env:
+2026-11-28T06:42:28.8135437Z   SELECTION: api
+2026-11-28T06:42:28.8135734Z   RUNTIME_REVISION: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+2026-11-28T06:42:28.8136152Z   RELEASE_COMMIT: e171783482d0a44974d6056cd9e144a7e33406a7
+2026-11-28T06:42:28.8136595Z ##[endgroup]
+2026-11-28T06:42:28.8221580Z Preparing worktree (detached HEAD db9b423502)
+2026-11-28T06:42:29.8588230Z Updating files:  76% (11639/15215)
+2026-11-28T06:42:29.8701441Z Updating files:  77% (11716/15215)
+2026-11-28T06:42:29.8851054Z Updating files:  78% (11868/15215)
+2026-11-28T06:42:29.8964762Z Updating files:  79% (12020/15215)
+2026-11-28T06:42:29.9054959Z Updating files:  80% (12172/15215)
+2026-11-28T06:42:29.9140749Z Updating files:  81% (12325/15215)
+2026-11-28T06:42:29.9230732Z Updating files:  82% (12477/15215)
+2026-11-28T06:42:29.9336677Z Updating files:  83% (12629/15215)
+2026-11-28T06:42:29.9444221Z Updating files:  84% (12781/15215)
+2026-11-28T06:42:29.9529945Z Updating files:  85% (12933/15215)
+2026-11-28T06:42:29.9661407Z Updating files:  86% (13085/15215)
+2026-11-28T06:42:29.9736864Z Updating files:  87% (13238/15215)
+2026-11-28T06:42:29.9808458Z Updating files:  88% (13390/15215)
+2026-11-28T06:42:29.9878517Z Updating files:  89% (13542/15215)
+2026-11-28T06:42:29.9947349Z Updating files:  90% (13694/15215)
+2026-11-28T06:42:30.0018743Z Updating files:  91% (13846/15215)
+2026-11-28T06:42:30.0089543Z Updating files:  92% (13998/15215)
+2026-11-28T06:42:30.0162334Z Updating files:  93% (14150/15215)
+2026-11-28T06:42:30.0271073Z Updating files:  94% (14303/15215)
+2026-11-28T06:42:30.0388150Z Updating files:  95% (14455/15215)
+2026-11-28T06:42:30.0465358Z Updating files:  96% (14607/15215)
+2026-11-28T06:42:30.0576951Z Updating files:  97% (14759/15215)
+2026-11-28T06:42:30.0691353Z Updating files:  98% (14911/15215)
+2026-11-28T06:42:30.0932244Z Updating files:  99% (15063/15215)
+2026-11-28T06:42:30.0932817Z Updating files: 100% (15215/15215)
+2026-11-28T06:42:30.0933361Z Updating files: 100% (15215/15215), done.
+2026-11-28T06:42:30.1130016Z HEAD is now at db9b423502 test(atlas): exercise aliased CAS through the disk-store constructor
+2026-11-28T06:42:34.8407932Z 
+2026-11-28T06:42:34.8408540Z > atlas@0.0.0 postinstall
+2026-11-28T06:42:34.8409228Z > node scripts/fix-scip-types.mjs
+2026-11-28T06:42:34.8409821Z 
+2026-11-28T06:42:34.8745588Z [fix-scip-types] added types/exports to @c4312/scip (upstream packaging shim)
+2026-11-28T06:42:34.9028035Z 
+2026-11-28T06:42:34.9028745Z added 167 packages, and audited 184 packages in 5s
+2026-11-28T06:42:34.9029189Z 
+2026-11-28T06:42:34.9029451Z 54 packages are looking for funding
+2026-11-28T06:42:34.9030106Z   run `npm fund` for details
+2026-11-28T06:42:34.9099077Z 
+2026-11-28T06:42:34.9099988Z 2 moderate severity vulnerabilities
+2026-11-28T06:42:34.9100388Z 
+2026-11-28T06:42:34.9100574Z To address all issues, run:
+2026-11-28T06:42:34.9100927Z   npm audit fix
+2026-11-28T06:42:34.9101093Z 
+2026-11-28T06:42:34.9101240Z Run `npm audit` for details.
+2026-11-28T06:42:34.9109272Z npm warn install-scripts 2 packages have install scripts not yet covered by allowScripts:
+2026-11-28T06:42:34.9110575Z npm warn install-scripts   tree-sitter-javascript@0.23.1 (install: node-gyp-build)
+2026-11-28T06:42:34.9111612Z npm warn install-scripts   tree-sitter-typescript@0.23.2 (install: node-gyp-build)
+2026-11-28T06:42:34.9112515Z npm warn install-scripts
+2026-11-28T06:42:34.9113273Z npm warn install-scripts Run `npm install-scripts ls` to review, or `npm install-scripts approve <pkg>` to allow.
+2026-11-28T06:42:34.9719382Z $ tsc -b
+2026-11-28T06:42:49.7020974Z ##[group]Run set -euo pipefail
+2026-11-28T06:42:49.7021303Z [36;1mset -euo pipefail[0m
+2026-11-28T06:42:49.7021609Z [36;1mDATA_ROOT="/tmp/genesis-s1-native/$SELECTION"[0m
+2026-11-28T06:42:49.7021942Z [36;1mtest ! -e "$DATA_ROOT"[0m
+2026-11-28T06:42:49.7022509Z [36;1mpython3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native.py \[0m
+2026-11-28T06:42:49.7023127Z [36;1m  --repository "$GITHUB_WORKSPACE" \[0m
+2026-11-28T06:42:49.7023446Z [36;1m  --runtime "$RUNTIME_ROOT" \[0m
+2026-11-28T06:42:49.7023759Z [36;1m  --runtime-revision "$RUNTIME_REVISION" \[0m
+2026-11-28T06:42:49.7024095Z [36;1m  --release-commit "$RELEASE_COMMIT" \[0m
+2026-11-28T06:42:49.7024410Z [36;1m  --selection "$SELECTION" \[0m
+2026-11-28T06:42:49.7024679Z [36;1m  --root "$DATA_ROOT" \[0m
+2026-11-28T06:42:49.7024934Z [36;1m  --output "$EVIDENCE_ROOT"[0m
+2026-11-28T06:42:49.7067209Z shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+2026-11-28T06:42:49.7067598Z env:
+2026-11-28T06:42:49.7067940Z   EVIDENCE_ROOT: /home/runner/work/_temp/genesis-core-native-46117651547-1-api
+2026-11-28T06:42:49.7068495Z   RUNTIME_ROOT: /home/runner/work/_temp/genesis-core-runtime-46117651547-1-api
+2026-11-28T06:42:49.7068961Z   RUNTIME_REVISION: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+2026-11-28T06:42:49.7069358Z   RELEASE_COMMIT: e171783482d0a44974d6056cd9e144a7e33406a7
+2026-11-28T06:42:49.7069912Z   SELECTION: api
+2026-11-28T06:42:49.7070119Z ##[endgroup]
+2026-11-28T06:42:55.4149046Z GENESIS_S1_NATIVE_RECEIPT={"argv": ["bun", "scripts/genesis-native.ts", "prepare", "/tmp/genesis-s1-native/api", "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json", "/home/runner/work/_temp/genesis-core-native-46117651547-1-api/prepared.json"], "binding_created": false, "candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8", "contract": "3503d5acc84be88be7ec60ed768745bb7d75c9121c62597d9c51788df0af6bc3", "cwd": "/home/runner/work/_temp/genesis-core-runtime-46117651547-1-api/modules/atlas", "ended_at_unix": 1795848175.4111302, "entries": 16, "exit_code": 0, "observations": 354, "operation": "prepare", "original_cli": true, "prepared_sha256": "d2e68acaa95aca1ad5301d7357955b712052a3954d61ac204415f7d1efaf8cb3", "publication_attempted": false, "run_attempt": "1", "run_id": "46117651547", "runtime_modified": false, "runtime_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7", "runtime_release_git_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22", "runtime_release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1", "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7", "schema": "genesis-s1-native-operation/v1", "selection": "api", "started_at_unix": 1795848172.6773458, "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", "stdout_sha256": "f75a2450cf5addaf260c006652c227ab28c9b50ad33e57c4c4353c4c728676af", "workflow_revision": "be539e76d05ab36ea401910c3c9241ce76b200c7"}
+2026-11-28T06:42:55.4265197Z ##[group]Run actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+2026-11-28T06:42:55.4265623Z with:
+2026-11-28T06:42:55.4265960Z   name: genesis-core-native-api-be539e76d05ab36ea401910c3c9241ce76b200c7-1
+2026-11-28T06:42:55.4266382Z   if-no-files-found: error
+2026-11-28T06:42:55.4266726Z   path: /home/runner/work/_temp/genesis-core-native-46117651547-1-api
+2026-11-28T06:42:55.4267084Z   retention-days: 30
+2026-11-28T06:42:55.4267306Z   compression-level: 6
+2026-11-28T06:42:55.4267526Z   overwrite: false
+2026-11-28T06:42:55.4267743Z   include-hidden-files: false
+2026-11-28T06:42:55.4267982Z env:
+2026-11-28T06:42:55.4268318Z   EVIDENCE_ROOT: /home/runner/work/_temp/genesis-core-native-46117651547-1-api
+2026-11-28T06:42:55.4269021Z   RUNTIME_ROOT: /home/runner/work/_temp/genesis-core-runtime-46117651547-1-api
+2026-11-28T06:42:55.4269483Z   RUNTIME_REVISION: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+2026-11-28T06:42:55.4270306Z   RELEASE_COMMIT: e171783482d0a44974d6056cd9e144a7e33406a7
+2026-11-28T06:42:55.4270619Z ##[endgroup]
+2026-11-28T06:42:55.5993460Z (node:3885) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-28T06:42:55.5994290Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-28T06:42:55.6084664Z With the provided path, there will be 9 files uploaded
+2026-11-28T06:42:55.6087805Z Artifact name is valid!
+2026-11-28T06:42:55.6088529Z Root directory input is valid!
+2026-11-28T06:42:56.0138525Z Beginning upload of artifact content to blob storage
+2026-11-28T06:42:56.0676131Z (node:3885) [DEP0169] DeprecationWarning: `url.parse()` behavior is not standardized and prone to errors that have security implications. Use the WHATWG URL API instead. CVEs are not issued for `url.parse()` vulnerabilities.
+2026-11-28T06:42:56.5723701Z Uploaded bytes 260739
+2026-11-28T06:42:56.6445412Z Finished uploading artifact content to blob storage!
+2026-11-28T06:42:56.6446357Z SHA256 digest of uploaded artifact zip is a91c2d8473d408ec5fa444c21edd407c28dcc18fce159bb50645743a60f25345
+2026-11-28T06:42:56.6447795Z Finalizing artifact upload
+2026-11-28T06:42:57.0226464Z Artifact genesis-core-native-api-be539e76d05ab36ea401910c3c9241ce76b200c7-1.zip successfully finalized. Artifact ID 15252442395
+2026-11-28T06:42:57.0228860Z Artifact genesis-core-native-api-be539e76d05ab36ea401910c3c9241ce76b200c7-1 has been successfully uploaded! Final size is 260739 bytes. Artifact ID is 15252442395
+2026-11-28T06:42:57.0234145Z Artifact download URL: https://github.com/gustavomhss/hugr-orchestra/actions/runs/46117651547/artifacts/15252442395
+2026-11-28T06:42:57.0499728Z Post job cleanup.
+2026-11-28T06:42:57.0503830Z ##[start-action display=Setup Bun;id=__3fc7b832-2891-45a5-b91e-8890508f1528.__oven-sh_setup-bun]
+2026-11-28T06:42:57.0548915Z Post job cleanup.
+2026-11-28T06:42:57.2338828Z ##[end-action id=__3fc7b832-2891-45a5-b91e-8890508f1528.__oven-sh_setup-bun;outcome=success;conclusion=success;duration_ms=183]
+2026-11-28T06:42:57.2342838Z ##[start-action display=Setup Node;id=__3fc7b832-2891-45a5-b91e-8890508f1528.__actions_setup-node]
+2026-11-28T06:42:57.2393662Z Post job cleanup.
+2026-11-28T06:42:57.3803934Z (node:3905) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+2026-11-28T06:42:57.3805332Z (Use `node --trace-deprecation ...` to show where the warning was created)
+2026-11-28T06:42:57.3921738Z ##[end-action id=__3fc7b832-2891-45a5-b91e-8890508f1528.__actions_setup-node;outcome=success;conclusion=success;duration_ms=157]
+2026-11-28T06:42:57.4006290Z Post job cleanup.
+2026-11-28T06:42:57.5024870Z [command]/usr/bin/git version
+2026-11-28T06:42:57.5098740Z git version 2.56.1
+2026-11-28T06:42:57.5156725Z Temporarily overriding HOME='/home/runner/work/_temp/1d77e8ed-6a5a-4a7b-a084-e0fdcdebeaba' before making global git config changes
+2026-11-28T06:42:57.5158439Z Adding repository directory to the temporary git global config as a safe directory
+2026-11-28T06:42:57.5166171Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/hugr-orchestra/hugr-orchestra
+2026-11-28T06:42:57.5222189Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-11-28T06:42:57.5280235Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-11-28T06:42:57.5653883Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-11-28T06:42:57.5693069Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-11-28T06:42:57.6001211Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+2026-11-28T06:42:57.6063274Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+2026-11-28T06:42:57.6503787Z Cleaning up orphan processes
+2026-11-28T06:42:57.6904068Z ##[warning]Node.js 20 is deprecated. The following actions target Node.js 20 but are being forced to run on Node.js 24: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830, actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5, actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020, actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

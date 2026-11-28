@@ -1,0 +1,45 @@
+{
+  "schema": "genesis-unaccepted-candidate-preservation/v1",
+  "entries": [
+    {
+      "key": "s1.core.tools",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/a/bodies/tools.md",
+      "byte_length": 5285,
+      "sha256": "ed668009ad400bf61adee3f1d497c59f91c9932b1730642816659ddbf2978e23",
+      "git_blob_sha": "05e4c63d6c8245a7725c192b6323bf9d404aefe0",
+      "handling": "Read as unaccepted proposal and limits; unchanged; not build dependency",
+      "historical_validity_in_projection": "supported",
+      "semantic_acceptance": "NOT_OBSERVED"
+    },
+    {
+      "key": "s1.core.security",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/a/bodies/security.md",
+      "byte_length": 7043,
+      "sha256": "dd6e7372b2c26c8c05435db8a55dfa05cd42813a9f105f48dc8b5d702bacbbcf",
+      "git_blob_sha": "a27d20dde414bf5f3cc1595d801fe9aa4096c24d",
+      "handling": "Read as unaccepted proposal and limits; unchanged; not build dependency",
+      "historical_validity_in_projection": "supported",
+      "semantic_acceptance": "NOT_OBSERVED"
+    },
+    {
+      "key": "s1.core.extensions",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/a/bodies/extensions.md",
+      "byte_length": 4994,
+      "sha256": "1adfea6dc88bb969fb2c9232c82b81ae917e8112a9d0993273733450891984d4",
+      "git_blob_sha": "7d0c0130061ce52985e6023d92a72236ff9fd670",
+      "handling": "Read as unaccepted proposal and limits; unchanged; not build dependency",
+      "historical_validity_in_projection": "supported",
+      "semantic_acceptance": "NOT_OBSERVED"
+    },
+    {
+      "key": "s1.core.capability",
+      "original_local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/a/bodies/capability.md",
+      "byte_length": 4469,
+      "sha256": "a5d40d013b3976a612a53acb7999ea498c32c71bff5f7acb276f1ddc3be95e7a",
+      "git_blob_sha": "5236c517e73b56362b56a443c81be0e3ba0f3bf0",
+      "handling": "Read as unaccepted proposal and limits; unchanged; not build dependency",
+      "historical_validity_in_projection": "supported",
+      "semantic_acceptance": "NOT_OBSERVED"
+    }
+  ]
+}

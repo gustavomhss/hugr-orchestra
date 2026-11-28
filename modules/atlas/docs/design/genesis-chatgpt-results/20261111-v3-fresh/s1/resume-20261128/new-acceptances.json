@@ -52,6 +52,335 @@
         "AC-03": "HOLD_PHASE_OWN",
         "CC-2 operational": "PENDING"
       }
+    },
+    {
+      "key": "s1.core.runtime",
+      "body_sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+      "body_bytes": 6974,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "judge_ids": [
+        "/root/review_coordinator/judge_j1",
+        "/root/review_coordinator/judge_j2"
+      ],
+      "review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/r02-j1-v1.md",
+          "sha256": "c7c87ae946aaf335fe194f063c464a61e5fba54c74de7f73df7d2a49e343d1b1"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/r02-j2-v1.md",
+          "sha256": "85a914c9c73253e3fd1c8923ebafb878c32e95542ad688d3804a6193993c8796"
+        }
+      ],
+      "open_mandatory_findings": [],
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      }
+    },
+    {
+      "key": "s1.subslice05.llm-contracts.l2",
+      "body_sha256": "5a65c4a80bf142d54a5e7eab30718090975d7d0e8d10cd6119340dfc134ed814",
+      "body_bytes": 8399,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L2",
+      "judge_ids": [
+        "/root/review_coordinator/judge_j1",
+        "/root/review_coordinator/judge_j2"
+      ],
+      "review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/l01a-j1-v1.md",
+          "sha256": "8e6b754269ca4c695aa18e2e780e1a0907e50f129b43506a80b834fc277659fd"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/l01a-j2-v1.md",
+          "sha256": "ac5e9c755506371a8354fc0bfcb5e2348c4c0e7804494a5c1257d544e3c7f748"
+        }
+      ],
+      "open_mandatory_findings": [],
+      "operational_criteria": {
+        "GO-A6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas; o corpo não certifica mecanização ou execução do produtor Atlas. |"
+          },
+          "J2": {
+            "result": "PASS_LOCAL_BOUNDED",
+            "evidence": "| **GO-A6, GO-A7, QS-3** | **PASS local** — síntese delimitada sobre conhecimento aceito e duas leituras adicionais, sem introduzir plataforma paralela ou mecanismo desnecessário. Não certifica mecanização executada. |"
+          }
+        },
+        "AC-04": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-A6, AC-04** | Construção pelos caminhos reais e controles de entradas; o corpo não certifica mecanização ou execução do produtor Atlas. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "CC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "SC-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "AC-05": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "AC-06": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-05, AC-06** | Reúso, mudança de inputs/receita, conjunto afetado e controles negativos executados. A distinção textual entre navegação e build está correta. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I4, GO-I5, CC-4, SC-3, AC-04, AC-05, AC-06** | Construção, cache, invalidação, alterações de fonte/receita/membership e controles negativos nas portas reais. O grafo declarado não é execução desses mecanismos. |"
+          }
+        },
+        "GO-I6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "CC-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "SC-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "AC-08": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "DOD-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação de despachos, revisões, reservas, uso e tentativas incertas no ledger da execução. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **GO-I6, CC-6, SC-4, AC-08, DOD-5** | Reconciliação integral de chamadas, tentativas incertas, reservas e uso físico; nenhum valor desconhecido recebe zero. |"
+          }
+        },
+        "CC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "CC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "SC-5": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-07": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-09": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "AC-10": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, CC-5, SC-5, AC-07, AC-09, AC-10** | Níveis necessários, persistência, publicação, recuperação, compatibilidade e gates exercitados nas portas reais. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "SC-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "SC-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "AC-02": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "AC-03": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "DOD-3": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **SC-1, SC-2, AC-02, AC-03, DOD-3** | Consumidores independentes, perguntas obrigatórias e contagem observada de leituras/bytes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-2, SC-1, SC-2, AC-02, AC-03, DOD-3** | Produção dos demais níveis, persistência/alcançabilidade, consumidores independentes e leituras reais dentro dos limites. |"
+          }
+        },
+        "DOD-1": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        },
+        "DOD-2": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        },
+        "DOD-4": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **CC-5, SC-5, AC-07, AC-09, AC-10, DOD-4** | Publicação coerente, recuperação, compatibilidade, preservação/migração e gates no candidato correto. |"
+          }
+        },
+        "DOD-6": {
+          "J1": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-4, DOD-6** | Consolidação dos dois pareceres, controles negativos, gates e entrega preservada das evidências operacionais pertinentes. |"
+          },
+          "J2": {
+            "result": "HOLD_PHASE_OWN",
+            "evidence": "| **DOD-1, DOD-2, DOD-6** | Consolidação dos dois pareceres pertinentes, controles exigidos e entrega operacional completa. Este parecer fornece apenas a decisão de J2. |"
+          }
+        }
+      }
     }
   ],
   "scope": "Only the exact bodies and local semantic obligations explicitly covered by both original responses. No binding or operational acceptance."

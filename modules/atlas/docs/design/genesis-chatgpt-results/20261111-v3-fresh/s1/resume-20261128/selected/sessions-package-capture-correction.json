@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s1-reference-correction/v1",
+  "original_commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+  "original_git_blob_sha": "c1558e36f8a52fe484980fa6eabc572c7969ad06",
+  "original_bytes": 270747,
+  "original_sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030",
+  "superseded_local_capture_sha256": "b78833339a84b805a3a51d9d9cf1291a77d479a6167fd0ae0ba57a29564bf1d6",
+  "cause": "The investigator local capture appended one LF to the original Git bytes. Original artifact bodies and inherited votes were unaffected. These inventory pointers now identify the exact Git package.",
+  "changed_records": [
+    {
+      "path": "reconciliation.json",
+      "occurrences": 23
+    },
+    {
+      "path": "reused-acceptances.json",
+      "occurrences": 7
+    }
+  ]
+}

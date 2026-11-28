@@ -1,0 +1,22 @@
+{
+  "id": "pty_exit",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 330,
+  "end_line": 369,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "          notifyEnd(session, { exitCode })\n          options?.observe?.onExit(exitCode)\n          exitOrder.push(id)\n          runFork(\n            Effect.gen(function* () {\n              yield* Effect.logInfo(\"session exited\", { id, exitCode })\n              yield* events.publish(Event.Exited, { id, exitCode })\n              while (exitOrder.length > EXITED_LIMIT) {\n                const oldest = exitOrder[0]\n                if (!oldest) break\n                yield* removeSession(oldest)\n              }\n            }),\n          )\n        }),\n      )\n      yield* events.publish(Event.Created, { info })\n      return info\n    })\n\n    const update = Effect.fn(\"Pty.update\")(function* (id: PtyID, input: UpdateInput) {\n      const session = yield* requireSession(id)\n      if (input.title) session.info.title = input.title\n      if (input.size && session.info.status === \"running\") {\n        session.size = { cols: clampSize(input.size.cols), rows: clampSize(input.size.rows) }\n        session.process.resize(session.size.cols, session.size.rows)\n      }\n      yield* events.publish(Event.Updated, { info: session.info })\n      return session.info\n    })\n\n    const write = Effect.fn(\"Pty.write\")(function* (id: PtyID, data: string) {\n      const session = yield* requireSession(id)\n      if (session.info.status === \"running\") session.process.write(data)\n    })\n\n    const attach = Effect.fn(\"Pty.attach\")(function* (id: PtyID, input: AttachInput) {\n      const session = yield* requireSession(id)\n      yield* Effect.logInfo(\"client attached to session\", { id, directory: location.directory })\n      const token = {}",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

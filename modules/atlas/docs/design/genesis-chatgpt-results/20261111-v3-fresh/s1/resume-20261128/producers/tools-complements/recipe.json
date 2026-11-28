@@ -1,0 +1,97 @@
+{
+  "schema": "genesis-producer-recipe/v1",
+  "producer": "/root/produce_tools",
+  "role": "independent_author_not_judge",
+  "execution_id_from_public_contract": "facc2a57-5e94-4cea-92bd-49b1dd218cb4",
+  "model_declared_in_host_context": "GPT-6 Astra Pro",
+  "host_conversation_id": "UNKNOWN",
+  "source_repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s1",
+  "layers_produced": [
+    1
+  ],
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/request.txt",
+    "sha256": "ae64106532d032fb902e66422f842b44dd6adb0a953924a507f4214d4ff6f494"
+  },
+  "parent_steering_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/evidence/parent-steering.txt",
+    "sha256": "f1b76a93e1cc6bb5a0ef94c6972c88c86588bee072f0c152d9ab129d99c9851b"
+  },
+  "public_input_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/input-manifest.json",
+    "sha256": "1bb91cb5a432b4fa81ab398ac85b5e87bb83a20bea454e23f0c4e0791ea90421"
+  },
+  "public_contract_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+    "sha256": "85092bacad55e68a94f0dd17595e51ad3bcb7f821d33633b6c749b53126e7833"
+  },
+  "source_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/source-manifest.json",
+    "sha256": "91ff373e5ec54881f864b6a8c071b3ad6dc4b1277e8e48c451c9c5a2eb6728da"
+  },
+  "coverage_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/coverage-424.json",
+    "sha256": "14c43385d916d756d6129c2760c245b2382af217c66a9b856ca6f08a3c073f8a"
+  },
+  "reading_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/reading-confirmation.json",
+    "sha256": "5c6940649aaef0b30f6d5c778a48a0c4bb32a74cc5b77987d467e4a173df0790"
+  },
+  "need_disposition_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/need-disposition.json",
+    "sha256": "7e2375d430df916d8adaf6ab0372bd1a0ec1b3fe347e8dcc3c96df4d78a2815d"
+  },
+  "historical_candidate_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/historical-candidates.json",
+    "sha256": "b31fad02c11011dfe3b96a28866ff326580c39458b7ef7dacf45e35d10a00dcf"
+  },
+  "actual_method": [
+    "Read protocol/public contract/public needs and the four unaccepted historical proposals.",
+    "Selectively extract exact source captures from the supplied verified archive.",
+    "Retrieve missing decisive source/dependency files through the read-only GitHub connector at the pinned revision.",
+    "Preserve raw connector receipts and compare computed Git blob/SHA-256 with source-map/archive or pinned GitHub metadata.",
+    "Read source ranges, distinguish implementation from historical intent and record capture separately from reading.",
+    "Author three bounded L1 deltas, preserve all original population records and identify remaining source-specific obligations.",
+    "Perform only native file/data/hash checks; no product/provider/test execution."
+  ],
+  "build_dependencies": [],
+  "historical_candidates_are_accepted_predecessors": false,
+  "isolation": {
+    "tools_oracle_accessed": false,
+    "expected_answers_accessed": false,
+    "other_review_files_accessed": false,
+    "incidental_exposure": "A collaboration.list_agents status response incidentally exposed a completed S1-01 runtime review, not the S1-02 Tools oracle. Reported to root; not used in this authorship. No such review file was opened.",
+    "aborted_delegation": "An extensions_sources child was started before the no-slot steering arrived, then immediately interrupted. No child finding was consumed. Subsequent work was solo.",
+    "incident_text_is_summary_not_original_transcript": true
+  },
+  "local_recoverable_tool_errors": [
+    "One oversized command argument while storing source receipts was split into bounded native writes; no product ran.",
+    "A resumed read used packages/opencode instead of packages/core and failed with file-not-found; corrected before reading.",
+    "Some source output was truncated; later rereads and the explicit confirmation ledger bound the claimed ranges."
+  ],
+  "execution": {
+    "product_tests": "NOT_RUN",
+    "provider_calls": "NOT_RUN",
+    "runtime_import": "NOT_RUN",
+    "consumers": "NOT_RUN",
+    "maintenance_M1_M2": "NOT_RUN",
+    "remote_writes": "NONE",
+    "commit": "NONE",
+    "merge": "NONE",
+    "semantic_acceptance": "NOT_ASSERTED"
+  },
+  "usage": {
+    "tokens": "UNKNOWN",
+    "billed_cost": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN"
+  },
+  "transport": {
+    "payload_prefix_authorized_by_root": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements",
+    "body_paths_are_relative_to_native_package": "resume-20261128/producers/tools-complements",
+    "payload_commit": null,
+    "note": "Root alone integrates and seals; no invented Git commit or Atlas runtime identity."
+  }
+}

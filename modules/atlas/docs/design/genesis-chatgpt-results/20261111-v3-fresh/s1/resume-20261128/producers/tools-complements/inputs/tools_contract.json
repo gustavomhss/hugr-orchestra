@@ -1,0 +1,105 @@
+{
+  "schema": "genesis-s1-02-evaluation/v1",
+  "execution_id": "facc2a57-5e94-4cea-92bd-49b1dd218cb4",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_bar": [
+    "Trace each substantive behavioral assertion to exact pinned evidence; separate intent, observed implementation and unexecuted claims.",
+    "Reconcile all 424 assigned sources by meaningful need and depth without treating a census as understanding.",
+    "Close the specific leaf-reading gaps, capture provenance and independently review every required artifact.",
+    "Use only accepted required predecessors for L2, then L3, then L4.",
+    "Publish/import/read/consumer/maintenance evidence is separate from semantic acceptance; unknown usage stays UNKNOWN."
+  ],
+  "cases": [
+    {
+      "id": "S1-02-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos acrescentar uma ferramenta tipada e sob demanda, com efeito de escrita. Onde registrar e validar, onde autorizar e o que deve acontecer quando o registro muda durante uma chamada já materializada?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C2",
+      "kind": "contract-violation",
+      "question": "Um plugin fornece JSON com Session, agente e call ID e pede capacidade nativa. Esses IDs bastam? Como reconhecer os limites da autorização e da persistência?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C3",
+      "kind": "cross-component-impact",
+      "question": "Uma mudança na declaração/política de ferramenta e outra no contrato de plugin/capacidade foram propostas. Quais artefatos precisam ser reavaliados e como evitar reutilizar binding desatualizado preservando os independentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C4",
+      "kind": "operational-failure",
+      "question": "Uma instalação de plugin falha após registrar contribuições, um OAuth fica pendente e uma mutação MCP é interrompida. Como orientar diagnóstico e recuperação sem criar garantias inexistentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos garantir que qualquer plugin, ferramenta ou capacidade está sempre sandboxed, validado localmente e protegido em todos os sistemas operacionais?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L1",
+      "kind": "direct-intermediate-use",
+      "question": "Distingua perda de captura do produtor, truncamento genérico e projeção Lean; qual evidência mantém o original e quais limites impedem prometer sua recuperação integral?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L2",
+      "kind": "direct-intermediate-use",
+      "question": "Como localizar a autoridade real de uma chamada antes de decidir se catálogo, aprovação ou contexto permite um efeito?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L3",
+      "kind": "direct-intermediate-use",
+      "question": "Qual é a interface de responsabilidade de host/plugins/capacidades para a necessidade N01 de S1-05?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S1-02-M1",
+      "question": "Change tool declaration/policy input in isolated observed source; inspect impact and rejection of old binding; restore exact bytes and show compatible reuse."
+    },
+    {
+      "id": "S1-02-M2",
+      "question": "Change plugin/capability contract input in isolated source; verify scope independence and stale binding rejection."
+    }
+  ]
+}
+

@@ -1,0 +1,129 @@
+export * as GlobTool from "./glob"
+
+import { ToolFailure } from "@orchestra/llm"
+import { Effect, Layer, Schema } from "effect"
+import path from "path"
+import { makeLocationNode } from "../effect/app-node"
+import { FileSystem } from "../filesystem"
+import { Location } from "../location"
+import { LocationMutation } from "../location-mutation"
+import { Ripgrep } from "../ripgrep"
+import { RelativePath } from "../schema"
+import { PermissionV2 } from "../permission"
+import { ToolRegistry } from "./registry"
+import { Tool } from "./tool"
+import { Tools } from "./tools"
+
+export const name = "glob"
+
+export const Input = Schema.Struct({
+  pattern: FileSystem.GlobInput.fields.pattern.annotate({ description: "Glob pattern to match files against" }),
+  path: RelativePath.pipe(Schema.optional).annotate({
+    description: "The directory to search, relative to the working directory, which is the default",
+  }),
+  limit: FileSystem.GlobInput.fields.limit.annotate({
+    description: "Maximum results to return",
+  }),
+})
+
+export const Output = Schema.Array(FileSystem.Entry)
+type ModelOutput = typeof Output.Encoded
+
+/** Format raw search results into the concise line-oriented output models expect. */
+export const toModelOutput = (output: ModelOutput) => {
+  const lines = output.length === 0 ? ["No files found"] : output.map((item) => item.path)
+  return lines.join("\n")
+}
+
+/** Glob leaf that defaults its filesystem root to the active Location. */
+const layer = Layer.effectDiscard(
+  Effect.gen(function* () {
+    const tools = yield* Tools.Service
+    const ripgrep = yield* Ripgrep.Service
+    const location = yield* Location.Service
+    const permission = yield* PermissionV2.Service
+    const mutation = yield* LocationMutation.Service
+    const text = (output: ModelOutput) =>
+      toModelOutput(output.map((entry) => ({ ...entry, path: path.resolve(location.directory, entry.path) })))
+
+    yield* tools
+      .register({
+        [name]: Tool.make({
+          description: `Find files whose paths match a glob pattern, such as \`**/*.tsx\` or \`src/**/config.*\`. A pattern without \`/\`, such as \`*.ts\`, matches file names at any depth.
+
+- \`path\` is the directory to search, the working directory by default.
+- Hidden files and directories, and those excluded by \`.gitignore\`, are not searched.
+- The result is a list of absolute paths in no particular order, or "No files found". \`limit\` caps how many come back; without it, every match does.`,
+          input: Input,
+          output: Output,
+          toModelOutput: ({ output }) => [{ type: "text", text: text(output) }],
+          // Native search results are attested for Lean 2.0; same-named application tools are not.
+          modelCapture: ({ output }) => ({
+            textIndex: 0,
+            observation: { source: "other", command: name, output: text(output), termination: { kind: "exited", code: 0 },
+              completeness: "complete", presentation: "unknown" },
+          }),
+          execute: (input, context) =>
+            Effect.gen(function* () {
+              // Same boundary as read: a search root outside the Location needs external_directory approval first.
+              const external = (yield* mutation.resolve({ path: input.path ?? ".", kind: "directory" })).externalDirectory
+              if (external)
+                yield* permission.assert({
+                  ...LocationMutation.externalDirectoryPermission(external),
+                  sessionID: context.sessionID,
+                  agent: context.agent,
+                  source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+                })
+              yield* permission.assert({
+                action: name,
+                resources: [input.pattern],
+                save: ["*"],
+                metadata: {
+                  root: input.path ?? ".",
+                  path: input.path,
+                  limit: input.limit,
+                },
+                sessionID: context.sessionID,
+                agent: context.agent,
+                source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+              })
+              const cwd = path.resolve(location.directory, input.path ?? ".")
+              return yield* ripgrep
+                .glob({
+                  cwd,
+                  pattern: input.pattern,
+                  limit: input.limit ?? Number.MAX_SAFE_INTEGER,
+                })
+                .pipe(
+                  Effect.map((result) =>
+                    result.map((entry) =>
+                      FileSystem.Entry.make({
+                        ...entry,
+                        path: RelativePath.make(path.relative(location.directory, path.resolve(cwd, entry.path))),
+                      }),
+                    ),
+                  ),
+                )
+            }).pipe(
+              // Ripgrep's reason (missing, still downloading) is the actionable part.
+              Effect.mapError(
+                (error) =>
+                  new ToolFailure({
+                    message:
+                      error instanceof Ripgrep.Error
+                        ? `Unable to find files matching ${input.pattern}: ${error.message}`
+                        : `Unable to find files matching ${input.pattern}`,
+                  }),
+              ),
+            ),
+        }),
+      })
+      .pipe(Effect.orDie)
+  }),
+)
+
+export const node = makeLocationNode({
+  name: "tool/glob",
+  layer,
+  deps: [ToolRegistry.node, Ripgrep.node, Location.node, LocationMutation.node, PermissionV2.node],
+})

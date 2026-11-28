@@ -1,0 +1,42 @@
+{
+  "schema": "genesis-exact-file-copy/v1",
+  "manifest_sha256": "90b191d1772410353f401e7c8ed45272f9325c8ddefc21f0491a56430fac1777",
+  "files_checked_and_copied": 143,
+  "source_population": 424,
+  "coverage_summary": {
+    "assigned_count": 424,
+    "by_historical_artifact": {
+      "s1.core.security": 51,
+      "s1.core.extensions": 122,
+      "s1.core.capability": 170,
+      "s1.core.tools": 81
+    },
+    "historical_read_status_preserved": {
+      "semantically_read_decisive_ranges": 27,
+      "captured_targeted_orientation_only": 3,
+      "not_read": 394
+    },
+    "current_production_read": {
+      "not_read": 354,
+      "decisive_source_ranges_read": 68,
+      "historical_contract_read_as_intent": 2
+    },
+    "dispositions": {
+      "historical_decisive_reading_preserved_without_new_read": 15,
+      "historical_orientation_preserved_without_semantic_upgrade": 3,
+      "documentation_deferred_not_read": 4,
+      "leaf_implementation_deferred_not_read": 116,
+      "support_contract_deferred_not_read": 13,
+      "targeted_reading_delta": 58,
+      "historical_source_reread": 12,
+      "validation_inventory_deferred_not_read_not_run": 203
+    },
+    "new_read_from_historical_not_read": 58,
+    "assigned_captured": 106,
+    "captured_total_including_dependencies": 115,
+    "confirmed_read_paths_total_including_control_and_dependencies": 77,
+    "product_tests": "NOT_RUN",
+    "semantic_verdict": "NOT_ASSERTED"
+  },
+  "semantic_acceptance": "NOT_ASSERTED"
+}

@@ -1,0 +1,78 @@
+{
+  "schema": "genesis-l1-correction-recipe/v1",
+  "unit": "C02",
+  "version": 2,
+  "artifact_key": "s1.subslice01.runtime-models-economy-completion",
+  "layer": 1,
+  "producer_id": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/request.txt",
+    "sha256": "964e9949198f1a413d376fb7044ebbf7d80af8909504305f8c5e11a41b25115a"
+  },
+  "original_body": {
+    "local_path": "/workspace/scratch/dd08f46a3e40/outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/selected/bodies/s1.subslice01.runtime-models-economy-completion.md",
+    "byte_length": 35465,
+    "sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20"
+  },
+  "original_inspection_scope": "Targeted matching lines and complete sections 4–5; rest retained byte-for-byte without new semantic re-audit.",
+  "public_findings": [
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/c01-public-content-findings-j1.md",
+      "byte_length": 3138,
+      "sha256": "ee541aab84c32e83c464057c075c25f659988ee1478be7ded9ec6f4917a6fef9",
+      "scope": "public content findings only, explicitly authorized by principal"
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/c01-public-content-findings-j2.md",
+      "byte_length": 2943,
+      "sha256": "a293ed39ae4092d84c70e792e64db0cd007423a02e7b5a0db66c0ee44ce45e01",
+      "scope": "public content findings only, explicitly authorized by principal"
+    }
+  ],
+  "prior_own_bodies_read": [
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/correct_models/body.md",
+      "byte_length": 4200,
+      "sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+      "authority": "Own prior corrected body read as context only; no acceptance or build dependency inferred"
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/body.md",
+      "byte_length": 6974,
+      "sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108",
+      "authority": "Own prior corrected body read as context only; no acceptance or build dependency inferred"
+    }
+  ],
+  "source_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/source-manifest.json",
+    "sha256": "52aa832200326af34df9636fa3553f4d06d73957e21b39468fd6dec5ca73fc85"
+  },
+  "method": "Apply exactly five nonoverlapping UTF-8 byte spans; copy six untouched byte segments directly. Preserve all other original claims, inventory and scope.",
+  "fixed_content": [
+    "PTY asynchronous retention, conditional trim and activation repaint",
+    "Basic exact environment/login branch with explicit shellIntegration preparation exception",
+    "Parser versus ledger validUsage versus reserve occupancy numeric checks",
+    "Normative two HTTP surfaces and client generation obligations"
+  ],
+  "not_closed": [
+    "J1-C01-F04: broad 235-row coverage and missing-family evidence request is not discharged or reclassified by this content delta. Principal must transport and bind its evidence separately."
+  ],
+  "not_run": [
+    "product tests",
+    "provider/process execution",
+    "client generation",
+    "runtime proof",
+    "remote writes",
+    "commits",
+    "child agents"
+  ],
+  "reserved_content_read": false,
+  "state": "REVIEW",
+  "usage": {
+    "new_github_fetches": 3,
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

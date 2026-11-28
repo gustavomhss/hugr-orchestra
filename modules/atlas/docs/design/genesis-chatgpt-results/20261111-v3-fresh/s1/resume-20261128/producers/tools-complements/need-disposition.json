@@ -1,0 +1,150 @@
+{
+  "schema": "genesis-l1-need-disposition/v1",
+  "public_contract_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+    "sha256": "85092bacad55e68a94f0dd17595e51ad3bcb7f821d33633b6c749b53126e7833"
+  },
+  "units": [
+    {
+      "work_package": "A2-tools-security",
+      "key": "s1.subslice02.tools-security-completion",
+      "new_body_necessary": true,
+      "reason": "Leitura das folhas de escrita/autoridade e separação captura, truncamento genérico e Lean.",
+      "historical_candidates_preserved": [
+        "s1.core.tools",
+        "s1.core.security"
+      ],
+      "bounded_result": "Targeted source-derived L1 delta produced; independent review outstanding",
+      "residual_limits": [
+        "Sem prova de rollback multi-file, sandbox universal, todos os OS ou validação local universal de Tool.dynamic.",
+        "Implementação externa de hugr-lean e folhas não lidas permanecem fora da evidência.",
+        "Sem execução do produto, teste, medição de qualidade de resumo, tokens cobrados ou consumidor."
+      ]
+    },
+    {
+      "work_package": "A2-extensions",
+      "key": "s1.subslice02.extensions-completion",
+      "new_body_necessary": true,
+      "reason": "Leitura das folhas de SDK/host, falha de ativação, OAuth pendente e mutação de skills.",
+      "historical_candidates_preserved": [
+        "s1.core.extensions"
+      ],
+      "bounded_result": "Targeted source-derived L1 delta produced; independent review outstanding",
+      "residual_limits": [
+        "Sem operação live de MCP/OAuth, execução de plugin ou garantia de recuperação durável de ativação/tentativa OAuth.",
+        "Adaptadores/provedores não lidos, efeitos externos e compatibilidade de todos os plugins/OS permanecem fora da evidência.",
+        "Inspeção/admissão de pacote e política declarada não provam sandbox universal."
+      ]
+    },
+    {
+      "work_package": "A2-capability",
+      "key": "s1.subslice02.capability-completion",
+      "new_body_necessary": true,
+      "reason": "Leitura de frame/policy/efeito, schemas/descritores, MCP implementado, persistência/projeção e folhas representativas do host.",
+      "historical_candidates_preserved": [
+        "s1.core.capability"
+      ],
+      "bounded_result": "Targeted source-derived L1 delta produced; independent review outstanding",
+      "residual_limits": [
+        "Sem execução remota, prova de nonexecution após abort ou atomicidade entre provedor e persistência local.",
+        "Vendors/engines de documentos/planilhas, channels, conexões/gestões completas, redaction e todos os schemas/OS continuam pendentes.",
+        "Folhas de documento/planilha lidas como pontos de delegação e contratos declarados; fidelidade/OCR/cálculo não foram verificados."
+      ]
+    }
+  ],
+  "public_case_navigation": [
+    {
+      "public_case_id": "S1-02-C1",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-C2",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.capability-completion",
+        "s1.subslice02.tools-security-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-C3",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.extensions-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-C4",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.extensions-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-C5",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.extensions-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-DIRECT-L1",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-DIRECT-L2",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.capability-completion",
+        "s1.subslice02.tools-security-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    },
+    {
+      "public_case_id": "S1-02-DIRECT-L3",
+      "body_keys_for_later_reader": [
+        "s1.subslice02.tools-security-completion",
+        "s1.subslice02.extensions-completion",
+        "s1.subslice02.capability-completion"
+      ],
+      "case_execution": "NOT_RUN",
+      "consumer_result": "NOT_OBSERVED",
+      "purpose": "Navigation for public need; not an answer key, evaluation or simulated consumer."
+    }
+  ],
+  "maintenance": {
+    "M1": "NOT_RUN",
+    "M2": "NOT_RUN",
+    "reason": "Future real maintenance trials after accepted layers; no false consumer or local product test."
+  },
+  "N01": {
+    "state": "L1_SOURCE_BOUNDARIES_ONLY",
+    "relation": "Plugin host, model tool frame and operator host separated in source; no L3 or S1-05 release claimed."
+  }
+}

@@ -1,0 +1,1408 @@
+{
+  "schema": "genesis-native-package/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/protocol-transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s1",
+  "package_state": "IN_PROGRESS",
+  "fragment_only": true,
+  "contract": {
+    "criteria": [
+      "Trace each substantive behavioral assertion to exact pinned evidence; separate intent, observed implementation and unexecuted claims.",
+      "Reconcile all 424 assigned sources by meaningful need and depth without treating a census as understanding.",
+      "Close the specific leaf-reading gaps, capture provenance and independently review every required artifact.",
+      "Use only accepted required predecessors for L2, then L3, then L4.",
+      "Publish/import/read/consumer/maintenance evidence is separate from semantic acceptance; unknown usage stays UNKNOWN."
+    ],
+    "public_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+      "sha256": "85092bacad55e68a94f0dd17595e51ad3bcb7f821d33633b6c749b53126e7833"
+    },
+    "oracle_ref": null,
+    "oracle_note": "Frozen by coordination before production; never provided to author; root must bind exact reference."
+  },
+  "required_artifact_keys": [
+    "s1.subslice02.tools-security-completion",
+    "s1.subslice02.extensions-completion",
+    "s1.subslice02.capability-completion"
+  ],
+  "artifacts": [
+    {
+      "key": "s1.subslice02.tools-security-completion",
+      "scope": "orchestra.s1",
+      "title": "Folhas de ferramentas, escrita, autoridade e saída",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "resume-20261128/producers/tools-complements/tools-security-completion.md",
+        "encoding": "utf-8",
+        "byte_length": 14338,
+        "sha256": "12c5f838030d624ba23071adefabbee9a317c6f6191a693a825a8d2c38f2ceb8"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Direct static reading of exact pinned source captures; public need contract; unaccepted historical candidates used only as limits/navigation.",
+        "claim_boundary": "Leitura das folhas de escrita/autoridade e separação captura, truncamento genérico e Lean.",
+        "observed": "Source implementation at pinned revision",
+        "unexecuted": "All product/provider/runtime/consumer/maintenance execution",
+        "historical_intent_is_current_behavior": false
+      },
+      "validity": "supported",
+      "validity_meaning": "Producer claim for the bounded statements only; not an independent acceptance verdict.",
+      "gaps": [
+        "Sem prova de rollback multi-file, sandbox universal, todos os OS ou validação local universal de Tool.dynamic.",
+        "Implementação externa de hugr-lean e folhas não lidas permanecem fora da evidência.",
+        "Sem execução do produto, teste, medição de qualidade de resumo, tokens cobrados ou consumidor."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/source-manifest.json",
+          "sha256": "91ff373e5ec54881f864b6a8c071b3ad6dc4b1277e8e48c451c9c5a2eb6728da"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/reading-confirmation.json",
+          "sha256": "5c6940649aaef0b30f6d5c778a48a0c4bb32a74cc5b77987d467e4a173df0790"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/coverage-424.json",
+          "sha256": "14c43385d916d756d6129c2760c245b2382af217c66a9b856ca6f08a3c073f8a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/need-disposition.json",
+          "sha256": "7e2375d430df916d8adaf6ab0372bd1a0ec1b3fe347e8dcc3c96df4d78a2815d"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/file-mutation.ts",
+        "file:packages/core/src/fs-util.ts",
+        "file:packages/core/src/location-mutation.ts",
+        "file:packages/core/src/permission.ts",
+        "file:packages/core/src/session/runner/llm.ts",
+        "file:packages/core/src/tool-output-store.ts",
+        "file:packages/core/src/tool/AGENTS.md",
+        "file:packages/core/src/tool/LEAN-DASHBOARD-CONTRACT.md",
+        "file:packages/core/src/tool/MODEL-CAPTURE-CONTRACT.md",
+        "file:packages/core/src/tool/bash.ts",
+        "file:packages/core/src/tool/builtins.ts",
+        "file:packages/core/src/tool/edit.ts",
+        "file:packages/core/src/tool/glob.ts",
+        "file:packages/core/src/tool/grep.ts",
+        "file:packages/core/src/tool/http-body.ts",
+        "file:packages/core/src/tool/lean-output.ts",
+        "file:packages/core/src/tool/lean-processor.ts",
+        "file:packages/core/src/tool/lean-recall.ts",
+        "file:packages/core/src/tool/lean-summary.ts",
+        "file:packages/core/src/tool/lean-telemetry.ts",
+        "file:packages/core/src/tool/model-capture.ts",
+        "file:packages/core/src/tool/model-projection.ts",
+        "file:packages/core/src/tool/read-filesystem.ts",
+        "file:packages/core/src/tool/read.ts",
+        "file:packages/core/src/tool/registry.ts",
+        "file:packages/core/src/tool/skill.ts",
+        "file:packages/core/src/tool/task-permission.ts",
+        "file:packages/core/src/tool/tool.ts",
+        "file:packages/core/src/tool/webfetch.ts",
+        "file:packages/core/src/tool/websearch.ts",
+        "file:packages/core/src/tool/write.ts",
+        "file:packages/core/src/util/physical-path.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools-source-map.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/a_needs.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/file-mutation.ts",
+          "git_blob_sha": "1a1af7ca0edd6b51db81820cbd8b45cad1eb7a3a",
+          "sha256": "ce3a0492d328541fec740d127abfa7cbfe5fb50a952cf5cf459c423d25e1a9bf",
+          "byte_length": 7949,
+          "read_ranges": [
+            [
+              31,
+              213
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/fs-util.ts",
+          "git_blob_sha": "695361a7b2812386ceb0dfcc0f535c146e744a9e",
+          "sha256": "075165942ad976929aa9e3257d63f6812a3f943472aeb960ffeb9be81ecc312a",
+          "byte_length": 12561,
+          "read_ranges": [
+            [
+              1,
+              18
+            ],
+            [
+              160,
+              184
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-mutation.ts",
+          "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+          "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a",
+          "byte_length": 6457,
+          "read_ranges": [
+            [
+              31,
+              160
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/permission.ts",
+          "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e",
+          "sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+          "byte_length": 14981,
+          "read_ranges": [
+            [
+              110,
+              180
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session/runner/llm.ts",
+          "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+          "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+          "byte_length": 39006,
+          "read_ranges": [
+            [
+              289,
+              307
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool-output-store.ts",
+          "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68",
+          "sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+          "byte_length": 9643,
+          "read_ranges": [
+            [
+              16,
+              59
+            ],
+            [
+              165,
+              201
+            ],
+            [
+              203,
+              238
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/AGENTS.md",
+          "git_blob_sha": "98ab3e6cc58259a418b7ab80d939295a21eeba2e",
+          "sha256": "381bcdefe9f3f40426c8e955ce3cdbc2295d067a46f568e7623671dfaabf7f24",
+          "byte_length": 4553,
+          "read_ranges": [
+            [
+              1,
+              63
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/LEAN-DASHBOARD-CONTRACT.md",
+          "git_blob_sha": "fa104a77f4e085a1e941313a6cf5d92ce114c69e",
+          "sha256": "721d216c49870127e82d7eebc69b40077036a07b012e25073c29619702b3a5ea",
+          "byte_length": 5409,
+          "read_ranges": [
+            [
+              1,
+              83
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/MODEL-CAPTURE-CONTRACT.md",
+          "git_blob_sha": "ec062e8d07bf3008750c6bf0e6f658c2cdefd1fc",
+          "sha256": "83744775f1b39f5ae2f937d6940983e38509ef484e18e85dd81fae29ea00f069",
+          "byte_length": 8170,
+          "read_ranges": [
+            [
+              1,
+              145
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/bash.ts",
+          "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b",
+          "sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+          "byte_length": 17377,
+          "read_ranges": [
+            [
+              1,
+              334
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/builtins.ts",
+          "git_blob_sha": "65f0c56beec8576eefd15cce7bb393f7c28a69fb",
+          "sha256": "bd2e423a2d17911a376b231595c04d45781a6f17655ec93884b0dd3eea013b1f",
+          "byte_length": 2091,
+          "read_ranges": [
+            [
+              1,
+              62
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/edit.ts",
+          "git_blob_sha": "e7295a875f374ded6954033d9a20f5604315cd49",
+          "sha256": "5813635cb938b6cf50d5ecdecadff8c5b6f6d25eaf8fa0e0708f523ccf9e3f8d",
+          "byte_length": 10381,
+          "read_ranges": [
+            [
+              1,
+              35
+            ],
+            [
+              116,
+              224
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/glob.ts",
+          "git_blob_sha": "2e4070b8891a4a513ef3566ca3905b7ba0bb8960",
+          "sha256": "929a9135b7c004ea84836caf060f8fda53a3f5b090f6b5e56904fe85978baefd",
+          "byte_length": 5584,
+          "read_ranges": [
+            [
+              50,
+              103
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/grep.ts",
+          "git_blob_sha": "04a376db43811d06daf0d4f3e655805b0cee7ee5",
+          "sha256": "96243715b46bff6c771278dd8e43286233f49c484c7016389dd1ba2fc5ed700e",
+          "byte_length": 7153,
+          "read_ranges": [
+            [
+              68,
+              122
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/http-body.ts",
+          "git_blob_sha": "7cb534a444fc62c1ad93dfea12ea786e18603647",
+          "sha256": "75dcace4c1dc93d0df508d1b021078ad0ce6c60143ff6cd70368aae341a38978",
+          "byte_length": 1331,
+          "read_ranges": [
+            [
+              1,
+              30
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/lean-output.ts",
+          "git_blob_sha": "71b2f7810da0dc8c82d82f3582fb37903c70e02d",
+          "sha256": "501fd48e53bc842ae1da21a6df53b818acf6f402d1471742433bcff4dc5946e0",
+          "byte_length": 11684,
+          "read_ranges": [
+            [
+              1,
+              225
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/lean-processor.ts",
+          "git_blob_sha": "d1d6c837c99be5e70a947b6b77f3a33a8423ec79",
+          "sha256": "0a07a896a6bd363edde8d727e916c5c68ee1c1cc9a3f632404af2bdd184080b5",
+          "byte_length": 3097,
+          "read_ranges": [
+            [
+              1,
+              50
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/lean-recall.ts",
+          "git_blob_sha": "d4cb57b6fd3d8789a42bc171d63fd38692923722",
+          "sha256": "15dabd3c13c14950c10a342dbae53cf4fdb106a5f6eb35d12a6bae08cb31b181",
+          "byte_length": 3062,
+          "read_ranges": [
+            [
+              1,
+              69
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/lean-summary.ts",
+          "git_blob_sha": "95fea4c5892310bacb939d62c981c7997eee4817",
+          "sha256": "b3fbd2057fb7b58e360904d60afbe6a11c6af6827e4d89b4ed5b731b9a420399",
+          "byte_length": 1634,
+          "read_ranges": [
+            [
+              1,
+              34
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/lean-telemetry.ts",
+          "git_blob_sha": "46eb4ca6738244d396d1f7e19efb6f0c9d916674",
+          "sha256": "65535f7018e8e0f8f0bc4f246ed98d879edcd0122f186f27c71d7ea1395efbe0",
+          "byte_length": 1985,
+          "read_ranges": [
+            [
+              1,
+              42
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/model-capture.ts",
+          "git_blob_sha": "07b4f958ba8d1bc1809609005b3a04f4d75c1ed1",
+          "sha256": "684707ab09f619295c0452ba1a2d5daa8a8ac73223d9d903aa6bea00d67c24fb",
+          "byte_length": 4494,
+          "read_ranges": [
+            [
+              1,
+              110
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/model-projection.ts",
+          "git_blob_sha": "9ce39270c662d276b1a126523ef419d34f63da4d",
+          "sha256": "d7ba6b08072af9c69878e976453c11d32bd49d8221b42201a2c4f178b8d2e3ae",
+          "byte_length": 4513,
+          "read_ranges": [
+            [
+              1,
+              85
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/read-filesystem.ts",
+          "git_blob_sha": "651e3b5f8852ed7a135763e0a32a12c897ef2da7",
+          "sha256": "d219062814c8e3e1eaedbd59b025836acac1c73cd480e4c470c25f61231c156f",
+          "byte_length": 13780,
+          "read_ranges": [
+            [
+              12,
+              30
+            ],
+            [
+              175,
+              216
+            ],
+            [
+              245,
+              337
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/read.ts",
+          "git_blob_sha": "1e38e74b7231691a31d2ba217267326e74189558",
+          "sha256": "1ca9741cfd96e11391c0cd457a354ad07a45072ed005b2c77b07c2710c6134c1",
+          "byte_length": 5745,
+          "read_ranges": [
+            [
+              1,
+              123
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/registry.ts",
+          "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453",
+          "sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+          "byte_length": 17719,
+          "read_ranges": [
+            [
+              1,
+              337
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/skill.ts",
+          "git_blob_sha": "2004e6844c5d6063caa1c09385e39b102723624b",
+          "sha256": "90b6dfc645ddb388b92cca9d1dcb8f1c96f74358c565d442f4955bc06f639240",
+          "byte_length": 5496,
+          "read_ranges": [
+            [
+              45,
+              157
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/task-permission.ts",
+          "git_blob_sha": "1a3c81a3a321a22509730275814c4339059f4115",
+          "sha256": "3932582a01a39963f209495d25d1ef6ee60322e61f1e25ee25a557e0d0af82bd",
+          "byte_length": 1489,
+          "read_ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/tool.ts",
+          "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16",
+          "sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+          "byte_length": 8883,
+          "read_ranges": [
+            [
+              1,
+              223
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/webfetch.ts",
+          "git_blob_sha": "1502b88d05778095dbd4270867c534ddb3fcd1d1",
+          "sha256": "7115b4d82d60d3301dce55e4d08eccc0a990a48d803d7c230ce6204ec4d86a62",
+          "byte_length": 9647,
+          "read_ranges": [
+            [
+              121,
+              230
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/websearch.ts",
+          "git_blob_sha": "d899ef0744f7c36735c0eeeb60c8d7eade104c0f",
+          "sha256": "34e475ecb799b41c79d8b87277e935f433265eb978f4b22e98be16574f36a13c",
+          "byte_length": 13691,
+          "read_ranges": [
+            [
+              243,
+              317
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tool/write.ts",
+          "git_blob_sha": "3a3f0a6e6074953f58a118a6fcc3331f80cdc194",
+          "sha256": "1aceb4e5e75cc347ab7f9bfa54a6f4de269d7758c686cb81b2f8d584c60af0eb",
+          "byte_length": 4832,
+          "read_ranges": [
+            [
+              46,
+              111
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/util/physical-path.ts",
+          "git_blob_sha": "f5c112bce604f1d178673bc68b21ff8b50a23e42",
+          "sha256": "fb186058a108effad2bd8ac1b1e02b8d53ba7a6094066e9f3eea5cbbc608aae0",
+          "byte_length": 3224,
+          "read_ranges": [
+            [
+              1,
+              65
+            ]
+          ]
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "sha256": "c42fbdc89379bafa0a17303ff10cb800fd11d85429b420342c496e0789902a3c"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        {
+          "key": "s1.core.tools",
+          "status": "historical_unaccepted_candidate",
+          "purpose": "Context/limits only; no accepted build edge"
+        },
+        {
+          "key": "s1.core.security",
+          "status": "historical_unaccepted_candidate",
+          "purpose": "Context/limits only; no accepted build edge"
+        }
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/request.txt",
+        "sha256": "ae64106532d032fb902e66422f842b44dd6adb0a953924a507f4214d4ff6f494"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/response.md",
+        "sha256": "9972972ffaa0dd50698e24feb39c419341de3ea77ec97eb75d0714432f1209ed"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "local_body_path": "bodies/tools-security-completion.md"
+    },
+    {
+      "key": "s1.subslice02.extensions-completion",
+      "scope": "orchestra.s1",
+      "title": "Admissão e lifetime de extensões, MCP/OAuth, agentes e skills",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "resume-20261128/producers/tools-complements/extensions-completion.md",
+        "encoding": "utf-8",
+        "byte_length": 12114,
+        "sha256": "ba632793c4d1843e5c71baa6e342cd18641fb5a1e600d64085fa1f41f6030f43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Direct static reading of exact pinned source captures; public need contract; unaccepted historical candidates used only as limits/navigation.",
+        "claim_boundary": "Leitura das folhas de SDK/host, falha de ativação, OAuth pendente e mutação de skills.",
+        "observed": "Source implementation at pinned revision",
+        "unexecuted": "All product/provider/runtime/consumer/maintenance execution",
+        "historical_intent_is_current_behavior": false
+      },
+      "validity": "supported",
+      "validity_meaning": "Producer claim for the bounded statements only; not an independent acceptance verdict.",
+      "gaps": [
+        "Sem operação live de MCP/OAuth, execução de plugin ou garantia de recuperação durável de ativação/tentativa OAuth.",
+        "Adaptadores/provedores não lidos, efeitos externos e compatibilidade de todos os plugins/OS permanecem fora da evidência.",
+        "Inspeção/admissão de pacote e política declarada não provam sandbox universal."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/source-manifest.json",
+          "sha256": "91ff373e5ec54881f864b6a8c071b3ad6dc4b1277e8e48c451c9c5a2eb6728da"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/reading-confirmation.json",
+          "sha256": "5c6940649aaef0b30f6d5c778a48a0c4bb32a74cc5b77987d467e4a173df0790"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/coverage-424.json",
+          "sha256": "14c43385d916d756d6129c2760c245b2382af217c66a9b856ca6f08a3c073f8a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/need-disposition.json",
+          "sha256": "7e2375d430df916d8adaf6ab0372bd1a0ec1b3fe347e8dcc3c96df4d78a2815d"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/mcp.ts",
+        "file:packages/core/src/mcp/auth.ts",
+        "file:packages/core/src/mcp/oauth-callback.ts",
+        "file:packages/core/src/mcp/oauth-provider.ts",
+        "file:packages/core/src/plugin.ts",
+        "file:packages/core/src/plugin/agent.ts",
+        "file:packages/core/src/plugin/host.ts",
+        "file:packages/core/src/plugin/internal.ts",
+        "file:packages/core/src/plugin/promise.ts",
+        "file:packages/core/src/plugin/sdk-admission.ts",
+        "file:packages/core/src/plugin/sdk-limits.ts",
+        "file:packages/core/src/plugin/sdk-package.ts",
+        "file:packages/core/src/plugin/sdk-reconcile.ts",
+        "file:packages/core/src/plugin/sdk-runtime.ts",
+        "file:packages/core/src/skill/discovery.ts",
+        "file:packages/core/src/skill/file.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools-source-map.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/a_needs.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/mcp.ts",
+          "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b",
+          "sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+          "byte_length": 39585,
+          "read_ranges": [
+            [
+              1,
+              93
+            ],
+            [
+              204,
+              330
+            ],
+            [
+              332,
+              490
+            ],
+            [
+              570,
+              674
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/mcp/auth.ts",
+          "git_blob_sha": "bfdafead0d7c0b2cab504750438a4ae13ec24293",
+          "sha256": "c91be81b5f6b269adf3f19c6ff72bb0d5396ffd4a8ef20e27c6384ff873ce29a",
+          "byte_length": 9008,
+          "read_ranges": [
+            [
+              62,
+              127
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/mcp/oauth-callback.ts",
+          "git_blob_sha": "8005eb69adf8a652162bf299599c241a4865c6e9",
+          "sha256": "24414db2352bbea82c4f20c53d6e25d6cf4e7485ad825630c1d310e671435fcf",
+          "byte_length": 6574,
+          "read_ranges": [
+            [
+              8,
+              174
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/mcp/oauth-provider.ts",
+          "git_blob_sha": "42e9e3f711cbb7f152166b695e897345143417fa",
+          "sha256": "aa8b5041aa31b75dd2934723d8e11240f7a58d615be52cad257a740c6249d62f",
+          "byte_length": 9541,
+          "read_ranges": [
+            [
+              28,
+              180
+            ],
+            [
+              184,
+              241
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin.ts",
+          "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818",
+          "sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+          "byte_length": 11007,
+          "read_ranges": [
+            [
+              69,
+              164
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/agent.ts",
+          "git_blob_sha": "386ff24903eb5680ea6455a7e593644f8fafd2bb",
+          "sha256": "22edf182465bce616ac608152231136fc28fe4afe6c6abb8d53abd50f07a7f21",
+          "byte_length": 4968,
+          "read_ranges": [
+            [
+              1,
+              106
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/host.ts",
+          "git_blob_sha": "50ae655cd272b232697afa98caa9f25b4c227a95",
+          "sha256": "f592ca169a0cfed30ddbebae4f3409844e61a250c11f1be23fa7ca29fb1628ed",
+          "byte_length": 8837,
+          "read_ranges": [
+            [
+              1,
+              219
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/internal.ts",
+          "git_blob_sha": "f7d43af0a7d12df1fa5feb445ebe7e760887413c",
+          "sha256": "f8890b02eeee0b9829f81eb9cc89d72ed91da45023f6ad03c3a489376ef33ebc",
+          "byte_length": 5531,
+          "read_ranges": [
+            [
+              1,
+              156
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/promise.ts",
+          "git_blob_sha": "276bbb04b6fae51b8db50f40c6f00a6df244f11a",
+          "sha256": "d1bfb5c19dae217df5ab9aa05820a295af0d403712fbf374581c40e5bc9e508b",
+          "byte_length": 3823,
+          "read_ranges": [
+            [
+              1,
+              93
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/sdk-admission.ts",
+          "git_blob_sha": "610f3003bb8e33119826db531ec4c441cc9700b5",
+          "sha256": "9df74b5559a205e01484a7bc451e78ce98e6e9a64fe0159ac67d37e811a534b0",
+          "byte_length": 13746,
+          "read_ranges": [
+            [
+              1,
+              261
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/sdk-limits.ts",
+          "git_blob_sha": "81d4a6b3ecf582ed94d624b0598337e3792a5458",
+          "sha256": "2f88aefecba107b5afaec3d7ba3f544e64e5486132f41fa51cba10584dc68325",
+          "byte_length": 2462,
+          "read_ranges": [
+            [
+              1,
+              57
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/sdk-package.ts",
+          "git_blob_sha": "a969919940aa47410f14386b43dbe9fc52101f83",
+          "sha256": "7dd3570fe7287081379d0b16643ef6cadfe1958c554ee04860e3e0300e90dac5",
+          "byte_length": 6491,
+          "read_ranges": [
+            [
+              24,
+              111
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/sdk-reconcile.ts",
+          "git_blob_sha": "072b4d95df67810a8c9e557745bb052a15ff80e0",
+          "sha256": "960b2a1106dd7b2b649a4347764a00b3cb83f025475df638563b9bddcc706524",
+          "byte_length": 2396,
+          "read_ranges": [
+            [
+              1,
+              41
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/plugin/sdk-runtime.ts",
+          "git_blob_sha": "5f7483c7ae4731f3b00d9b6de2e4e872f77c80b4",
+          "sha256": "cd63dd02454ad04cc74cac0d8cd1af829c6fab3c7c77aead53515c5a45297097",
+          "byte_length": 3685,
+          "read_ranges": [
+            [
+              1,
+              76
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/skill/discovery.ts",
+          "git_blob_sha": "276a7d70acefafb7fd0edb9bc134b3c22870c641",
+          "sha256": "636edd11046ef768f502c316c8c0c01ed1cf14aaaae1c148a5dcb66b8bb0419d",
+          "byte_length": 8279,
+          "read_ranges": [
+            [
+              15,
+              64
+            ],
+            [
+              93,
+              210
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/skill/file.ts",
+          "git_blob_sha": "2db97a580cbf97bb7c0b689b172fe38c5bc19d08",
+          "sha256": "9b5eb9dc02a0da1b802c8ee56cfba6415ace1f52adb50d6767476fabe215141a",
+          "byte_length": 8719,
+          "read_ranges": [
+            [
+              54,
+              113
+            ],
+            [
+              115,
+              182
+            ]
+          ]
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "sha256": "c42fbdc89379bafa0a17303ff10cb800fd11d85429b420342c496e0789902a3c"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        {
+          "key": "s1.core.extensions",
+          "status": "historical_unaccepted_candidate",
+          "purpose": "Context/limits only; no accepted build edge"
+        }
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/request.txt",
+        "sha256": "ae64106532d032fb902e66422f842b44dd6adb0a953924a507f4214d4ff6f494"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/response.md",
+        "sha256": "9972972ffaa0dd50698e24feb39c419341de3ea77ec97eb75d0714432f1209ed"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "local_body_path": "bodies/extensions-completion.md"
+    },
+    {
+      "key": "s1.subslice02.capability-completion",
+      "scope": "orchestra.s1",
+      "title": "Capacidades nativas, revalidação de efeito, MCP e limites de host",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "resume-20261128/producers/tools-complements/capability-completion.md",
+        "encoding": "utf-8",
+        "byte_length": 16742,
+        "sha256": "cf6c36fde73bb6c191cb4d8e7b3bf82b121009b3390c16b1941667c1d40dac89"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Direct static reading of exact pinned source captures; public need contract; unaccepted historical candidates used only as limits/navigation.",
+        "claim_boundary": "Leitura de frame/policy/efeito, schemas/descritores, MCP implementado, persistência/projeção e folhas representativas do host.",
+        "observed": "Source implementation at pinned revision",
+        "unexecuted": "All product/provider/runtime/consumer/maintenance execution",
+        "historical_intent_is_current_behavior": false
+      },
+      "validity": "supported",
+      "validity_meaning": "Producer claim for the bounded statements only; not an independent acceptance verdict.",
+      "gaps": [
+        "Sem execução remota, prova de nonexecution após abort ou atomicidade entre provedor e persistência local.",
+        "Vendors/engines de documentos/planilhas, channels, conexões/gestões completas, redaction e todos os schemas/OS continuam pendentes.",
+        "Folhas de documento/planilha lidas como pontos de delegação e contratos declarados; fidelidade/OCR/cálculo não foram verificados."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/source-manifest.json",
+          "sha256": "91ff373e5ec54881f864b6a8c071b3ad6dc4b1277e8e48c451c9c5a2eb6728da"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/reading-confirmation.json",
+          "sha256": "5c6940649aaef0b30f6d5c778a48a0c4bb32a74cc5b77987d467e4a173df0790"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/coverage-424.json",
+          "sha256": "14c43385d916d756d6129c2760c245b2382af217c66a9b856ca6f08a3c073f8a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/need-disposition.json",
+          "sha256": "7e2375d430df916d8adaf6ab0372bd1a0ec1b3fe347e8dcc3c96df4d78a2815d"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/capability/artifact/blob.ts",
+        "file:packages/core/src/capability/artifact/index.ts",
+        "file:packages/core/src/capability/artifact/management-mutation.ts",
+        "file:packages/core/src/capability/artifact/management.ts",
+        "file:packages/core/src/capability/catalog/descriptors.ts",
+        "file:packages/core/src/capability/catalog/schema.ts",
+        "file:packages/core/src/capability/children.ts",
+        "file:packages/core/src/capability/document/index.ts",
+        "file:packages/core/src/capability/invocation.ts",
+        "file:packages/core/src/capability/job/index.ts",
+        "file:packages/core/src/capability/mcp/http.ts",
+        "file:packages/core/src/capability/mcp/index.ts",
+        "file:packages/core/src/capability/mcp/protocol.ts",
+        "file:packages/core/src/capability/media/index.ts",
+        "file:packages/core/src/capability/operator/index.ts",
+        "file:packages/core/src/capability/policy.ts",
+        "file:packages/core/src/capability/process-control/index.ts",
+        "file:packages/core/src/capability/process-control/registry.ts",
+        "file:packages/core/src/capability/schedule/index.ts",
+        "file:packages/core/src/capability/service/contract.ts",
+        "file:packages/core/src/capability/service/execute.ts",
+        "file:packages/core/src/capability/service/execution/projection.ts",
+        "file:packages/core/src/capability/service/index.ts",
+        "file:packages/core/src/capability/sheet/index.ts",
+        "file:packages/core/src/capability/tools.ts",
+        "file:packages/core/src/scheduled-task/port.ts",
+        "file:packages/core/src/toolkit/install.ts",
+        "file:packages/core/src/toolkit/runtime.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools_contract.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/tools-source-map.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/inputs/a_needs.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/artifact/blob.ts",
+          "git_blob_sha": "7ffe65a4311dc38d8b55ef336a55b4fc00d4493e",
+          "sha256": "b6a2e92aaf64c9f10ae755cdaf5f11141e965ff40d391050e618e471b443ee40",
+          "byte_length": 12431,
+          "read_ranges": [
+            [
+              12,
+              110
+            ],
+            [
+              142,
+              196
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/artifact/index.ts",
+          "git_blob_sha": "62072c7c8d3152ac991c34be5520160527b62623",
+          "sha256": "8e07dc7298f1e97870fa459a8b26b78f01f27625b48dc1a7162aa9123cad92d0",
+          "byte_length": 18704,
+          "read_ranges": [
+            [
+              28,
+              271
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/artifact/management-mutation.ts",
+          "git_blob_sha": "84b2494d8c4d4662d38147e606ea7681e296b9d1",
+          "sha256": "7abcf1dce97cfd0a06bf9c9ab5594a5cd55a6721ca5f6a126c82a197eea9e12b",
+          "byte_length": 8339,
+          "read_ranges": [
+            [
+              28,
+              133
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/artifact/management.ts",
+          "git_blob_sha": "9dd01f62adbe4b195705c6e02b34b475344c3a6e",
+          "sha256": "f851f4da628e246b9046756b5dd398c82d31f36b8c1d75cf9981e1517832152e",
+          "byte_length": 8317,
+          "read_ranges": [
+            [
+              48,
+              111
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/catalog/descriptors.ts",
+          "git_blob_sha": "33222e3e49555b39555ed21bb5fb1686b85909d0",
+          "sha256": "19e7a8c0a2067d03bc4ee72988dfd5e9ee4f56b178b2784376ab58e9598160f0",
+          "byte_length": 9570,
+          "read_ranges": [
+            [
+              1,
+              207
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/catalog/schema.ts",
+          "git_blob_sha": "15664f32856ea0da80a91a800cb860161f915221",
+          "sha256": "fb4b532017f36a9dfd132c2ec665121919916c220641d8ad1a50b353c91f4ab1",
+          "byte_length": 9808,
+          "read_ranges": [
+            [
+              1,
+              189
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/children.ts",
+          "git_blob_sha": "6f2ab8d9ac75861c60bb0c177c378d4d9bbe408d",
+          "sha256": "d82cc9ac887984add08b035b95a077babc61bfa13b1882ceee9816727bb74152",
+          "byte_length": 9399,
+          "read_ranges": [
+            [
+              1,
+              163
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/document/index.ts",
+          "git_blob_sha": "4035ad0822ab985eb3ab574f01ebdb7f10eb61ea",
+          "sha256": "641b8442cdbc6cb25a0c7d19b24f8e1d045d3c39a84cc9d1450fd4c647e22d81",
+          "byte_length": 1689,
+          "read_ranges": [
+            [
+              1,
+              29
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/invocation.ts",
+          "git_blob_sha": "e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890",
+          "sha256": "6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae",
+          "byte_length": 5979,
+          "read_ranges": [
+            [
+              1,
+              142
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/job/index.ts",
+          "git_blob_sha": "b6272a4e4dd4baf63f046d941ccf3b91a5169802",
+          "sha256": "827c37e3131fcb164f4f3984ba6e5cfbb8c238903b292f50f906490b0cc20675",
+          "byte_length": 37696,
+          "read_ranges": [
+            [
+              225,
+              357
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/mcp/http.ts",
+          "git_blob_sha": "a12e5c5a954321474beb3ddd6901601d2f591352",
+          "sha256": "851c18426d339f092eeab39d50f498ff3480a5ca732ef217b169740cffcb8506",
+          "byte_length": 12200,
+          "read_ranges": [
+            [
+              23,
+              232
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/mcp/index.ts",
+          "git_blob_sha": "559a829a82d68b5c8e1bab5240f662d418455f43",
+          "sha256": "3095221d8055a1ff2b75ea2f35cff9c394bd809d2627ea0a723a0b0eb5f3c342",
+          "byte_length": 13901,
+          "read_ranges": [
+            [
+              1,
+              235
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/mcp/protocol.ts",
+          "git_blob_sha": "e6c777d2b15577ad10de176483c2ca5073d98574",
+          "sha256": "cff25887cedc029e023f4dfa1d857e14720131e9c1358368ebb723697b62ec82",
+          "byte_length": 14252,
+          "read_ranges": [
+            [
+              34,
+              163
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/media/index.ts",
+          "git_blob_sha": "e694b123cf9b95ea77f586bf85d09a06eb52299c",
+          "sha256": "d2f4abc0117728cbc553db743fa95c6571aaa374138cca5d0d2d9b109f383300",
+          "byte_length": 31324,
+          "read_ranges": [
+            [
+              49,
+              110
+            ],
+            [
+              251,
+              347
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/operator/index.ts",
+          "git_blob_sha": "5b46d15cb316584c00da3718db619bc9a1d72926",
+          "sha256": "c3cef618e7895452996b92b2dc0a055cc6d338bc50a2384c613e360be486339f",
+          "byte_length": 8290,
+          "read_ranges": [
+            [
+              1,
+              159
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/policy.ts",
+          "git_blob_sha": "d75718a6ac8d6d3e36c5b791301a68a728be26b0",
+          "sha256": "9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022",
+          "byte_length": 8907,
+          "read_ranges": [
+            [
+              1,
+              182
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/process-control/index.ts",
+          "git_blob_sha": "fd8814dc3823f2b87b79971bbc3ff22f24662c43",
+          "sha256": "764f9abcfac5ca7d22827c8dc510af0db358ad3dc2b3345abd7f1bfbde098d8d",
+          "byte_length": 13253,
+          "read_ranges": [
+            [
+              44,
+              205
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/process-control/registry.ts",
+          "git_blob_sha": "f71de9b071eff3f124f06d8c41e751d66ffbd3cf",
+          "sha256": "44c68a08c66e50b0218eabe75addce0681b0f426fa3a3217eac4e39b1f841e3f",
+          "byte_length": 9223,
+          "read_ranges": [
+            [
+              29,
+              135
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/schedule/index.ts",
+          "git_blob_sha": "14ca7dea9d1e59fa650028cb3f2b7433de0387f5",
+          "sha256": "9ec23a9a116d4de344917940b96b84045386d815fc07277d8fdfd4d8895fa181",
+          "byte_length": 9299,
+          "read_ranges": [
+            [
+              20,
+              124
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/service/contract.ts",
+          "git_blob_sha": "65faa83911af3b2aa5f9b8fda30a3c08f0a13e5f",
+          "sha256": "70b4aebd23634c172f1dadd2e9fa98a04e1b888a8e2a8cfa02212100bd709357",
+          "byte_length": 1659,
+          "read_ranges": [
+            [
+              1,
+              31
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/service/execute.ts",
+          "git_blob_sha": "01e934495e0147a1af9887f7157db3d4b28b2ba8",
+          "sha256": "8de2d31e6ffae5be5ff3711b3bcc80657a3fc4b5d3a1ec8fb6963a9d5d947341",
+          "byte_length": 11943,
+          "read_ranges": [
+            [
+              1,
+              162
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/service/execution/projection.ts",
+          "git_blob_sha": "c5b65f19cde41b2ad8a2b6344d09fcc19622d721",
+          "sha256": "fd670b8e9ea9c8edba9eadda0e29c823a61a685d3e4f5b1f12781411d2b63527",
+          "byte_length": 7321,
+          "read_ranges": [
+            [
+              1,
+              117
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/service/index.ts",
+          "git_blob_sha": "a647dd4ddf0ea54c005902abca3556509275d917",
+          "sha256": "16ad5b280a85cfd9dc96cb6889606338351ed2c172f05f2eabe6102b5d646d70",
+          "byte_length": 5250,
+          "read_ranges": [
+            [
+              1,
+              93
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/sheet/index.ts",
+          "git_blob_sha": "0a4d62777e7961b63f137471e5af2564bd5aade3",
+          "sha256": "f5f664ae5f66ced0d212ca665d475be1f8717d804097c08b58fc96be293eeb84",
+          "byte_length": 1897,
+          "read_ranges": [
+            [
+              1,
+              30
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/capability/tools.ts",
+          "git_blob_sha": "1103ab0c8eb3d9d79cc5ff295cb267847eab629e",
+          "sha256": "7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46",
+          "byte_length": 4027,
+          "read_ranges": [
+            [
+              1,
+              69
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/scheduled-task/port.ts",
+          "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c",
+          "sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+          "byte_length": 2092,
+          "read_ranges": [
+            [
+              1,
+              41
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/toolkit/install.ts",
+          "git_blob_sha": "5dae92b2c98118812fbda0179260649b1f52352e",
+          "sha256": "2f8c74d3581ccfee72f052a07a159adb4c11be145286fc69de8272d3a201d7d3",
+          "byte_length": 2457,
+          "read_ranges": [
+            [
+              1,
+              63
+            ]
+          ]
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/toolkit/runtime.ts",
+          "git_blob_sha": "6c835f438b80a1c49bff738bc761b6d27fe0a21c",
+          "sha256": "6cccbe7bf0352f530cd222738176cd5dbf0c9a745ff933679451e913d5ae5135",
+          "byte_length": 6320,
+          "read_ranges": [
+            [
+              1,
+              128
+            ]
+          ]
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/recipe.json",
+        "sha256": "c42fbdc89379bafa0a17303ff10cb800fd11d85429b420342c496e0789902a3c"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        {
+          "key": "s1.core.capability",
+          "status": "historical_unaccepted_candidate",
+          "purpose": "Context/limits only; no accepted build edge"
+        }
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/request.txt",
+        "sha256": "ae64106532d032fb902e66422f842b44dd6adb0a953924a507f4214d4ff6f494"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/tools-complements/response.md",
+        "sha256": "9972972ffaa0dd50698e24feb39c419341de3ea77ec97eb75d0714432f1209ed"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "local_body_path": "bodies/capability-completion.md"
+    }
+  ],
+  "roots": {
+    "component": [
+      "s1.subslice02.tools-security-completion",
+      "s1.subslice02.extensions-completion",
+      "s1.subslice02.capability-completion"
+    ]
+  },
+  "missing_required_artifact_keys": [],
+  "known_limits": [
+    "This is the three-complement producer fragment, not the complete S1 package.",
+    "Historical candidates have no acceptance assumed and no build edges.",
+    "No L2-L4, runtime binding, publication, consumers or maintenance execution.",
+    "Population disposition is not exhaustive semantic reading; exact residual limits are preserved."
+  ]
+}

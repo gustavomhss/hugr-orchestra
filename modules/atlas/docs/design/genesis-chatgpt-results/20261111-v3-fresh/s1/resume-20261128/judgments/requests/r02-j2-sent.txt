@@ -1,0 +1,167 @@
+R02 — s1.core.runtime v2. Mesmo juiz persistente, critérios, pin e protocolo de R01. Corpo completo: 6974 bytes UTF-8, SHA256 01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108. Autor independente /root/produce_libraries não recebeu oracle; corrigiu 5 spans F01/F02/F03/F04 e anchors. Reprodução mecânica de delta.json confirmou que demais bytes do SHA331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534 foram preservados; isto não é julgamento. Use todas as fontes literais anteriores de R01, incluindo complemento de retenção/protocol e S101-N3. Três capturas adicionais exatas seguem. Sem ferramentas. Este pedido é só R02; C01 pode estar parcialmente na fila e continua aguardando seu próprio FIM.
+
+BEGIN EXACT BODY R02
+# Host composition and native process infrastructure
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+`Host.merge` validates contribution IDs, extra node names and Location additions, refusing contributions that own reserved SessionExecution, Session, LocationServiceMap or scheduler nodes. Built-in Location nodes can change only through replacements. `app-node` tags allow Location nodes to depend on global nodes and keep the converse boundary closed. Global paths use Orchestra's XDG data/cache/config/state roots; the module creates required directories at import. These are product data locations, not arbitrary cache names. [1,2,3]
+
+`AppProcess` centralizes spawn, collected output and stream output. Optional collectors cap retained bytes while continuing to drain input and set truncation flags. Inspectors see raw chunks before capture limits. Timeouts and caller AbortSignals terminate the scoped collection path. Memory-tree caps are documented and supplied to Omni; the legacy spawner does not enforce them. Native collection is selected only for eligible commands/options, otherwise the configured spawner path runs. No universal output or timeout bound exists unless the caller supplies one. [4]
+
+Omni loads once, accepts explicit paths only before first load, requires an addon/supervisor pair and throws when requested native components cannot load. It does not silently fall back during acquisition. Lookup checks configured paths, environment overrides, shipped binary locations and checkout targets. Its test-control predicate returns no refusal in mode `off`. In `on` or `strict`, zero native spawns are refused only when `expected || delegations > 0`; with `expected:false` and zero spawns/zero delegations it returns no refusal. A strict run with any delegation is refused. Reading this predicate is not running that control. Child environment assembly removes `HUGR_OMNI_*` and folds Windows variable names. [5]
+
+PTY sessions keep a bounded retained output ring. Exited sessions enter an asynchronous `runFork` path that publishes the exit event before evicting the oldest entries while the retained count exceeds 25; this is an eviction policy, not an instantaneous upper bound. `exact:true` suppresses process-environment inheritance and automatic login arguments in the basic creation path; terminal defaults still apply, with locale defaults on Windows. Explicit `shellIntegration:true` can still invoke `ShellIntegration.prepare`, whose returned preparation can replace arguments and add environment entries. This qualifies the basic exact path without asserting the unread helper's internals. [6]
+
+Attachment returns replay/cursor before live activation. When retained output is replayed across a gap, it is prefixed with a terminal reset. `afterFirstLine` drops the prefix only when the first newline index is nonnegative and less than 4096; otherwise it retains the buffer. Repaint is requested during `activate()` only when there is a gap and the PTY session is still running. Inactive subscribers accumulate pending chunks until activation; synchronous callbacks and a bounded replay ring do not establish network backpressure or bound memory for a slow/non-reading WebSocket client. Teardown stops or explicitly adopts Omni descendants, and layer finalization waits only up to seven seconds for pending stops. The maintenance skill separately records that unresolved client-memory limit. [6,7,12]
+
+LSP and formatter project commands pass through ConfigTrust. LSP filters files outside active/project roots and shares in-flight launches per root/server. Workspace-code commands use confinement; trusted system commands may use the ordinary launch path. Formatter execution similarly confines workspace-code commands and limits allowed writes; logged spawn/format failure is distinct from successful formatting. Installation lookup falls back to the running version on release-query failure, so an unchanged “latest” value can reflect unavailable observation. OTLP logs/traces initialize only with a configured endpoint. [8,9,10,11]
+
+## Normative intent and gaps
+
+Core owns platform composition; product modules contribute through its ports. Native Rust, OS-specific spawners, PTY adapters, language servers, formatter packages and telemetry exporters remain separate implementations. No process was spawned through product code, no upgrade occurred and no native or network test ran. Source contracts about limits should be rechecked against the exact backend when runtime verification is needed.
+
+The terminal-maintenance skill prescribes that one PTY implementation serves both HTTP surfaces, the legacy handlers and `@orchestra/server`; changes must be coordinated across both. It also requires `bun run generate` from `packages/client` for a wire-protocol change. These are normative maintenance obligations from the skill, not execution evidence that both surfaces were exercised or client generation ran in this production. [7]
+
+## Source anchors
+
+- **1.** `packages/core/src/host.ts:a0fc5bc9a36e50315b0ddddf4de3566555711250` — contribution merge and reserved nodes, lines 15–63.
+- **2.** `packages/core/src/effect/app-node.ts:e8112f921ad7a7dcefbf6985c24995df1855c96b` — scope dependency tags, lines 1–14.
+- **3.** `packages/core/src/global.ts:ba7790536b60c6075ff37854c4db14909b779183` — XDG data roots and overrides, lines 10–43,59–85.
+- **4.** `packages/core/src/process.ts:a2c29d4a18c44ff407e6055b27830fade5d43f20` — capture, cancellation and native selection, lines 25–65,131–217,221–272,319–324.
+- **5.** `packages/core/src/omni.ts:94a19789cef782806a80432c9a86f28bccbdecac` — native acquisition and control predicate, lines 25–112,139–174.
+- **6.** `packages/core/src/pty.ts:fc08cb64d832f77b145c4c9702d417d7db49c14f` — retention policy, exact/integration creation, activation, replay and teardown, lines 23–39,74–108,109–228,229–423,424–449.
+- **7.** `.orchestra/skills/terminal-maintenance/SKILL.md:610fa93e3ec385790509b0c7fd0181fd30adc727` — terminal ownership, invariants and WebSocket limit, lines 10–29.
+- **8.** `packages/core/src/lsp/lsp.ts:7848ef568344421190171962367fe2836170d084` — trust, confinement and shared launch, lines 149–215,223–282.
+- **9.** `packages/core/src/format/format.ts:0198f9c0d4aa4a9e1452339ca5c3302611478aba` — trust, command cache and confinement, lines 46–62,73–158.
+- **10.** `packages/core/src/installation/service.ts:4a75cd0fdf8467866c10c692987769751edd0f42` — latest lookup and explicit upgrade commands, lines 156–196.
+- **11.** `packages/core/src/observability/otlp.ts:4d403d30bded809a37d426a8c56361ca8d66ddf7` — configured OTLP startup, lines 7–18,36–76.
+- **12.** `packages/core/src/pty/protocol.ts:cca1266bd0235f21bbac04454824c04b5c839aeb` — conditional first-line removal, lines 44–48.
+END EXACT BODY R02
+
+BEGIN PINNED SOURCE packages/core/src/pty.ts:23–39; blob fc08cb64d832f77b145c4c9702d417d7db49c14f; source 1cde2ff7a71bcf7aecb5d030917b577165135d38
+23: // Exited sessions stay observable (status, exit code, retained output) until removed explicitly.
+24: // Cap retention so abandoned terminals do not accumulate unbounded buffers.
+25: const EXITED_LIMIT = 25
+26: const pty = lazy(() => import("#pty"))
+27: const omniPty = lazy(() => import("./pty/omni").then((mod) => mod.load()))
+28: // How long an omni tree gets to wind down when its session goes, and how long the layer finalizer waits for every
+29: // pending stop: above ConPTY's declared 6 s close (integration plan, WP2).
+30: const STOP_GRACE_MS = 2000
+31: const FINALIZE_CAP = "7 seconds"
+32: 
+33: type Subscriber = {
+34:   readonly onData: (chunk: string) => void
+35:   readonly onEnd: (event: { exitCode?: number }) => void
+36:   active: boolean
+37:   detached: boolean
+38:   pending: string[]
+39:   end?: { exitCode?: number }
+END SOURCE
+
+BEGIN PINNED SOURCE packages/core/src/pty.ts:229–270; blob fc08cb64d832f77b145c4c9702d417d7db49c14f; source 1cde2ff7a71bcf7aecb5d030917b577165135d38
+229:     const create = Effect.fn("Pty.create")(function* (input: CreateInput, options?: CreateOptions) {
+230:       const id = PtyID.ascending()
+231:       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
+232:       const given =
+233:         !options?.exact && Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+234:       const cwd = input.cwd || location.directory
+235:       const base = {
+236:         ...(options?.exact ? {} : process.env),
+237:         ...input.env,
+238:         TERM: "xterm-256color",
+239:         ORCHESTRA_TERMINAL: "1",
+240:       } as Record<string, string>
+241:       const integration = (options?.shellIntegration ?? (!options?.exact && Flag.ORCHESTRA_SHELL_INTEGRATION))
+242:         ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
+243:         : undefined
+244:       const args = integration?.args ?? given
+245:       const env = integration ? { ...base, ...integration.env } : base
+246:       if (process.platform === "win32") {
+247:         env.LC_ALL = "C.UTF-8"
+248:         env.LC_CTYPE = "C.UTF-8"
+249:         env.LANG = "C.UTF-8"
+250:       }
+251:       // Only given sizes reach the backend, so a create without them stays what it was.
+252:       const size = {
+253:         ...(input.cols === undefined ? {} : { cols: clampSize(input.cols) }),
+254:         ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),
+255:       }
+256:       const backend = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
+257:       // Argv and cwd can carry secrets and private paths: log the executable and the argument count only.
+258:       yield* Effect.logInfo("creating session", { id, cmd: command.split(/[\\/]/).pop(), args: args.length, backend })
+259:       const omni =
+260:         backend === "omni"
+261:           ? yield* Effect.gen(function* () {
+262:               const { spawn } = yield* Effect.promise(() => omniPty())
+263:               const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env, ...size }))
+264:               const service = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Service))
+265:               const registry = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Registry))
+266:               return { proc, ...(service ? { adoption: { service, registry } } : {}) }
+267:             })
+268:           : undefined
+269:       const proc =
+270:         omni?.proc ??
+END SOURCE
+
+BEGIN PINNED SOURCE packages/core/src/pty.ts:370–423; blob fc08cb64d832f77b145c4c9702d417d7db49c14f; source 1cde2ff7a71bcf7aecb5d030917b577165135d38
+370:       const subscriber: Subscriber = {
+371:         onData: input.onData,
+372:         onEnd: input.onEnd,
+373:         active: false,
+374:         detached: false,
+375:         pending: [],
+376:       }
+377:       // An exited session still serves its retained output: the client gets the replay, then the end.
+378:       if (session.info.status === "running") session.subscribers.set(token, subscriber)
+379:       else subscriber.end = { exitCode: session.info.exitCode }
+380:       const start = session.bufferCursor
+381:       const end = session.cursor
+382:       const from =
+383:         input.cursor === -1
+384:           ? end
+385:           : typeof input.cursor === "number" && Number.isSafeInteger(input.cursor)
+386:             ? Math.max(0, input.cursor)
+387:             : 0
+388:       // The ring dropped output this client never saw, so the replay starts mid-stream: reset the terminal rather than
+389:       // paint garbage over its old screen, and nudge the program to redraw once the replay is queued.
+390:       const gap = from < start
+391:       const replay = (() => {
+392:         if (!session.buffer || from >= end) return ""
+393:         if (gap) return GAP_RESET + PtyProtocol.afterFirstLine(session.buffer)
+394:         const offset = Math.max(0, from - start)
+395:         if (offset >= session.buffer.length) return ""
+396:         return session.buffer.slice(offset)
+397:       })()
+398:       return {
+399:         replay,
+400:         cursor: end,
+401:         ...(session.shellNonce ? { shellNonce: session.shellNonce } : {}),
+402:         write: (data: string) => {
+403:           if (session.info.status === "running") session.process.write(data)
+404:         },
+405:         activate: () => {
+406:           if (subscriber.active || subscriber.detached) return
+407:           subscriber.active = true
+408:           if (gap && session.info.status === "running") repaint(session)
+409:           try {
+410:             for (const chunk of subscriber.pending) subscriber.onData(chunk)
+411:             subscriber.pending.length = 0
+412:             if (subscriber.end) subscriber.onEnd(subscriber.end)
+413:           } catch {
+414:             session.subscribers.delete(token)
+415:           }
+416:         },
+417:         detach: () => {
+418:           subscriber.detached = true
+419:           subscriber.pending.length = 0
+420:           subscriber.end = undefined
+421:           session.subscribers.delete(token)
+422:         },
+423:       }
+END SOURCE
+
+FIM R02. Reavalie o corpo completo e findings anteriores por TODOS os critérios obrigatórios. Resultado/evidência concisos, até 700 palavras se sem defeito. Não transferir aceite para C01 nem consumidores/gates; AC-02/03 permanecem fases próprias. Não exponha raciocínio privado.

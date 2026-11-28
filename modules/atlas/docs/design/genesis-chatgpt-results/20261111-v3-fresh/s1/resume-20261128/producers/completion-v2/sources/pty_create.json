@@ -1,0 +1,23 @@
+{
+  "id": "pty_create",
+  "start_line": 229,
+  "end_line": 270,
+  "path": "packages/core/src/pty.ts",
+  "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "    const create = Effect.fn(\"Pty.create\")(function* (input: CreateInput, options?: CreateOptions) {\n      const id = PtyID.ascending()\n      const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), \"shell\"))\n      const given =\n        !options?.exact && Shell.login(command) ? [...(input.args ?? []), \"-l\"] : [...(input.args ?? [])]\n      const cwd = input.cwd || location.directory\n      const base = {\n        ...(options?.exact ? {} : process.env),\n        ...input.env,\n        TERM: \"xterm-256color\",\n        ORCHESTRA_TERMINAL: \"1\",\n      } as Record<string, string>\n      const integration = (options?.shellIntegration ?? (!options?.exact && Flag.ORCHESTRA_SHELL_INTEGRATION))\n        ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))\n        : undefined\n      const args = integration?.args ?? given\n      const env = integration ? { ...base, ...integration.env } : base\n      if (process.platform === \"win32\") {\n        env.LC_ALL = \"C.UTF-8\"\n        env.LC_CTYPE = \"C.UTF-8\"\n        env.LANG = \"C.UTF-8\"\n      }\n      // Only given sizes reach the backend, so a create without them stays what it was.\n      const size = {\n        ...(input.cols === undefined ? {} : { cols: clampSize(input.cols) }),\n        ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),\n      }\n      const backend = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === \"off\" ? \"legacy\" : \"omni\"\n      // Argv and cwd can carry secrets and private paths: log the executable and the argument count only.\n      yield* Effect.logInfo(\"creating session\", { id, cmd: command.split(/[\\\\/]/).pop(), args: args.length, backend })\n      const omni =\n        backend === \"omni\"\n          ? yield* Effect.gen(function* () {\n              const { spawn } = yield* Effect.promise(() => omniPty())\n              const proc = yield* Effect.sync(() => spawn(command, args, { name: \"xterm-256color\", cwd, env, ...size }))\n              const service = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Service))\n              const registry = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Registry))\n              return { proc, ...(service ? { adoption: { service, registry } } : {}) }\n            })\n          : undefined\n      const proc =\n        omni?.proc ??",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

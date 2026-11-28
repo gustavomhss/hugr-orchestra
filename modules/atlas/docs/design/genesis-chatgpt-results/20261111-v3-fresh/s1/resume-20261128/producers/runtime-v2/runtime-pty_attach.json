@@ -1,0 +1,23 @@
+{
+  "id": "pty_attach",
+  "start_line": 370,
+  "end_line": 423,
+  "path": "packages/core/src/pty.ts",
+  "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "      const subscriber: Subscriber = {\n        onData: input.onData,\n        onEnd: input.onEnd,\n        active: false,\n        detached: false,\n        pending: [],\n      }\n      // An exited session still serves its retained output: the client gets the replay, then the end.\n      if (session.info.status === \"running\") session.subscribers.set(token, subscriber)\n      else subscriber.end = { exitCode: session.info.exitCode }\n      const start = session.bufferCursor\n      const end = session.cursor\n      const from =\n        input.cursor === -1\n          ? end\n          : typeof input.cursor === \"number\" && Number.isSafeInteger(input.cursor)\n            ? Math.max(0, input.cursor)\n            : 0\n      // The ring dropped output this client never saw, so the replay starts mid-stream: reset the terminal rather than\n      // paint garbage over its old screen, and nudge the program to redraw once the replay is queued.\n      const gap = from < start\n      const replay = (() => {\n        if (!session.buffer || from >= end) return \"\"\n        if (gap) return GAP_RESET + PtyProtocol.afterFirstLine(session.buffer)\n        const offset = Math.max(0, from - start)\n        if (offset >= session.buffer.length) return \"\"\n        return session.buffer.slice(offset)\n      })()\n      return {\n        replay,\n        cursor: end,\n        ...(session.shellNonce ? { shellNonce: session.shellNonce } : {}),\n        write: (data: string) => {\n          if (session.info.status === \"running\") session.process.write(data)\n        },\n        activate: () => {\n          if (subscriber.active || subscriber.detached) return\n          subscriber.active = true\n          if (gap && session.info.status === \"running\") repaint(session)\n          try {\n            for (const chunk of subscriber.pending) subscriber.onData(chunk)\n            subscriber.pending.length = 0\n            if (subscriber.end) subscriber.onEnd(subscriber.end)\n          } catch {\n            session.subscribers.delete(token)\n          }\n        },\n        detach: () => {\n          subscriber.detached = true\n          subscriber.pending.length = 0\n          subscriber.end = undefined\n          session.subscribers.delete(token)\n        },\n      }",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

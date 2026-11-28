@@ -1,0 +1,247 @@
+[
+  {
+    "path": ".orchestra/skills/session-requests-usage/SKILL.md",
+    "zip_entry": "producers/a/sources/.orchestra/skills/session-requests-usage/SKILL.md",
+    "byte_length": 2317,
+    "sha256": "b8e74957b967d293723e756b3c6344813873204d20b26af73ef7ef558ab68be2",
+    "git_blob_sha": "681da4ff9bd3ae17e8181a7d5ed588aa33d4e1e3"
+  },
+  {
+    "path": "AGENTS.md",
+    "zip_entry": "producers/a/sources/AGENTS.md",
+    "byte_length": 16501,
+    "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+    "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+  },
+  {
+    "path": "docs/guides/agents.md",
+    "zip_entry": "producers/a/sources/docs/guides/agents.md",
+    "byte_length": 12564,
+    "sha256": "cd2d380c747e5a477220373b7c97344761795b5af03bd669b543f60d4b8c1b3a",
+    "git_blob_sha": "0a308e86120f9d5cb3235ec1cc14c81029c4f4ae"
+  },
+  {
+    "path": "docs/guides/artifacts-and-processes.md",
+    "zip_entry": "producers/a/sources/docs/guides/artifacts-and-processes.md",
+    "byte_length": 3482,
+    "sha256": "a9346c052cf12ffb98551361d8cba70f7784bd6eaf8b58146cd05c2c6e3d9dfd",
+    "git_blob_sha": "b9e9c90310318f99a1efaa3ae2952026796364c4"
+  },
+  {
+    "path": "docs/guides/session-requests.md",
+    "zip_entry": "producers/a/sources/docs/guides/session-requests.md",
+    "byte_length": 1031,
+    "sha256": "8ebdef173dba97d70aab405d493953aa34b21f61efc90f8ebbd12542ac7084d1",
+    "git_blob_sha": "cc2e9003d697d1afd05009bf7a4ede1167fd142d"
+  },
+  {
+    "path": "docs/specs/v2/session.md",
+    "zip_entry": "producers/a/sources/docs/specs/v2/session.md",
+    "byte_length": 29623,
+    "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+    "git_blob_sha": "e3574b87bc3b12c0eca603f96821a16ec89399fc"
+  },
+  {
+    "path": "docs/specs/v2/tools.md",
+    "zip_entry": "producers/a/sources/docs/specs/v2/tools.md",
+    "byte_length": 9403,
+    "sha256": "d699b711cc97c99cdd85d4cb59a8fab1ea1ad1916c2e7a4492c182d44b95200a",
+    "git_blob_sha": "4dc7bfac225a2f2ecb6235a441f5b19420c1f64c"
+  },
+  {
+    "path": "packages/core/src/agent.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/agent.ts",
+    "byte_length": 3960,
+    "sha256": "e37dc284213ab59730e1250b43d11d29c576b69a3135c57b8c40ce8412f723d6",
+    "git_blob_sha": "53870dcf9d34423ab49a1241e88ec5c5db0985cf"
+  },
+  {
+    "path": "packages/core/src/capability/invocation.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/capability/invocation.ts",
+    "byte_length": 5979,
+    "sha256": "6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae",
+    "git_blob_sha": "e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890"
+  },
+  {
+    "path": "packages/core/src/capability/mcp/README.md",
+    "zip_entry": "producers/a/sources/packages/core/src/capability/mcp/README.md",
+    "byte_length": 11760,
+    "sha256": "f9b7b9df6645714b942f2adc46c9c1a727def9ea39a1f9e33782519bb14ca662",
+    "git_blob_sha": "95f3154aef1625eaac3cd8feb500504996eb074f"
+  },
+  {
+    "path": "packages/core/src/capability/policy.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/capability/policy.ts",
+    "byte_length": 8907,
+    "sha256": "9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022",
+    "git_blob_sha": "d75718a6ac8d6d3e36c5b791301a68a728be26b0"
+  },
+  {
+    "path": "packages/core/src/capability/tools.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/capability/tools.ts",
+    "byte_length": 4027,
+    "sha256": "7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46",
+    "git_blob_sha": "1103ab0c8eb3d9d79cc5ff295cb267847eab629e"
+  },
+  {
+    "path": "packages/core/src/credential/cipher.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/credential/cipher.ts",
+    "byte_length": 6671,
+    "sha256": "599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7",
+    "git_blob_sha": "829dd497e04ee5729a6ab45cd5164bee9430a641"
+  },
+  {
+    "path": "packages/core/src/credential.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/credential.ts",
+    "byte_length": 12749,
+    "sha256": "d091c6c02c5ba51b930ac55cf8ca473d048f8b336e9dccf310e2c2f6f978b2e8",
+    "git_blob_sha": "3161ca0d7f1e4c68a372acb97234eab80a9024b2"
+  },
+  {
+    "path": "packages/core/src/integration.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/integration.ts",
+    "byte_length": 23521,
+    "sha256": "d1952b88c361ed35ac1dd3b2f736b6aa9588bd7e82db37c1f88fb878f09f9796",
+    "git_blob_sha": "d6d9a85e8c9b2737b1f09f95700c05663735e6e4"
+  },
+  {
+    "path": "packages/core/src/mcp.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/mcp.ts",
+    "byte_length": 39585,
+    "sha256": "73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59",
+    "git_blob_sha": "3d2203cb152ef733ca3b7d3231a302416a1f394b"
+  },
+  {
+    "path": "packages/core/src/permission.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/permission.ts",
+    "byte_length": 14981,
+    "sha256": "19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6",
+    "git_blob_sha": "2e3d29d3f1ec1fe805d21af091029721c9fa738e"
+  },
+  {
+    "path": "packages/core/src/plugin/README.md",
+    "zip_entry": "producers/a/sources/packages/core/src/plugin/README.md",
+    "byte_length": 2288,
+    "sha256": "e5a3ebc62eee4c3b135239bb0e81bdf64196e3456ccd5fa8e3f4aa528ead8519",
+    "git_blob_sha": "24afcfd763b3a57d9de07ee4ccbe4691094be044"
+  },
+  {
+    "path": "packages/core/src/plugin.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/plugin.ts",
+    "byte_length": 11007,
+    "sha256": "8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302",
+    "git_blob_sha": "5c3c232bfa46b3f8cfad106c2db4787d6c374818"
+  },
+  {
+    "path": "packages/core/src/question.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/question.ts",
+    "byte_length": 6273,
+    "sha256": "37719b3b7f50d433f9338fb9660514de8fe269f8628e22fb7764680bfabda43c",
+    "git_blob_sha": "cb64c1eb972bc01c6019f52a4fb2e71f37110457"
+  },
+  {
+    "path": "packages/core/src/scheduled-task/port.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/scheduled-task/port.ts",
+    "byte_length": 2092,
+    "sha256": "5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7",
+    "git_blob_sha": "8ea347436e18a93f8dc43926c7fb84108fc0a20c"
+  },
+  {
+    "path": "packages/core/src/session/runner/llm.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/session/runner/llm.ts",
+    "byte_length": 39006,
+    "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+    "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6"
+  },
+  {
+    "path": "packages/core/src/skill.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/skill.ts",
+    "byte_length": 9172,
+    "sha256": "07c062a4f778a329572ba0217df3e72315c61bf5baa135414324af63dd28a18b",
+    "git_blob_sha": "dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0"
+  },
+  {
+    "path": "packages/core/src/state.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/state.ts",
+    "byte_length": 4662,
+    "sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189",
+    "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872"
+  },
+  {
+    "path": "packages/core/src/tool/AGENTS.md",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/AGENTS.md",
+    "byte_length": 4553,
+    "sha256": "381bcdefe9f3f40426c8e955ce3cdbc2295d067a46f568e7623671dfaabf7f24",
+    "git_blob_sha": "98ab3e6cc58259a418b7ab80d939295a21eeba2e"
+  },
+  {
+    "path": "packages/core/src/tool/agent-terminal.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/agent-terminal.ts",
+    "byte_length": 4813,
+    "sha256": "a869ee14c21054a21d7f7adbe289588655f49d3c1cad7d21b6d4f22a30000fc4",
+    "git_blob_sha": "d8cbde3d8436081eb9c3815bea334915e6efef0b"
+  },
+  {
+    "path": "packages/core/src/tool/application-tools.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/application-tools.ts",
+    "byte_length": 1708,
+    "sha256": "612d045ddfea89b2a98b330f390de68d2c1711cf0aaa651fbdd01d10e320900d",
+    "git_blob_sha": "1633897cd6c71cc3abdd22901829b95af2dd96aa"
+  },
+  {
+    "path": "packages/core/src/tool/apply-patch.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/apply-patch.ts",
+    "byte_length": 11258,
+    "sha256": "f0ee81a3b65e46383bd5a2a133279bb82890be5a35f4f7262959e12c459787be",
+    "git_blob_sha": "c8ba6c68abbd121db47475f17163d72c381f55f9"
+  },
+  {
+    "path": "packages/core/src/tool/bash.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/bash.ts",
+    "byte_length": 17377,
+    "sha256": "e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473",
+    "git_blob_sha": "6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b"
+  },
+  {
+    "path": "packages/core/src/tool/read.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/read.ts",
+    "byte_length": 5745,
+    "sha256": "1ca9741cfd96e11391c0cd457a354ad07a45072ed005b2c77b07c2710c6134c1",
+    "git_blob_sha": "1e38e74b7231691a31d2ba217267326e74189558"
+  },
+  {
+    "path": "packages/core/src/tool/registry.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/registry.ts",
+    "byte_length": 17719,
+    "sha256": "276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085",
+    "git_blob_sha": "ab6a6dc2f8c993aec804ebdfc73d89885e8a1453"
+  },
+  {
+    "path": "packages/core/src/tool/tool.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool/tool.ts",
+    "byte_length": 8883,
+    "sha256": "69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e",
+    "git_blob_sha": "2ecde42373ef59b1bf2352e6272141a610feea16"
+  },
+  {
+    "path": "packages/core/src/tool-output-store.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool-output-store.ts",
+    "byte_length": 9643,
+    "sha256": "179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8",
+    "git_blob_sha": "605a99e72e0482a998e2521a26f025589f81da68"
+  },
+  {
+    "path": "packages/core/src/tool-safety-sandbox.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool-safety-sandbox.ts",
+    "byte_length": 44865,
+    "sha256": "bbf5091b282f9fbeea862f3ebc3d9365a87a59fb414197eb6524268fbc32478a",
+    "git_blob_sha": "61a252c15cc35fa534593413045a6f54a15b6665"
+  },
+  {
+    "path": "packages/core/src/tool-safety.ts",
+    "zip_entry": "producers/a/sources/packages/core/src/tool-safety.ts",
+    "byte_length": 35966,
+    "sha256": "c33a3088b858884bbb2b358836df8a971e80575bf3d15eccfe75ac554c1aa015",
+    "git_blob_sha": "effd9af70e95a38de93c9e472bd03728666c4da8"
+  }
+]

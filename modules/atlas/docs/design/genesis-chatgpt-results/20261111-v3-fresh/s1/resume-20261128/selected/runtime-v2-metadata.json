@@ -1,0 +1,126 @@
+{
+  "schema": "genesis-selected-version-change/v1",
+  "key": "s1.core.runtime",
+  "old_body": {
+    "path": "resume-20261128/selected/bodies/s1.core.runtime.md",
+    "encoding": "utf-8",
+    "byte_length": 5451,
+    "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534"
+  },
+  "body": {
+    "path": "resume-20261128/producers/runtime-v2/body.md",
+    "encoding": "utf-8",
+    "byte_length": 6974,
+    "sha256": "01fddc30b43eca26c191999b44e5cebb030aa7d770743827aa4fd0f5794c5108"
+  },
+  "old_production_refs": {
+    "recipe_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+      "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+    },
+    "producer_request_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+      "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+    },
+    "producer_response_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+      "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+    }
+  },
+  "new_production_refs": {
+    "recipe_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/recipe.json",
+      "sha256": "dd1871db2bf421f9b1c55ae0324c779a93badb6aa75c25c87594bf961e0d697c"
+    },
+    "producer_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/request.txt",
+      "sha256": "54a6a0207b897a215481452e02a42bbd5e67fc222b17261030fcde0ea339fb8c"
+    },
+    "producer_response_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/response.md",
+      "sha256": "2019ae7c15c2459746d7c65672d62312b30dc12824bafb421c7976a100a7c792"
+    }
+  },
+  "literal_inputs_consumed_by_producer": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-omni_controls.json",
+      "sha256": "6dc74a7e546730743351b8ed8fd20d31dff543b564d8dd075b13bbb3a7937f52",
+      "byte_length": 2642
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_top.json",
+      "sha256": "53f62c41331c2e93c04992779c1114c578eb28a31d022e444b28afb19c88997d",
+      "byte_length": 1461
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_exit.json",
+      "sha256": "4e2a285375171c6dc284abf206286fd6f7b946e5efb7cfb2e131b024bcd65079",
+      "byte_length": 2231
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_protocol.json",
+      "sha256": "dd748c7aad5a2e9543eaffecd4e920b19258d54e0b0f463e2b9da5922f250a84",
+      "byte_length": 2862
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_remove.json",
+      "sha256": "e8069e5bf35a163a8d9acac408b5a40e5c027368a632de879724105ac70b2169",
+      "byte_length": 1641
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_reset.json",
+      "sha256": "7b1f930bbde1264ee9063b9d8a090571f32b5cd1f3af5e1f73daff46c44f1fe1",
+      "byte_length": 1897
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_tail.json",
+      "sha256": "5642a375a9533efb7208892d473a7fdf7f7d39f93e2ea01230b29841bd6a2174",
+      "byte_length": 1625
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-terminal_skill.json",
+      "sha256": "3b169aa7cf909c70abc75cfae210e0b7c16188414942496ea67973ba153c96d0",
+      "byte_length": 3007
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_ring.json",
+      "sha256": "7f7ed3ebcf8e96736229df939935899eab87cd76613ce6fc35312ab46bdd194f",
+      "byte_length": 2323
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_pending.json",
+      "sha256": "080808bccc91b75c0075f648c4561fc329efb10d5dd09b9c66b8617bc83959e7",
+      "byte_length": 3108
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/runtime-pty_cleanup.json",
+      "sha256": "c3c137dd47cf8b368c1ffc69dfbb59971245c9e8b809a56425cb3e4cce25bb58",
+      "byte_length": 3029
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_constants.json",
+      "sha256": "e28f9bca72e86223ca4cbb6293cb9c58fee19502d6b7170d2956c7b4c99f432d",
+      "byte_length": 1405
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_create.json",
+      "sha256": "4fb5d2cb44a847aa394df40d82d8b30b4427b773a98d3b6961155115d56abecc",
+      "byte_length": 3029
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_attach.json",
+      "sha256": "6251eda7984321b024a35c13532e2a96f5ff27abc1a3b4d1b265326fd7d5533e",
+      "byte_length": 2892
+    }
+  ],
+  "added_source_ref": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/core/src/pty/protocol.ts",
+    "git_blob_sha": "cca1266bd0235f21bbac04454824c04b5c839aeb",
+    "sha256": "a75e3b002aabddb3c9c53a848cfec6650207beca43b471041b21c148587d86f4"
+  },
+  "semantic_state": "Exact pair acceptance is linked through decision-index; runtime binding remains separate."
+}

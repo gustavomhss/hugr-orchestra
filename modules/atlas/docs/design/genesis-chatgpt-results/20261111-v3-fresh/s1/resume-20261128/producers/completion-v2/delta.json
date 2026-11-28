@@ -1,0 +1,220 @@
+{
+  "schema": "genesis-l1-correction-delta/v1",
+  "unit": "C02",
+  "version": 2,
+  "artifact_key": "s1.subslice01.runtime-models-economy-completion",
+  "producer_id": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "state": "REVIEW",
+  "old_body": {
+    "local_path": "/workspace/scratch/dd08f46a3e40/outgoing/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/selected/bodies/s1.subslice01.runtime-models-economy-completion.md",
+    "byte_length": 35465,
+    "sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20"
+  },
+  "body": {
+    "path": "resume-20261128/producers/completion-v2/body.md",
+    "encoding": "utf-8",
+    "byte_length": 37774,
+    "sha256": "b508a88285219a8afac0066e5ef80eda06d8397c266dfb6e9294311d74fc659a"
+  },
+  "byte_offsets": "zero-based; ends exclusive; UTF-8 bytes",
+  "replacement_count": 5,
+  "spans": [
+    {
+      "id": "NUMERIC_SETTLEMENT",
+      "findings": [
+        "J1-C01-F02",
+        "J2-F02"
+      ],
+      "old": "| Usage completa e válida vinculada à tentativa | Settlement idempotente; conflito é distinguido. Valores precisam ser inteiros seguros não negativos, com cached≤input e reasoning≤output. |",
+      "new": "| Usage completa e válida vinculada à tentativa | Settlement idempotente; conflito é distinguido. No novo settlement, `admission.validUsage` exige valores finitos, inteiros e não negativos, com cached≤input e reasoning≤output; esse validador não exige `Number.isSafeInteger`. |",
+      "source_ids": [
+        "admission_589_699"
+      ],
+      "old_byte_start": 16312,
+      "old_byte_end": 16509,
+      "old_identity": {
+        "byte_length": 197,
+        "sha256": "75c11a17220c8d5b341569664cbf6340987ef8faa5aa52d07a330a7fc8dd7764"
+      },
+      "new_identity": {
+        "byte_length": 286,
+        "sha256": "26fe1e6933a01c110a109134c213f1cfb66c5da064512c4cb49a03bb1e221163"
+      },
+      "new_byte_start": 16312,
+      "new_byte_end": 16598
+    },
+    {
+      "id": "NUMERIC_BOUNDARIES",
+      "findings": [
+        "J1-C01-F02",
+        "J2-F02"
+      ],
+      "old": "\n\nO retry após status exige",
+      "new": "\n\nA validação numérica tem fronteiras distintas. No parser do executor, `counted` exige `Number.isSafeInteger` e não negatividade; `usageOf` também exige as dimensões correspondentes para cached/reasoning e verifica suas relações. Usage que esse parser classifica como inválida é recusada por `guardedDispatch` antes de `observeTerminal` e `settleAttempt`. Já `validUsage`, chamado pelo ramo de novo settlement do ledger, usa `Number.isFinite` e `Number.isInteger`, sem checagem de inteiro seguro. Ao calcular a ocupação para uma nova reserva, `reserveAttempt` relê usage persistida, verifica `Number.isSafeInteger` nos valores presentes e conserva hold de autoridade para valores corrompidos; é outra operação, não uma checagem uniforme do settlement. [Fontes: `economy/executor.ts:148–175,340–369`; `economy/admission.ts:466–478,596–613,656–699`.]\n\nO retry após status exige",
+      "source_ids": [
+        "executor",
+        "admission_409_510",
+        "admission_589_699"
+      ],
+      "old_byte_start": 16662,
+      "old_byte_end": 16690,
+      "old_identity": {
+        "byte_length": 28,
+        "sha256": "113b55dc1861ec1e4e7a646cb817f77ac2e2384e9af3403cd0b3e0eedfb7fa21"
+      },
+      "new_identity": {
+        "byte_length": 905,
+        "sha256": "e35276fcad14141430b32c39408dbb634484c6a45cc7c6a2944f8492ce1f0bc1"
+      },
+      "new_byte_start": 16751,
+      "new_byte_end": 17656
+    },
+    {
+      "id": "PTY_RETENTION_REPLAY",
+      "findings": [
+        "J1-C01-F01",
+        "J2-F01"
+      ],
+      "old": "`Pty` pertence à Location, conserva sessões em memória e retém até 25 encerradas. Ring e cursor usam **unidades UTF-16**, com limite nominal `2*1024*1024`, não bytes; cortes evitam dividir surrogate. Attach abaixo do cursor retido provoca reset/replay alinhado/repaint; listeners usam fila pendente antes da ativação. Nem o ring nem essa lógica demonstram backpressure do WebSocket quando o cliente para de ler. O documento terminal registra esse risco como conhecido e não resolvido; a medição nele é histórica, não desta produção. [Fontes: `pty.ts:1–449`; `pty/protocol.ts:1–58`; `docs/specs/terminal/plan.md:27–47`; `docs/specs/terminal/status.md:27–35`.]",
+      "new": "`Pty` pertence à Location e conserva sessões em memória. A retenção de 25 encerradas é uma política de evicção assíncrona: `onExit` inclui o ID na ordem de saída e inicia `runFork`, que publica o evento antes de remover as entradas mais antigas enquanto excederem o limite; não é um teto instantâneo. Ring e cursor usam **unidades UTF-16**, com limite nominal `2*1024*1024`, não bytes; cortes evitam dividir surrogate. Se houver replay de output retido com gap, ele recebe prefixo de reset; `afterFirstLine` remove a primeira linha somente se o primeiro newline tiver índice não negativo e menor que 4096, caso contrário conserva o buffer. Repaint é solicitado ao ativar o subscriber, somente com gap e sessão ainda executando; não é garantia de recuperação visual. Listeners usam fila pendente antes da ativação. Nem o ring nem essa lógica demonstram backpressure do WebSocket quando o cliente para de ler. O documento terminal registra esse risco como conhecido e não resolvido; a medição nele é histórica, não desta produção. [Fontes: `pty.ts:23–39,304–344,370–423`; `pty/protocol.ts:34–48`; `docs/specs/terminal/plan.md:27–47`; `docs/specs/terminal/status.md:27–35`.]",
+      "source_ids": [
+        "pty_constants",
+        "pty_exit",
+        "pty_attach",
+        "pty_protocol"
+      ],
+      "old_byte_start": 21044,
+      "old_byte_end": 21727,
+      "old_identity": {
+        "byte_length": 683,
+        "sha256": "91b9f15bcb2fd4385c88fac986198c066ed915cefb976f1413884bf0f5b6af11"
+      },
+      "new_identity": {
+        "byte_length": 1218,
+        "sha256": "eb762aa60fe02112e649fc594b8c81dcf2eeab5dea1f55d42236338c5e117ad8"
+      },
+      "new_byte_start": 22010,
+      "new_byte_end": 23228
+    },
+    {
+      "id": "PTY_EXACT_INTEGRATION",
+      "findings": [
+        "J1-C01-exact-qualification",
+        "J2-F01"
+      ],
+      "old": "`exact:true` em criação de PTY usa o ambiente explícito, distinto do terminal humano herdado; não ampliar essa garantia para qualquer chamador.",
+      "new": "No caminho básico de criação de PTY, `exact:true` suprime herança de `process.env` e acréscimo automático de `-l`, conservando o ambiente explícito e defaults de terminal. Porém `shellIntegration:true` explícito ainda pode chamar `ShellIntegration.prepare`, substituir argumentos e fundir entradas de ambiente da preparação. Isso descreve o branch de `Pty.create`, não as propriedades finais de qualquer preparação ou chamador. [Fonte adicional: `pty.ts:229–249`.]",
+      "source_ids": [
+        "pty_create"
+      ],
+      "old_byte_start": 22048,
+      "old_byte_end": 22195,
+      "old_identity": {
+        "byte_length": 147,
+        "sha256": "3daba2cd0d708cd81efdef329829b3c5a55ca908876a6f00b94f442e9939dcfe"
+      },
+      "new_identity": {
+        "byte_length": 480,
+        "sha256": "d724d7ee7df2eb7a52587ce72a7c5a06d2614bc27034fb92f48fa1bdd8b56da4"
+      },
+      "new_byte_start": 23549,
+      "new_byte_end": 24029
+    },
+    {
+      "id": "TERMINAL_NORM",
+      "findings": [
+        "J1-C01-F03",
+        "J2-F03"
+      ],
+      "old": "### 5.3 Recursos auxiliares que abrem processos ou rede",
+      "new": "A skill `terminal-maintenance` exige manutenção coordenada: uma implementação PTY serve as duas superfícies HTTP, handlers legados e `@orchestra/server`, e mudanças devem contemplar ambas. Para alteração do protocolo wire, exige `bun run generate` em `packages/client`. São obrigações normativas da skill; geração e verificação das duas superfícies permanecem **NOT_RUN** nesta produção. [Fonte: `.orchestra/skills/terminal-maintenance/SKILL.md:10–29`.]\n\n### 5.3 Recursos auxiliares que abrem processos ou rede",
+      "source_ids": [
+        "terminal_skill"
+      ],
+      "old_byte_start": 23670,
+      "old_byte_end": 23725,
+      "old_identity": {
+        "byte_length": 55,
+        "sha256": "3b16688c976e8ab60112210a015cf9aac75227d6bf645e3301fa877145a3473c"
+      },
+      "new_identity": {
+        "byte_length": 530,
+        "sha256": "ad576dffa1f7f433ec75c4c2bd7e90e8563fa725f52ee453965d93e0500201b3"
+      },
+      "new_byte_start": 25504,
+      "new_byte_end": 26034
+    }
+  ],
+  "untouched_segments": [
+    {
+      "old_start": 0,
+      "old_end": 16312,
+      "new_start": 0,
+      "new_end": 16312,
+      "byte_length": 16312,
+      "sha256": "f54fd5ab4c3b9452efe5e26037723b57d8477dcb2017c6e3303070a9b2823494"
+    },
+    {
+      "old_start": 16509,
+      "old_end": 16662,
+      "new_start": 16598,
+      "new_end": 16751,
+      "byte_length": 153,
+      "sha256": "5a4fd416e0c5f1de7c817cd29a3254a99bb5fec33f05c2148c722314c8910838"
+    },
+    {
+      "old_start": 16690,
+      "old_end": 21044,
+      "new_start": 17656,
+      "new_end": 22010,
+      "byte_length": 4354,
+      "sha256": "243e6b690c52b4b3857f434dd84a5dbbea32ec8159fe2e06060d2aa1f3418829"
+    },
+    {
+      "old_start": 21727,
+      "old_end": 22048,
+      "new_start": 23228,
+      "new_end": 23549,
+      "byte_length": 321,
+      "sha256": "4dfee000ca05e32a3f6d4541a983538b490af47b49de6eeacdc6f716d44dd5d9"
+    },
+    {
+      "old_start": 22195,
+      "old_end": 23670,
+      "new_start": 24029,
+      "new_end": 25504,
+      "byte_length": 1475,
+      "sha256": "d832d5e75f58c165b34c41c648256f68a0131da991201b4db1351421d5043019"
+    },
+    {
+      "old_start": 23725,
+      "old_end": 35465,
+      "new_start": 26034,
+      "new_end": 37774,
+      "byte_length": 11740,
+      "sha256": "c0018254a8134d170cefa07f7c1a41fa7e58eb4b33cb77b6ca774b4b42481e8b"
+    }
+  ],
+  "untouched_byte_count": 34355,
+  "untouched_segments_compared_equal": true,
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/recipe.json",
+    "sha256": "d3898dea7415cc0b01b9dfa33f3af47afd79e2ca7168d0aaa065c8f2e96f3bf7"
+  },
+  "source_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/source-manifest.json",
+    "sha256": "52aa832200326af34df9636fa3553f4d06d73957e21b39468fd6dec5ca73fc85"
+  },
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/request.txt",
+    "sha256": "964e9949198f1a413d376fb7044ebbf7d80af8909504305f8c5e11a41b25115a"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/completion-v2/response.md",
+    "sha256": "d5e22d342471fb98354f5188783dbfe32c43ffec0522c24643ce04d83324fa61"
+  },
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "remaining_evidence_request": "J1-C01-F04 remains open outside this minimal content delta. Original broad source-coverage declarations preserved without new approval."
+}

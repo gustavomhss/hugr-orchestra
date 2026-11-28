@@ -1,0 +1,389 @@
+{
+  "schema": "genesis-l1-correction-recipe/v1",
+  "version": 2,
+  "artifact_key": "s1.core.runtime",
+  "layer": 1,
+  "need": "component",
+  "scope": "orchestra.s1",
+  "producer_id": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/request.txt",
+    "sha256": "54a6a0207b897a215481452e02a42bbd5e67fc222b17261030fcde0ea339fb8c"
+  },
+  "original_body": {
+    "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/runtime.md",
+    "byte_length": 5451,
+    "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534"
+  },
+  "sources_read": [
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-omni_controls.json",
+      "wrapper_identity": {
+        "byte_length": 2642,
+        "sha256": "6dc74a7e546730743351b8ed8fd20d31dff543b564d8dd075b13bbb3a7937f52"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/omni.ts",
+        "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac"
+      },
+      "literal_excerpt": {
+        "start_line": 139,
+        "requested_end_line": 174,
+        "actual_end_line": 174,
+        "byte_length": 2024,
+        "sha256": "a13f2f20c2f7dcf105a0adfa93a17cf07d2d9fa49cb13677b680806d8fbbbdeb"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/omni.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_top.json",
+      "wrapper_identity": {
+        "byte_length": 1461,
+        "sha256": "53f62c41331c2e93c04992779c1114c578eb28a31d022e444b28afb19c88997d"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 1,
+        "requested_end_line": 22,
+        "actual_end_line": 22,
+        "byte_length": 851,
+        "sha256": "b8bd5424e7223abadf9f849e4a6913bf54ecc9965428c5d2e1e5832ffe6ce1ed"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_exit.json",
+      "wrapper_identity": {
+        "byte_length": 2231,
+        "sha256": "4e2a285375171c6dc284abf206286fd6f7b946e5efb7cfb2e131b024bcd65079"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 330,
+        "requested_end_line": 369,
+        "actual_end_line": 369,
+        "byte_length": 1623,
+        "sha256": "b62c37ddefdf0e1759c896c01ab1cfb8f4e82cfddd3c8046ab47ddaea12df38d"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_protocol.json",
+      "wrapper_identity": {
+        "byte_length": 2862,
+        "sha256": "dd748c7aad5a2e9543eaffecd4e920b19258d54e0b0f463e2b9da5922f250a84"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty/protocol.ts",
+        "git_blob_sha": "cca1266bd0235f21bbac04454824c04b5c839aeb"
+      },
+      "literal_excerpt": {
+        "start_line": 1,
+        "requested_end_line": 100,
+        "actual_end_line": 58,
+        "byte_length": 2216,
+        "sha256": "4a2994a10c0bbae3d471962c494d013fba76c3551531ba51e57d9dcc76e9c95c"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty/protocol.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_remove.json",
+      "wrapper_identity": {
+        "byte_length": 1641,
+        "sha256": "e8069e5bf35a163a8d9acac408b5a40e5c027368a632de879724105ac70b2169"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 198,
+        "requested_end_line": 228,
+        "actual_end_line": 227,
+        "byte_length": 1044,
+        "sha256": "0693ad4a0d00a6985429aba42a51c270842d329d6b753dd5588facc35bdf4444"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_reset.json",
+      "wrapper_identity": {
+        "byte_length": 1897,
+        "sha256": "7b1f930bbde1264ee9063b9d8a090571f32b5cd1f3af5e1f73daff46c44f1fe1"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 109,
+        "requested_end_line": 138,
+        "actual_end_line": 138,
+        "byte_length": 1308,
+        "sha256": "8c0e32203423175afe925baded247f6484572ae3d7b339391320c979603e63e6"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_tail.json",
+      "wrapper_identity": {
+        "byte_length": 1625,
+        "sha256": "5642a375a9533efb7208892d473a7fdf7f7d39f93e2ea01230b29841bd6a2174"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 424,
+        "requested_end_line": 470,
+        "actual_end_line": 449,
+        "byte_length": 1042,
+        "sha256": "8deb91c3d684963eb0f19b57f9d66e3f710ea8991bc43d99b1d62b2e6b4b6c8f"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-terminal_skill.json",
+      "wrapper_identity": {
+        "byte_length": 3007,
+        "sha256": "3b169aa7cf909c70abc75cfae210e0b7c16188414942496ea67973ba153c96d0"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+        "git_blob_sha": "610fa93e3ec385790509b0c7fd0181fd30adc727"
+      },
+      "literal_excerpt": {
+        "start_line": 10,
+        "requested_end_line": 29,
+        "actual_end_line": 29,
+        "byte_length": 2380,
+        "sha256": "ebbdc36c5cb04cd84c16c45ac8fd167cd51865841ce54c5a14e646db784bbc89"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/terminal-maintenance/SKILL.md",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_ring.json",
+      "wrapper_identity": {
+        "byte_length": 2323,
+        "sha256": "7f7ed3ebcf8e96736229df939935899eab87cd76613ce6fc35312ab46bdd194f"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 74,
+        "requested_end_line": 108,
+        "actual_end_line": 108,
+        "byte_length": 1735,
+        "sha256": "f0c6b41a8e7bd73c0d4609c0922ff21424906489db68f547f856da363c5f9da9"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_pending.json",
+      "wrapper_identity": {
+        "byte_length": 3108,
+        "sha256": "080808bccc91b75c0075f648c4561fc329efb10d5dd09b9c66b8617bc83959e7"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 271,
+        "requested_end_line": 329,
+        "actual_end_line": 329,
+        "byte_length": 2480,
+        "sha256": "f8f032dbf8bdd74775f98a28aea4b8a0eb2bf099c4b5fa7a92cb5ccf349e1682"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/runtime-pty_cleanup.json",
+      "wrapper_identity": {
+        "byte_length": 3029,
+        "sha256": "c3c137dd47cf8b368c1ffc69dfbb59971245c9e8b809a56425cb3e4cce25bb58"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 139,
+        "requested_end_line": 197,
+        "actual_end_line": 197,
+        "byte_length": 2409,
+        "sha256": "0be7340fcb8bc7f36ccabccd0c2e6fcb475bd68e65d5a227981e91c71a9bc015"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_constants.json",
+      "wrapper_identity": {
+        "byte_length": 1405,
+        "sha256": "e28f9bca72e86223ca4cbb6293cb9c58fee19502d6b7170d2956c7b4c99f432d"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 23,
+        "requested_end_line": 39,
+        "actual_end_line": 39,
+        "byte_length": 772,
+        "sha256": "c525904f312d540754677900367dae49125195f813a08bde469cc79e9abde69f"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only.",
+      "preserved_original_wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_constants.json",
+        "sha256": "e28f9bca72e86223ca4cbb6293cb9c58fee19502d6b7170d2956c7b4c99f432d"
+      }
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_create.json",
+      "wrapper_identity": {
+        "byte_length": 3029,
+        "sha256": "4fb5d2cb44a847aa394df40d82d8b30b4427b773a98d3b6961155115d56abecc"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 229,
+        "requested_end_line": 270,
+        "actual_end_line": 270,
+        "byte_length": 2346,
+        "sha256": "3f5cc81f10cafe1ed8a067b55b3f838865bad5323b6be5f4851ecff8cfec1721"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only.",
+      "preserved_original_wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_create.json",
+        "sha256": "4fb5d2cb44a847aa394df40d82d8b30b4427b773a98d3b6961155115d56abecc"
+      }
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/correct_runtime/runtime-pty_attach.json",
+      "wrapper_identity": {
+        "byte_length": 2892,
+        "sha256": "6251eda7984321b024a35c13532e2a96f5ff27abc1a3b4d1b265326fd7d5533e"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/pty.ts",
+        "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+      },
+      "literal_excerpt": {
+        "start_line": 370,
+        "requested_end_line": 423,
+        "actual_end_line": 423,
+        "byte_length": 2217,
+        "sha256": "8e8213003527a288fe327c56c79178e9131a5cbef85c7404e2750e1993ba3ad4"
+      },
+      "read_depth": "full literal excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "identity_note": "Git blob identifies the complete pinned source; SHA-256 values identify wrapper and literal excerpt only.",
+      "preserved_original_wrapper_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/runtime-v2/runtime-pty_attach.json",
+        "sha256": "6251eda7984321b024a35c13532e2a96f5ff27abc1a3b4d1b265326fd7d5533e"
+      }
+    }
+  ],
+  "source_authorization": "Initial original-body/literal-wrapper scope plus explicit principal authorization to fetch three pinned PTY ranges; authorization text preserved in request.txt.",
+  "new_fetches": {
+    "tool": "GitHub fetch_file",
+    "count": 3,
+    "ranges": [
+      [
+        23,
+        39
+      ],
+      [
+        229,
+        270
+      ],
+      [
+        370,
+        423
+      ]
+    ],
+    "path": "packages/core/src/pty.ts",
+    "all_blobs_equal_existing": true,
+    "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f"
+  },
+  "changes_requested": [
+    "F01: exact Omni refusal predicate including expected=false zero/zero",
+    "F02: exact basic path qualified by explicitly requested shell integration",
+    "F03: asynchronous eviction, conditional afterFirstLine, activation-time repaint, and WebSocket memory boundary",
+    "F04: normative two-surface coordination and client generation obligations"
+  ],
+  "method": "Five exact replacement spans: Omni predicate; PTY paragraph; normative skill addition; expanded PTY source anchor; appended protocol source anchor. All other bytes preserved.",
+  "not_read": [
+    "oracles",
+    "judge requests or responses",
+    "ShellIntegration.prepare implementation"
+  ],
+  "not_run": [
+    "product tests",
+    "process/model/provider execution",
+    "client generation",
+    "runtime proof",
+    "remote writes",
+    "commits"
+  ],
+  "semantic_state": "REVIEW",
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

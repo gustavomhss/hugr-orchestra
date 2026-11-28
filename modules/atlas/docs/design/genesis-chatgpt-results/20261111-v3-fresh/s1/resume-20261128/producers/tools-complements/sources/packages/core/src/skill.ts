@@ -1,0 +1,223 @@
+export * as SkillV2 from "./skill"
+
+import { makeLocationNode } from "./effect/app-node"
+import path from "path"
+import { Context, Effect, Layer, Schema, Types } from "effect"
+import { Skill } from "@orchestra/schema/skill"
+import { AgentV2 } from "./agent"
+import { ConfigMarkdown } from "./config/markdown"
+import { FSUtil } from "./fs-util"
+import { PermissionV2 } from "./permission"
+import { AbsolutePath } from "./schema"
+import { SkillDiscovery } from "./skill/discovery"
+import { SkillFile } from "./skill/file"
+import { State } from "./state"
+
+export const DirectorySource = Skill.DirectorySource
+export type DirectorySource = Skill.DirectorySource
+
+export const UrlSource = Skill.UrlSource
+export type UrlSource = Skill.UrlSource
+
+export const EmbeddedSource = Skill.EmbeddedSource
+export type EmbeddedSource = Skill.EmbeddedSource
+
+export const Source = Skill.Source
+export type Source = typeof Source.Type
+
+export const Info = Skill.Info
+export type Info = Skill.Info
+
+export const available = (skills: ReadonlyArray<Info>, agent: AgentV2.Info) =>
+  skills.filter((skill) => PermissionV2.evaluate("skill", skill.name, agent.permissions).effect !== "deny")
+
+/**
+ * A skill tree's nodes are skills too: a `SKILL.md` inside the directory of another listed `SKILL.md` is a node of that
+ * tree. It loads by name, but only through its parent's "Next level" index; it is never listed on its own.
+ */
+export const nested = (skills: ReadonlyArray<Info>, skill: Info) =>
+  skills.some(
+    (other) =>
+      other !== skill &&
+      path.basename(other.location) === "SKILL.md" &&
+      path.dirname(skill.location).startsWith(path.dirname(other.location) + path.sep),
+  )
+
+/** The direct children of a skill tree node, sorted by name. */
+export const children = (skills: ReadonlyArray<Info>, skill: Info) =>
+  path.basename(skill.location) !== "SKILL.md"
+    ? []
+    : skills
+        .filter(
+          (other) =>
+            path.basename(other.location) === "SKILL.md" &&
+            path.dirname(path.dirname(other.location)) === path.dirname(skill.location),
+        )
+        .toSorted((a, b) => a.name.localeCompare(b.name))
+
+const Frontmatter = Schema.Struct({
+  name: Schema.String.pipe(Schema.optional),
+  description: Schema.String.pipe(Schema.optional),
+  slash: Schema.Boolean.pipe(Schema.optional),
+  // Unknown, not Boolean: YAML reads `internal: yes` as a string, and a bad value must not drop the skill.
+  internal: Schema.Unknown.pipe(Schema.optional),
+})
+const decodeFrontmatter = Schema.decodeUnknownOption(Frontmatter)
+
+export type Data = {
+  sources: Types.DeepMutable<Source>[]
+  /** Keys (`Source.key`) of the sources whose skill names no other source may take. */
+  reserved: string[]
+}
+
+export type Draft = {
+  /**
+   * Adds a source after the others, so its skills win same-name conflicts; `first` puts it before them instead.
+   * `reserved` keeps its skill names its own: a same-name skill from any other source is dropped with a warning.
+   */
+  source: (source: Source, options?: { readonly first?: boolean; readonly reserved?: boolean }) => void
+  list: () => readonly Source[]
+}
+
+export interface Interface extends State.Transformable<Draft> {
+  readonly sources: () => Effect.Effect<Source[]>
+  readonly list: () => Effect.Effect<Info[]>
+  /** Writes a skill file for the catalog (see SkillFile.save) and reloads cached skill files. */
+  readonly save: (directory: string, input: SkillFile.SaveInput) => Effect.Effect<Info, SkillFile.WriteError>
+  readonly remove: (directory: string, location: string) => Effect.Effect<void, SkillFile.WriteError>
+}
+
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Skill") {}
+
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const discovery = yield* SkillDiscovery.Service
+    const fs = yield* FSUtil.Service
+
+    const state = State.create<Data, Draft>({
+      initial: () => ({ sources: [], reserved: [] }),
+      draft: (draft) => ({
+        source: (source, options) => {
+          if (draft.sources.some((item) => Source.equals(item, source))) return
+          if (options?.reserved) draft.reserved.push(Source.key(source))
+          if (options?.first) return void draft.sources.unshift(source as Types.DeepMutable<Source>)
+          draft.sources.push(source as Types.DeepMutable<Source>)
+        },
+        list: () => draft.sources as Source[],
+      }),
+    })
+
+    const load = Effect.fn("SkillV2.load")(function* (source: Source) {
+      const skills: Info[] = []
+      if (source.type === "embedded") return [source.skill]
+      const directories = source.type === "directory" ? [source.path] : yield* discovery.pull(source.url)
+      for (const directory of directories) {
+        const files = yield* fs
+          .glob("{*.md,**/SKILL.md}", { cwd: directory, absolute: true, include: "file", symlink: true, dot: true })
+          .pipe(Effect.catch(() => Effect.succeed([] as string[])))
+        for (const filepath of files.toSorted()) {
+          const content = yield* fs.readFileStringSafe(filepath).pipe(Effect.catch(() => Effect.succeed(undefined)))
+          if (!content) continue
+          const markdown = ConfigMarkdown.parseOption(content)
+          if (!markdown) {
+            yield* Effect.logWarning(`Skipping skill file ${filepath}: its frontmatter could not be parsed`)
+            continue
+          }
+          const frontmatter = decodeFrontmatter(markdown.data).valueOrUndefined
+          if (!frontmatter) {
+            yield* Effect.logWarning(`Skipping skill file ${filepath}: its frontmatter is not valid skill metadata`)
+            continue
+          }
+          const name =
+            frontmatter.name !== undefined
+              ? frontmatter.name
+              : path.dirname(filepath) === directory
+                ? path.basename(filepath, ".md")
+                : undefined
+          if (!name) continue
+          skills.push({
+            name,
+            description: frontmatter.description,
+            slash: frontmatter.slash,
+            ...(frontmatter.internal === true || frontmatter.internal === "yes" ? { internal: true } : {}),
+            location: AbsolutePath.make(filepath),
+            content: markdown.content,
+            mtime: yield* SkillFile.modified(filepath).pipe(Effect.provideService(FSUtil.Service, fs)),
+          })
+        }
+      }
+      return skills
+    })
+
+    // QUESTION(Dax): Should local skill sources invalidate on filesystem watch
+    // events, following the reload policy chosen for other context sources?
+    const cache = new Map<string, Info[]>()
+    // A write bumps the generation, so a list() that started loading before it cannot refill the cache.
+    const generation = { current: 0 }
+    const invalidate = () => {
+      generation.current++
+      cache.clear()
+    }
+    // Each dropped skill file is reported once, not on every list.
+    const shadowed = new Set<string>()
+    const list = Effect.fn("SkillV2.list")(function* () {
+      const started = generation.current
+      const data = state.get()
+      const sources: { key: string; skills: Info[] }[] = []
+      for (const source of data.sources) {
+        const key = Source.key(source)
+        const loaded = cache.get(key) ?? (yield* load(source))
+        if (generation.current === started) cache.set(key, loaded)
+        sources.push({ key, skills: loaded })
+      }
+      const owners = new Map(
+        sources
+          .filter((source) => data.reserved.includes(source.key))
+          .flatMap((source) => source.skills.map((skill) => [skill.name, source.key] as const)),
+      )
+      const skills = new Map<string, Info>()
+      for (const source of sources) {
+        for (const skill of source.skills) {
+          const owner = owners.get(skill.name)
+          if (owner === undefined || owner === source.key) {
+            skills.set(skill.name, skill)
+            continue
+          }
+          if (!shadowed.has(skill.location))
+            yield* Effect.logWarning(`Ignoring skill ${skill.location}: the name ${skill.name} is reserved by a bundled skill`)
+          shadowed.add(skill.location)
+        }
+      }
+      return Array.from(skills.values())
+    })
+
+    const save = Effect.fn("SkillV2.save")(function* (directory: string, input: SkillFile.SaveInput) {
+      const saved = yield* SkillFile.save({ directory, registered: yield* list(), skill: input }).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+      )
+      invalidate()
+      return Info.make({ ...saved, location: AbsolutePath.make(saved.location) })
+    })
+
+    const remove = Effect.fn("SkillV2.remove")(function* (directory: string, location: string) {
+      yield* SkillFile.remove({ directory, registered: yield* list(), location }).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+      )
+      invalidate()
+    })
+
+    return Service.of({
+      transform: state.transform,
+      reload: state.reload,
+      sources: Effect.fn("SkillV2.sources")(function* () {
+        return state.get().sources
+      }),
+      list,
+      save,
+      remove,
+    })
+  }),
+)
+
+export const node = makeLocationNode({ service: Service, layer, deps: [SkillDiscovery.node, FSUtil.node] })

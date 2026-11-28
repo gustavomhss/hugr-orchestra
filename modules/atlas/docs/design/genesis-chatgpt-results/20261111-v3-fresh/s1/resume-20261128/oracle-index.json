@@ -40,13 +40,15 @@
       "owner": "02-tools",
       "commit": "dea8dd6842260e9d6dd79f7203d5aceda5deafa6",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools/oracles/evaluation-v1.json",
-      "local_evidence": "tools_oracle.json"
+      "local_evidence": "tools_oracle.json",
+      "sha256": "bca5e4c0ac9d7cb01ef255dcfbe911b3d7147a5c50852f27c2332417425fe230"
     },
     {
       "owner": "05-libraries-upper",
       "commit": "4fd2b5e7690a486e87fba0abe2daedcdbfd26c88",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/oracles/evaluation-v1.json",
-      "local_evidence": "libs_oracle.json"
+      "local_evidence": "libs_oracle.json",
+      "sha256": "587abf203a63d727a93029222416d1971f72598c343eec9d83920172b038e4ec"
     }
   ]
 }
