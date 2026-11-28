@@ -1,0 +1,9 @@
+{
+  "reviewer": "J1",
+  "purpose": "s2-u1-semantic-restore",
+  "key": "s2.l2.desktop-web",
+  "snapshot_sha256": "289a13cd4a525235423ee21f46c9b32faec65cd4a022b933c8718f8e78a7c9ae",
+  "result_id": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+  "verdict": "PASS",
+  "reason": "The restored L2 body matches the exact M0 body and its stated 120-second wording. Its snapshot is explicitly DERIVED from the observed capture and restored L1 result ID; I do not treat it as an observed callback. I verified the local payload and body hashes. Semantic reuse is appropriate if the actual callback later matches this snapshot and dependency."
+}

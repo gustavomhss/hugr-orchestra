@@ -1,0 +1,66 @@
+{
+  "schema": "genesis-s2-u1-m2-restore-review-packet/v1",
+  "run_id": 46171310792,
+  "scope": "Only the three prior M0 results exactly restored under the M2 input captures; no fresh text generation or admission",
+  "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+  "baseline_candidate": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+  "baseline_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+  "restoration_generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+  "inputs_snapshot_first": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+  "entries": [
+    {
+      "key": "s2.l1.desktop-web",
+      "ready_prior_result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+      "restored_exact_result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "body_cas": "40bd4973ae445c868b853e539845e205fc0f3253c2738ad10722ca7e1c413aa6",
+      "snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+      "snapshot_status": "HOSTED_CALLBACK_OBSERVED",
+      "dependencies": [],
+      "payload": "s2.l1.desktop-web.json",
+      "payload_sha256": "c5908680cd44f8cccf7fa30a5f7e4c3fba3898a35ac05807a635e81a0a3ff49b"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "ready_prior_result": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+      "restored_exact_result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "body_cas": "f5736222ce1ab2c9a50f2a4f0230987887e5ed27f07b9578e3d2cdb6a06cf031",
+      "snapshot_sha256": "289a13cd4a525235423ee21f46c9b32faec65cd4a022b933c8718f8e78a7c9ae",
+      "snapshot_status": "DERIVED_FROM_OBSERVED_CAPTURE_AND_EXACT_PREDECESSOR_IDS",
+      "dependencies": [
+        [
+          "s2.l1.desktop-web",
+          "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58"
+        ]
+      ],
+      "payload": "s2.l2.desktop-web.json",
+      "payload_sha256": "6aa5bc996a27995fc9970496852b957b506a680f6aced69c7fbd07609d246b4a"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "ready_prior_result": "f2885f6d9cf24702935080a454f2a780bea513e8517b19572df074e3f2d2f65c",
+      "restored_exact_result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "body_cas": "21221f99742db11c2a8bf52684855a7be9804c824274bc16e854e0b76e1e5dbb",
+      "snapshot_sha256": "fbfdd494934ecebd227951e1aaeb73885b4a0714ea948fe434a4f01f913f4639",
+      "snapshot_status": "DERIVED_FROM_OBSERVED_CAPTURE_AND_EXACT_PREDECESSOR_IDS",
+      "dependencies": [
+        [
+          "s2.l2.app-session",
+          "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        ],
+        [
+          "s2.l2.design-tui",
+          "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+        ],
+        [
+          "s2.l2.desktop-web",
+          "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+        ]
+      ],
+      "payload": "s2.l3.desktop-web.json",
+      "payload_sha256": "2e66223a531db03d45a434e054c1939a13fbb8270798a3ee58d51f440af9e2eb"
+    }
+  ]
+}

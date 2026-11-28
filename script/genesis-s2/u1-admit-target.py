@@ -167,6 +167,50 @@ def main():
         write(out / 'restoration-summary.json', encoded({'status': 'RESTORED_SOURCE_CAPTURED_AWAITING_RECIPE_EVIDENCE',
             'baseline_candidate': prepared['candidate_id'], 'baseline_manifest': summary['admitted_manifest'], 'generation': restore['target_generation'],
             'source_sha256': sha(original), 'affected': planned['affected'], 'first_snapshot_sha256': sha(snapshots[0].read_bytes()), 'first_key': planned['affected'][0]}))
+        producer_dir = repo / 'script/genesis-s2/u1-producers/m2'
+        manifest_path = producer_dir / 'manifest.json'
+        if not manifest_path.exists():
+            return
+        manifest = json.loads(committed(manifest_path))
+        require(manifest['schema'] == 'genesis-s2-u1-producer-evidence/v1' and manifest['baseline_candidate'] == prepared['candidate_id']
+                and manifest['baseline_manifest'] == summary['admitted_manifest'] and manifest['generation'] == restore['target_generation']
+                and manifest['first_snapshot_sha256'] == sha(snapshots[0].read_bytes()), 'M2 replay manifest mismatch')
+        def evidence(relative):
+            path = (producer_dir / relative).resolve(strict=True)
+            require(path.is_relative_to(producer_dir), 'M2 evidence escaped its scope')
+            return {'path': str(path), 'sha256': sha(committed(path))}
+        producers = [{'key': row['key'], 'snapshot_sha256': row['snapshot_sha256'], 'producer_id': row['producer_id'],
+                      'response': evidence(row['response']), 'decisions': [evidence(p) for p in row['decisions']]} for row in manifest['producers']]
+        sealer = repo / 'script/genesis-s2/u1-output-seal.ts'
+        committed(sealer)
+        seal_request = {**restore, 'planner_file': str(out / 'restoration-plan.stdout'), 'checkpoint_dir': str(out / 'restoration-capture'),
+            'snapshot_file': str(snapshots[0]), 'producers': producers, 'retention_review': evidence(manifest['retention_review']),
+            'output_dir': str(out / 'restoration-sealed')}
+        seal_request_file = out / 'restoration-seal-request.json'
+        write(seal_request_file, encoded(seal_request))
+        staged = invoke('restoration-seal', ['bun', str(sealer), str(seal_request_file)])
+        registry = out / 'restoration-sealed/outputs.json'
+        require(staged['status'] == 'READY_FOR_EXACT_PREPARE' and sha(registry.read_bytes()) == staged['registry_sha256'], 'M2 registry incomplete')
+        restore_checkpoint = out / 'restoration-prepared-checkpoint'
+        prepare_request_file = out / 'restoration-prepare-request.json'
+        write(prepare_request_file, encoded({**restore, 'mode': 'prepare', 'checkpoint_dir': str(restore_checkpoint),
+            'outputs_file': str(registry), 'outputs_sha256': staged['registry_sha256']}))
+        complete = invoke('restoration-prepare', ['bun', str(driver), str(prepare_request_file)])
+        exact_m2 = restore_checkpoint / 'result.json'
+        require(complete['kind'] == 'prepared-evaluation-update' and complete == json.loads(exact_m2.read_bytes()), 'M2 durable result differs')
+        verify_request_file = out / 'restoration-verify-request.json'
+        write(verify_request_file, encoded({**seal_request, 'output_dir': str(out / 'restoration-verified'),
+            'prepared_run_file': str(exact_m2), 'prepared_callbacks_file': str(restore_checkpoint / 'callbacks.jsonl')}))
+        verified = invoke('restoration-verify', ['bun', str(sealer), str(verify_request_file)])
+        original_candidate = json.loads(Path(request['baseline_file']).read_bytes())['candidate']
+        before = {entry['key']: entry['artifact']['result'] for entry in original_candidate['entries']}
+        after = {entry['key']: entry['artifact']['result'] for entry in complete['prepared']['candidate']['entries']}
+        require(before == after and len(after) == 13 and verified['actual_prepare_verification'] == 'MATCHED_OBSERVED_CALLBACKS_AND_RESULTS',
+                'restored M2 does not reproduce all M0 result identities')
+        require(inventory(root) == source_before, 'M2 prepare changed the admitted M1 root')
+        write(out / 'restoration-prepare-summary.json', encoded({'status': 'M2_PREPARED_ALL_M0_RESULTS_RESTORED_REQUIRES_ADMIT',
+            'candidate_id': complete['prepared']['candidate_id'], 'generation': complete['targetGeneration'], 'target_sha256': sha(exact_m2.read_bytes()),
+            'manifest_baseline': summary['admitted_manifest'], 'observed_callbacks': complete['calls'], 'restored_original_results': len(after)}))
         return
     if args.phase == 'finalize':
         require(not out.exists() and sorted(p.name for p in (root / '.atlas').iterdir()) == ['cas'], 'fresh target CAS required')

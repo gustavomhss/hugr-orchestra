@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "s2-u1-semantic-restore",
+  "key": "s2.l3.desktop-web",
+  "snapshot_sha256": "fbfdd494934ecebd227951e1aaeb73885b4a0714ea948fe434a4f01f913f4639",
+  "result_id": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+  "verdict": "PASS",
+  "reason": "O corpo restaurado descreve o timeout de 120 segundos, coerente com a captura examinada; payload e corpo correspondem aos hashes do pacote. O snapshot é uma previsão dependente de confronto no CI. Não recalculei o result ID nem julguei ADMIT ou comportamento em execução."
+}

@@ -1,0 +1,43 @@
+{
+  "schema": "genesis-s2-u1-producer-evidence/v1",
+  "baseline_candidate": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+  "baseline_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+  "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+  "first_snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+  "producers": [
+    {
+      "key": "s2.l1.desktop-web",
+      "snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+      "producer_id": "retained-cas:S2-U1-M0",
+      "response": "s2.l1.desktop-web.json",
+      "decisions": [
+        "s2.l1.desktop-web-j1.json",
+        "s2.l1.desktop-web-j2.json"
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "snapshot_sha256": "289a13cd4a525235423ee21f46c9b32faec65cd4a022b933c8718f8e78a7c9ae",
+      "producer_id": "retained-cas:S2-U1-M0",
+      "response": "s2.l2.desktop-web.json",
+      "decisions": [
+        "s2.l2.desktop-web-j1.json",
+        "s2.l2.desktop-web-j2.json"
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "snapshot_sha256": "fbfdd494934ecebd227951e1aaeb73885b4a0714ea948fe434a4f01f913f4639",
+      "producer_id": "retained-cas:S2-U1-M0",
+      "response": "s2.l3.desktop-web.json",
+      "decisions": [
+        "s2.l3.desktop-web-j1.json",
+        "s2.l3.desktop-web-j2.json"
+      ]
+    }
+  ],
+  "retention_review": "retention-review.json",
+  "reviewer_aliases": {
+    "J1": "/root/s2_admission_j1"
+  }
+}

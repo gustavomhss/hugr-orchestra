@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "s2-u1-semantic-restore",
+  "key": "s2.l1.desktop-web",
+  "snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+  "result_id": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+  "verdict": "PASS",
+  "reason": "O corpo restaurado descreve o limite de 120 segundos, coerente com READY_TIMEOUT na captura cujo hash foi conferido. Payload e corpo correspondem aos hashes do pacote; o callback L1 foi observado no CI. Não recalculei o result ID nem julguei ADMIT ou comportamento em execução."
+}

@@ -1,0 +1,9 @@
+{
+  "reviewer": "J1",
+  "purpose": "s2-u1-semantic-restore",
+  "key": "s2.l1.desktop-web",
+  "snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+  "result_id": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+  "verdict": "PASS",
+  "reason": "The packet records this snapshot as HOSTED_CALLBACK_OBSERVED and ties it to the exact restored M0 body/result. I verified the local payload hash and body SHA; the body contains the 120-second wording. This supports semantic reuse for the stated M2 inputs, not any broader claim."
+}

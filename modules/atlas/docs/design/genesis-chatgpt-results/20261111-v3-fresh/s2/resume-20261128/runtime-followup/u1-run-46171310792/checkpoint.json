@@ -1,0 +1,61 @@
+{
+  "schema": "genesis-s2-u1-admitted-m1-restoration-capture/v1",
+  "run_id": 46171310792,
+  "run_head": "c41f6100967fb8d1ff133a5e2e6a791d909b1bb1",
+  "artifact_id": 15273024378,
+  "artifact_zip_sha256": "ef856f55ab9a3e5032f2f3978a1c7e0c327de393bcf5427baec2c58f33a92fa0",
+  "m1_admission": {
+    "status": "TARGET_ADMITTED_AND_CURRENT_READ",
+    "target": "M1",
+    "candidate_id": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+    "generation": "178e09746ca0e6b5781ea452cf35109976011b135e23020a0482391bf258c3b0",
+    "private_manifest": "c682bfc1c6ff7fd42c789c6cf8d66355b45e306e18871881829ba3ead0d5cddf",
+    "admitted_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+    "reviewed_result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+    "section": "1. Startup, readiness and shutdown",
+    "callback_state_unchanged": true,
+    "seal_sha256": "7d86c878d5b05191fd69f178ac7a6efb1125d9cf3644f23b37ab91e2e9410879"
+  },
+  "read": {
+    "ready": true,
+    "historical": false,
+    "documented_timeout_seconds": 150,
+    "manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+    "result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8"
+  },
+  "m2_restoration_capture": {
+    "status": "RESTORED_SOURCE_CAPTURED_AWAITING_RECIPE_EVIDENCE",
+    "baseline_candidate": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+    "baseline_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+    "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+    "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+    "affected": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "first_snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+    "first_key": "s2.l1.desktop-web"
+  },
+  "file_sha256": {
+    "summary.json": "48a443d40dc6a7346f9f4a651da9f509df6b7d184964587cdce880ecc5e66341",
+    "read-current.stdout": "7be9933162037e1c5f3fc8f9000686846f71651a9a2d51a46e163af1a8efb0d3",
+    "read-current.receipt.json": "654bff3d677ca6abed86d28e123ef0d09ab1e09b26b1b40df779453ad728889f",
+    "resume-lock.json": "bf5e8c02f9fbd64d80fb25ddc5a9d746f7784dcd6ef3a5e11310994a89bb782b",
+    "finalize.receipt.json": "49a9e06d4b96b5b34b9cae24a14ccb3e56d4a8c4fc8b17dcd45610a3b305a913",
+    "admit-target.receipt.json": "156ba41ccfe9d48dcadc58b6b91187ff8898b454a886b626e2cae301a32e545e",
+    "restoration-summary.json": "46fff325aace5116437b3814ef1c244465b334c49592b5cdc3bdeb4585163852",
+    "restoration-plan.stdout": "fd2b0247bb3e8c03a088368ad4c135722bcad515113e71fca127646da9022ec6",
+    "restoration-capture/callbacks.jsonl": "071ecae78bbd1b7dc22372e68b6ec88881c4cc5890b4cce0f83cb6f229c13c97"
+  },
+  "after_run_m2_replay_evidence": {
+    "path": "script/genesis-s2/u1-producers/m2/manifest.json",
+    "sha256": "c6a6acfe8c28409c278bd979ee85726eb811f10327d5dd3cfc6dc74fd4673861"
+  }
+}
