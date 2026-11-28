@@ -34,12 +34,24 @@ returns `review-code-timeout`. An unavailable read does not establish that the c
 
 ## Prepare local review checks
 
-Ask Maestro explicitly: “Prepare `shfmt`, `cargo-machete`, or both for review.” Maestro asks for one-time permission
-before downloads, licence notices or version probes. If permission is declined, preparation does not proceed.
+Ask Maestro explicitly: “Prepare `shfmt`, `cargo-machete`, or `kubeconform` for review.” You can request up to two
+tools together. Maestro asks for one-time permission before downloads, licence notices or version probes. If
+permission is declined, preparation does not proceed.
 
-Analysis with these checks is supported only on Linux x64. After a host restart, ask Maestro to prepare them again.
-Preparation does not enable every check for every project or review. Review cards report actual check statuses and
-reasons, including checks that could not run; a partial preparation is not reported as fully ready.
+Analysis with `shfmt` and `cargo-machete` is supported only on Linux x64. After a host restart, ask Maestro to
+prepare those checks again. Preparation does not enable every check for every project or review. Review cards
+report actual check statuses and reasons, including checks that could not run; a partial preparation is not
+reported as fully ready.
+
+Kubeconform preparation is available on Linux x64 only. It installs the pinned 0.8.0 executable and its required
+notices in Lucy's private cache, checks their integrity, and runs a bounded version probe on every explicit
+preparation. This prepares the tool; it does not enable Kubernetes manifest analysis or qualify schemas,
+compliance results or redistribution. Other hosts return an explicit `not-run` result.
+
+The private Lucy cache does not repair old global installs. An existing global Kubeconform install without the
+required notices stays unchanged and becomes unavailable under the current declaration. Missing or modified
+notices are refused without silently repairing that install. Review reads cannot download a missing sandbox
+runtime; ask Maestro to prepare it explicitly.
 
 To opt in for a project, commit `.orchestra/lucy-local-checks.json` at the review base:
 
@@ -506,3 +518,4 @@ lanes that this setting can accept.
 When a change crosses a trust boundary, or needs a legal or residual-risk call, `lucy` lists a handoff naming the
 lane, the reason and the evidence. The security review and process audit seats are not built yet, so those handoffs
 show `"covered": false`: nobody checked them.
+
