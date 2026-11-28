@@ -25,3 +25,16 @@ test("probe signatures bind the secret, nonce and direction", async () => {
   expect(await wrong.verify("probe-response", nonce, reply)).toBe(false)
   expect(await signer.verify("probe-response", nonce, "invalid")).toBe(false)
 })
+
+test("arm signatures bind the endpoint, exact JSON and direction", async () => {
+  const signer = await ActivityPrivateChannel.signer(new Uint8Array(32).fill(3))
+  const nonce = ActivityPrivateChannel.nonce()
+  const body = '{"previewID":"fixture-id"}'
+  const endpoint = ActivityPrivateChannel.confirmPath
+  const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+  expect(await signer.verifyArm("arm-request", endpoint, nonce, mac, body)).toBe(true)
+  expect(await signer.verifyArm("arm-request", endpoint, nonce, mac, body + "\n")).toBe(false)
+  expect(await signer.verifyArm("arm-request", endpoint, nonce, mac, "\uFEFF" + body)).toBe(false)
+  expect(await signer.verifyArm("arm-request", ActivityPrivateChannel.previewPath, nonce, mac, body)).toBe(false)
+  expect(await signer.verifyArm("arm-response", endpoint, nonce, mac, body)).toBe(false)
+})
