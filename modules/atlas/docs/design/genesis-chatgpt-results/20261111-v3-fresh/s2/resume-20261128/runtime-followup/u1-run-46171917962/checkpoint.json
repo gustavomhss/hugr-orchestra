@@ -1,0 +1,49 @@
+{
+  "schema": "genesis-s2-u1-observed-restored-target-prepare/v1",
+  "run_id": 46171917962,
+  "run_head": "cdd548a2efe6666c4c6c9f13526ef9d8ab04579d",
+  "artifact_id": 15273813657,
+  "artifact_zip_sha256": "23f5ec510529f639dd3e73d6aa3e3a88d7b5c348b669160f67ade08460bc2910",
+  "restoration": {
+    "status": "M2_PREPARED_ALL_M0_RESULTS_RESTORED_REQUIRES_ADMIT",
+    "candidate_id": "5ec27ad30e271c7da130a0cb355d71a17322c0fb97b83c9a0593b061e8db0d88",
+    "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+    "target_sha256": "0af4f68e6dba8eb84f7c9b9808fb0113c703a4eca0fd3a38533e43e33de646ff",
+    "manifest_baseline": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+    "observed_callbacks": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "restored_original_results": 13
+  },
+  "file_sha256": {
+    "restoration-summary.json": "46fff325aace5116437b3814ef1c244465b334c49592b5cdc3bdeb4585163852",
+    "restoration-prepare-summary.json": "a72691af0a8cdea27685ba5e62465b1d4774e2e94a72eda4c9f29e1d84eeb59e",
+    "restoration-prepared-checkpoint/result.json": "0af4f68e6dba8eb84f7c9b9808fb0113c703a4eca0fd3a38533e43e33de646ff",
+    "restoration-prepared-checkpoint/callbacks.jsonl": "f2e87188a94754b11ae15cc10a602f6bad47ee57b4906c172c6490d044a00fe6",
+    "restoration-verified/summary.json": "225b0716f3c67909f4620699c1f9906308bd91806f9da433bfc76d4b5a477232",
+    "restoration-verify.receipt.json": "45035a6f7d5bde22e9187d7d1206fb3d7081428eb76eacee7266530d1d559ce4"
+  },
+  "reviewed_after_run": {
+    "vector": {
+      "path": "script/genesis-s2/u1-target-binding/m2/review-vector.json",
+      "sha256": "b2ab464f91c061fd2427a40bc1522a4787d60e5940cee7cbb2cf034792d5c2d1"
+    },
+    "approval": {
+      "path": "script/genesis-s2/u1-target-binding/m2/approval.json",
+      "sha256": "c9d6f829e80617e6a83d620db8bf42733e10d0dd645583fd8a673178cd5646bd"
+    },
+    "seal": {
+      "path": "script/genesis-s2/u1-target-binding/m2/seal.json",
+      "sha256": "3659aec05a0f6c21435c1c00eea7d12e37fb79357e50eee638123a9fda1da1e4"
+    }
+  },
+  "admitted_in_this_run": false
+}

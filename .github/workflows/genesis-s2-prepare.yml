@@ -38,6 +38,10 @@ on:
         description: Finalize, resume and admit only a separately reviewed exact U1 M1 target
         type: boolean
         default: false
+      admit_exact_m2:
+        description: Finalize, resume and admit only a separately reviewed exact U1 M2 target
+        type: boolean
+        default: false
   push:
     branches: ["genesis-interfaces-resume"]
     paths:
@@ -179,9 +183,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - name: Validate selected phases
-        if: ${{ (inputs.run_reuse_and_drift == true && inputs.admit_exact_m0 != true) || (inputs.admit_exact_m1 == true && inputs.run_reuse_and_drift != true) }}
+        if: ${{ (inputs.run_reuse_and_drift == true && inputs.admit_exact_m0 != true) || (inputs.admit_exact_m1 == true && inputs.run_reuse_and_drift != true) || (inputs.admit_exact_m2 == true && inputs.admit_exact_m1 != true) }}
         run: |
-          echo 'M1 admission requires reuse and drift with an exact M0 admission in the same run.' >&2
+          echo 'Each S2-U1 admission phase requires its reviewed predecessor in the same run.' >&2
           exit 1
       - name: Create fixed runtime
         shell: bash
@@ -249,6 +253,26 @@ jobs:
             --request "$root/changed-prepare.request.json" --target-file "$root/target-checkpoint/result.json" \
             --callback-root "$root/target-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m1 \
             --output "$U1_ROOT/evidence/u1-m1-admission"
+      - name: Finalize the exact M2 private target
+        if: ${{ inputs.admit_exact_m2 == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$U1_ROOT/evidence/u1-m1-admission"
+          python3 script/genesis-s2/u1-admit-target.py --phase finalize --target M2 \
+            --request "$root/restoration-prepare-request.json" --target-file "$root/restoration-prepared-checkpoint/result.json" \
+            --callback-root "$root/restoration-prepared-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m2 \
+            --output "$U1_ROOT/evidence/u1-m2-admission"
+      - name: Resume and read M2, then verify identical reuse
+        if: ${{ inputs.admit_exact_m2 == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$U1_ROOT/evidence/u1-m1-admission"
+          python3 script/genesis-s2/u1-admit-target.py --phase resume --target M2 \
+            --request "$root/restoration-prepare-request.json" --target-file "$root/restoration-prepared-checkpoint/result.json" \
+            --callback-root "$root/restoration-prepared-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m2 \
+            --output "$U1_ROOT/evidence/u1-m2-admission"
       - name: Preserve baseline evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

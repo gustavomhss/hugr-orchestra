@@ -1,0 +1,17 @@
+{
+  "kind": "operator archive of requested exact M2 review",
+  "reviewer": "/root/s2_admission_j2",
+  "response_alias": "/root/s2_admission_j2",
+  "run_id": 46171917962,
+  "artifact_id": 15273813657,
+  "candidate_id": "5ec27ad30e271c7da130a0cb355d71a17322c0fb97b83c9a0593b061e8db0d88",
+  "target_sha256": "0af4f68e6dba8eb84f7c9b9808fb0113c703a4eca0fd3a38533e43e33de646ff",
+  "vector_sha256": "b2ab464f91c061fd2427a40bc1522a4787d60e5940cee7cbb2cf034792d5c2d1",
+  "criteria": [
+    "ADMIT-EXACT-TRANSFORM",
+    "ADMIT-SOURCE-BINDINGS",
+    "ADMIT-SEMANTIC-SCOPE",
+    "ADMIT-ISOLATED-PLAN"
+  ],
+  "scope": "All thirteen entries of the restored 120-second isolated M2 candidate only."
+}

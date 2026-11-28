@@ -1,0 +1,238 @@
+{
+  "kind": "operator exact M2 review vector",
+  "purpose": "isolated-evaluation-admission",
+  "run_id": 46171917962,
+  "artifact_id": 15273813657,
+  "artifact_zip_sha256": "23f5ec510529f639dd3e73d6aa3e3a88d7b5c348b669160f67ade08460bc2910",
+  "candidate_id": "5ec27ad30e271c7da130a0cb355d71a17322c0fb97b83c9a0593b061e8db0d88",
+  "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+  "target_sha256": "0af4f68e6dba8eb84f7c9b9808fb0113c703a4eca0fd3a38533e43e33de646ff",
+  "evaluation": {
+    "phase": "evaluation",
+    "evaluationPlan": "6529883dc731d9dc41768fdaeb78942955dc1c7a43eb938e3ddacf8d292299c2",
+    "obligationSet": "4c76c66cedd2f82c650e6aaee4d486cbd530091f98c90d137fbff11693900059"
+  },
+  "scope": "orchestra.interfaces",
+  "repo_root": "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus-u1-restored",
+  "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+  "baseline_candidate": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+  "baseline_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+  "original_m0_candidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "restored_original_result_count": 13,
+  "observed_callbacks": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "verified_recipes": [
+    {
+      "key": "s2.l1.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "f89f80268108050e47d63f36495bc447ada0b51a1a95f7de2f22475384055de8",
+      "result_id": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "289a13cd4a525235423ee21f46c9b32faec65cd4a022b933c8718f8e78a7c9ae",
+      "result_id": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+    },
+    {
+      "key": "s2.l3.app-session",
+      "action": "replay-original-result",
+      "snapshot_sha256": "0fc22024bc591395d2862374d20feb5d55d4644ef486422d99f69ceadc13a9da",
+      "result_id": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "action": "replay-original-result",
+      "snapshot_sha256": "638eb022c9af2edd683873070d5cbbf5c0f4c463f8a281e88e2ecd24ed5304bb",
+      "result_id": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "fbfdd494934ecebd227951e1aaeb73885b4a0714ea948fe434a4f01f913f4639",
+      "result_id": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "action": "replay-original-result",
+      "snapshot_sha256": "fa8cb330c968537cd3edc298fe4cd1d76f4507aff9e1429b07a996de27809088",
+      "result_id": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "action": "replay-original-result",
+      "snapshot_sha256": "00301a176de98a59b7c0e89d1bd678175a7d28e7b22314059ee565aef5c33852",
+      "result_id": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "action": "replay-original-result",
+      "snapshot_sha256": "2c8207c0ac0e2ff6d73e4b8cfd53ecf9130a62670ae44fa333d0b03dcb92f1d9",
+      "result_id": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    },
+    {
+      "key": "s2.l4.entry",
+      "action": "replay-original-result",
+      "snapshot_sha256": "351c89538dc83e684fe908a25ccbad5ea26af72125265a8c2064332efc8a0858",
+      "result_id": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "retention_review_sha256": "3359cd8ac280f7594bdfb298d7c362d55d6c865d95e381690f688b9a21c18f46"
+    }
+  ],
+  "criteria": [
+    "ADMIT-EXACT-TRANSFORM",
+    "ADMIT-SOURCE-BINDINGS",
+    "ADMIT-SEMANTIC-SCOPE",
+    "ADMIT-ISOLATED-PLAN"
+  ],
+  "entries": [
+    {
+      "key": "s2.l1.desktop-web",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "inputs": "b7a301e9e9f8a714f65e9c909123d00024c6e3f12f98e2b647b5718f90f17c77",
+      "semantic_evidence": [
+        "1a58e9d7a94ee2eebb6d5f4ef995a7a2ce77b3e191bdeeb87ec3ef560f5baa5c",
+        "3aff0f698eda8db9fa616910a66e1ee05a184f7cc59c56e2d8f390289938b28e"
+      ]
+    },
+    {
+      "key": "s2.l1.app-session",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "inputs": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "semantic_evidence": [
+        "a81c82b0a82cff391776d152b327d0810b7d38a1cf10006716367b7765da0835",
+        "c89a9fc74876fba54d153f690fe35dcb32338721a1dd2b6dd7fc0a3ceddcce9e"
+      ]
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "inputs": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "semantic_evidence": [
+        "2f3c2464a482eb4089e33c6d4586ac805422642a8797fc4e2ab488a50117ffe6",
+        "aaa42fa8834cdfefb1710a56a668a07cfc52c9145a98594546f494d5122c0c43"
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "inputs": "5450abe65f2e4e329754bc0bcbfce8c1b0c7d0abd8b92c65c0581c15a8177ec8",
+      "semantic_evidence": [
+        "68e0f5b2d16c8955eb59603a785eb38044590d417f987cbe3d0866f03e06ed0e",
+        "1519777441ab232d74d415289ba63eefdf0aa1fba29fd4fd83c3c26513490846"
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "inputs": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "semantic_evidence": [
+        "e2a6ee84c790d60cafa6c6566ef652b3a27408b10331e3b82d3e5fb74a3cac58",
+        "b588e7634a6f88aebe573a282cab0f513d886fe3bdb6f2d6f942be7a5928e513"
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "inputs": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "semantic_evidence": [
+        "e2a6ee84c790d60cafa6c6566ef652b3a27408b10331e3b82d3e5fb74a3cac58",
+        "b588e7634a6f88aebe573a282cab0f513d886fe3bdb6f2d6f942be7a5928e513"
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "inputs": "5ee5376bae738a5933ce87b190044fa155e00b5d89158b96b59294b8beb1f22b",
+      "semantic_evidence": [
+        "e49865d8d94cd706039232b9985d41b73139e5b0aec95adb454a11658239266b",
+        "7a41f499bcad771072a7061570d4f7ebd83479e60748c91e10bc58ff43ca66eb"
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "inputs": "421bf1cc6d5aac61357f46489c1b0a5bfa2985db145902221962dff765078ebe",
+      "semantic_evidence": [
+        "2cc784af6c94a2db9ba85d70c28cb5854cc57c0e321505dfd99e908f6909db87",
+        "24d65f483646dd2af6659021a55456a447f3eb4d0d3250e7fd8527164a3dcc28"
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "inputs": "5fad554671557f8dbed19beedce73180711be1a40e953fab3661d2bf14b6ae56",
+      "semantic_evidence": [
+        "3ce1496bde0c6ba698d55b0bdd34b07322605bcadb24b4ccbb65a501413f1799",
+        "93b4c2e9f6f8ae7e90694ba4bdd061ddbc2b7c24b85327bae24a0f6ffd22b75b"
+      ]
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "inputs": "2e1170408c07cd847f53039208b8e91005f549c21a2c286bf92802195b7ad01b",
+      "semantic_evidence": [
+        "2af302432fbe7dee74403c3c67dde43d58adb67e923c22041b691479e0ebc3cd",
+        "99fc8d86993f883ceb9ef936da2050e9fcbbeaa79ff6a36ef2fbf2d35d24a8d9"
+      ]
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "inputs": "2a6b6054b46335dc6ad510d12e7e1dafc52905c9319daf87567eeaaf3532508a",
+      "semantic_evidence": [
+        "2af302432fbe7dee74403c3c67dde43d58adb67e923c22041b691479e0ebc3cd",
+        "99fc8d86993f883ceb9ef936da2050e9fcbbeaa79ff6a36ef2fbf2d35d24a8d9"
+      ]
+    },
+    {
+      "key": "s2.l4.app-session",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "inputs": "ff4d39cfcb4e6f726873b104b0fc60a0dd1b8fbf51144df1571d5326d3ea503d",
+      "semantic_evidence": [
+        "2af302432fbe7dee74403c3c67dde43d58adb67e923c22041b691479e0ebc3cd",
+        "99fc8d86993f883ceb9ef936da2050e9fcbbeaa79ff6a36ef2fbf2d35d24a8d9"
+      ]
+    },
+    {
+      "key": "s2.l4.entry",
+      "contract": "20d00ae362c956ffeefad01196e7b76482b55d5efaa4150afaccb40a84641fd3",
+      "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "inputs": "11919529bd0065731f00b8c8a7b90e8a2480e72cea82abc26308914c4b0ebc30",
+      "semantic_evidence": [
+        "dc88b62807dd6ae483369855dad46a90195f45533ccff25ff04bd68c2da0fb99",
+        "e6f355b79799fb135c7c4995416384f9167d8c9ad2bfbdc15d2db465cd549f52"
+      ]
+    }
+  ],
+  "limits": [
+    "Isolated original-source M2 target only",
+    "Four consumer HOLDs remain",
+    "No production activation or S2 closure claim"
+  ]
+}

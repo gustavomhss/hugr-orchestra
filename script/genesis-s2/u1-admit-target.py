@@ -279,6 +279,88 @@ def main():
     pattern = rf'\b(?:{seconds}[ -]?(?:seconds?|s)|{seconds}[ ,_]?000\s*(?:ms|milliseconds?))\b'
     require(re.search(pattern, read['body'], re.IGNORECASE) is not None, 'current section does not report required timeout')
     require(lock['callbacks'] == inventory(callback_root), 'callback occurred after finalization')
+    if args.target == 'M2':
+        before_reuse = inventory(root)
+        reuse_request = out / 'restored-identical-reuse-request.json'
+        reuse_scope = {k: v for k, v in request.items() if k not in ('outputs_file', 'outputs_sha256')}
+        reuse_scope.update({'mode': 'prepare', 'baseline_file': str(out / 'target-prepared.json'), 'manifest': manifest,
+            'target_generation': sha(('s2-u1-target:' + prepared['candidate_id'] + ':identical').encode()),
+            'context': {'evaluation': candidate['evaluation'], 'evaluationCandidate': prepared['candidate_id'], 'generation': target['targetGeneration']},
+            'checkpoint_dir': str(out / 'restored-identical-reuse')})
+        write(reuse_request, encoded(reuse_scope))
+        reused = invoke('restored-identical-reuse', ['bun', str(driver), str(reuse_request)])
+        require(reused['kind'] == 'evaluation-reuse' and reused['prepared'] == prepared and reused['manifest'] == manifest
+                and reused['calls'] == [] and reused['affected'] == [], 'restored identical input did not reuse the admitted result')
+        reused_events = map(json.loads, (out / 'restored-identical-reuse/callbacks.jsonl').read_text().splitlines())
+        require(not any(event['event'].startswith('callback-') for event in reused_events)
+                and inventory(root) == before_reuse, 'restored reuse produced callbacks or wrote state')
+        write(out / 'restored-identical-summary.json', encoded({'status': 'RESTORED_IDENTICAL_REUSE_OBSERVED',
+            'candidate_id': prepared['candidate_id'], 'manifest': manifest, 'callbacks': 0}))
+        controls_root = root.parent / 'corpus-u1-controls'
+        require(not controls_root.exists(), 'fresh negative control root required')
+        shutil.copytree(root, controls_root, ignore=lambda directory, names: set(names) - {'cas'} if Path(directory) == root / '.atlas' else ())
+        require(inventory(controls_root) == [p for p in before_reuse if not p['path'].startswith('.atlas/') or p['path'].startswith('.atlas/cas/')],
+                'control clone drift')
+        def expect_hold(tag, changes, reason, evidence, callback_snapshot=None):
+            checkpoint = out / tag
+            control_path = out / (tag + '-request.json')
+            write(control_path, encoded({**reuse_scope, 'corpus_root': str(controls_root), 'target_repo_root': str(controls_root),
+                'target_generation': sha(('s2-u1-control:' + prepared['candidate_id'] + ':' + tag).encode()),
+                'checkpoint_dir': str(checkpoint), **changes}))
+            control = invoke(tag, ['bun', str(driver), str(control_path)], expected=1)
+            require(control['kind'] == 'hold' and control['reason'] == reason and evidence in control['evidence'], tag + ' refusal mismatch')
+            events = [json.loads(line) for line in (checkpoint / 'callbacks.jsonl').read_text().splitlines()]
+            callbacks = [event for event in events if event['event'].startswith('callback-')]
+            expected = [] if callback_snapshot is None else [('callback-enter', callback_snapshot), ('callback-return', callback_snapshot)]
+            require([(event['event'], event['snapshot_sha256']) for event in callbacks] == expected, tag + ' callback trace mismatch')
+            return {'id': tag, 'reason': reason, 'evidence': control['evidence'], 'callbacks': len(callbacks) // 2}
+        source_path = controls_root / plan['source']['path']
+        original_source = source_path.read_bytes()
+        source_path.unlink()
+        missing = expect_hold('missing-source', {}, 'ownership-input-unavailable', 'file:' + plan['source']['path'])
+        write(source_path, original_source)
+        edge_recipes = [{**recipe, 'required': []} if recipe['key'] == 's2.l2.desktop-web' else recipe for recipe in request['recipes']]
+        edge = expect_hold('missing-required-edge', {'recipes': edge_recipes}, 'ownership-dependency-changed', 's2.l2.desktop-web')
+        recipe = next(r for r in request['recipes'] if r['key'] == 's2.l1.desktop-web')
+        require(recipe['recipe_input_key'].startswith('file:'), 'recipe version control requires a file')
+        recipe_path = controls_root / recipe['recipe_input_key'][5:]
+        recipe_path.write_bytes(recipe_path.read_bytes() + b'\n<!-- Isolated S2-U1 recipe-version control. -->\n')
+        version = expect_hold('old-recipe-version', {}, 'ownership-input-changed', 'recipe')
+        version_events = map(json.loads, (out / 'old-recipe-version/callbacks.jsonl').read_text().splitlines())
+        captured = [event for event in version_events if event['event'] == 'capture' and event['key'] == recipe['recipe_input_key']]
+        require(len(captured) == 1 and captured[0]['sha256'] == sha(recipe_path.read_bytes()), 'changed recipe was not captured')
+        new_capture = captured[0]
+        new_version = new_capture['observation']['version']
+        require(new_version != recipe['recipe_version'], 'recipe control did not change the observed version')
+        registry = json.loads(Path(request['outputs_file']).read_bytes())
+        original_output = next(row for row in registry if row['key'] == recipe['key'])
+        original_snapshot = original_output['snapshot_sha256']
+        snapshot_path = callback_root / ('snapshot-' + original_snapshot + '.json')
+        require(sha(snapshot_path.read_bytes()) == original_snapshot, 'restored snapshot drift')
+        snapshot = json.loads(snapshot_path.read_bytes())
+        snapshot['recipe_version'] = new_version
+        snapshot['captured'] = [[key, new_capture['observation'] if key == new_capture['key'] else observed] for key, observed in snapshot['captured']]
+        snapshot['bytes'] = [{k: new_capture[k] for k in ('key', 'sha256', 'byte_length')} if row['key'] == new_capture['key'] else row for row in snapshot['bytes']]
+        snapshot_hash = sha(json.dumps(snapshot, ensure_ascii=False, separators=(',', ':')).encode())
+        control_recipes = [{**row, 'recipe_version': new_version} if row['key'] == recipe['key'] else row for row in request['recipes']]
+        original_body_raw = Path(original_output['output_file']).read_bytes()
+        require(sha(original_body_raw) == original_output['output_sha256'], 'restored body output drift')
+        body = json.loads(original_body_raw)
+        def semantic_control(tag, updated, reason, detail):
+            output = out / (tag + '-output.json')
+            write(output, encoded({**body, **updated, 'snapshot_sha256': snapshot_hash}))
+            control_registry = out / (tag + '-registry.json')
+            write(control_registry, encoded([{'key': recipe['key'], 'snapshot_sha256': snapshot_hash, 'output_file': str(output),
+                'output_sha256': sha(output.read_bytes()), 'producer_id': 'isolated-negative-control'}]))
+            return expect_hold(tag, {'recipes': control_recipes, 'outputs_file': str(control_registry),
+                'outputs_sha256': sha(control_registry.read_bytes())}, reason, detail, callback_snapshot=snapshot_hash)
+        varied = semantic_control('declared-recipe-result-variation', {'authorityBasis': body['authorityBasis'] + ' (isolated control)'},
+            'ownership-review', 'new-semantic-evidence-required')
+        blocked = semantic_control('blocked-result', {'validity': 'blocked', 'gaps': ['s2-u1-intentional-blocked-result']},
+            'ownership-blocked', 's2-u1-intentional-blocked-result')
+        require(inventory(root) == before_reuse, 'negative control changed the admitted M2 root')
+        write(out / 'negative-controls-summary.json', encoded({'status': 'FROZEN_NEGATIVE_CONTROLS_OBSERVED',
+            'controls': [missing, edge, version, varied, blocked]}))
     write(out / 'summary.json', encoded({'status': 'TARGET_ADMITTED_AND_CURRENT_READ', 'target': args.target, 'candidate_id': prepared['candidate_id'],
           'generation': target['targetGeneration'], 'private_manifest': lock['private_manifest'], 'admitted_manifest': manifest,
           'reviewed_result': seal['expected_result'], 'section': SECTION, 'callback_state_unchanged': True, 'seal_sha256': sha(seal_raw)}))
