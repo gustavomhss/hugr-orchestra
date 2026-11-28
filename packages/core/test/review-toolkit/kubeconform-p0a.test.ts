@@ -29,9 +29,6 @@ const BuildInfo = Schema.Struct({
   GoVersion: Schema.String, Path: Schema.String, Main: Module, Deps: Schema.Array(Module),
   Settings: Schema.Array(Schema.Struct({ Key: Schema.String, Value: Schema.optional(Schema.String) })),
 })
-const Tag = Schema.Struct({ object: Schema.Struct({
-  type: Schema.Literal("commit"), sha: Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/)),
-}) })
 const text = (data: Uint8Array) => new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(data)
 const evidenceRoot = path.resolve(import.meta.dir, "../../../../test-ci-evidence/kubeconform-p0a")
 
@@ -227,19 +224,20 @@ it.live("P0A kubeconform 0.8.0 Linux x64: real provisioner, executable bytes, -v
       return { ...dependency, sourceCandidate: candidate }
     })
 
-    // Actual compiler notices are discovered only after the binary supplies a bounded release tag.
-    // Their measured commit/body hashes are retained for subsequent pinning; no unknown digest is invented here.
-    const tagURL = `https://api.github.com/repos/golang/go/git/ref/tags/${decoded.GoVersion}`
-    const tagBytes = yield* Effect.promise(() => fetched(tagURL, 64 * 1024))
-    yield* Effect.promise(() => retain("compiler-tag-response.json", tagBytes))
-    const tag = Schema.decodeUnknownSync(Schema.fromJsonString(Tag))(text(tagBytes))
+    // The first native measurement observed go1.26.3 before its unauthenticated tag lookup received HTTP 403.
+    // Resolve that observed tag once through the primary source; the hosted run downloads only its pinned notices.
+    expect(decoded.GoVersion).toBe(sources.compiler.version)
+    yield* Effect.promise(() => retain("compiler-source-pin.json", JSON.stringify(sources.compiler, null, 2) + "\n"))
     const compilerNotices: Array<{ path: string; url: string; commit: string; bytes: number; sha256: string }> = []
-    for (const filename of ["LICENSE", "PATENTS"]) {
-      const url = `https://raw.githubusercontent.com/golang/go/${tag.object.sha}/${filename}`
-      const bytes = yield* Effect.promise(() => fetched(url, 128 * 1024))
+    for (const source of sources.compiler.files) {
+      const bytes = yield* Effect.promise(() => fetched(source.url, 128 * 1024))
       expect(bytes.length).toBeGreaterThan(0)
-      yield* Effect.promise(() => retain(`compiler-notices/${filename}`, bytes))
-      compilerNotices.push({ path: filename, url, commit: tag.object.sha, bytes: bytes.length, sha256: hash(bytes) })
+      expect(bytes.length).toBe(source.bytes)
+      expect(hash(bytes)).toBe(source.sha256)
+      const gitBlob = createHash("sha1").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
+      expect(gitBlob).toBe(source.gitBlob)
+      yield* Effect.promise(() => retain(`compiler-notices/${source.path}`, bytes))
+      compilerNotices.push({ path: source.path, url: source.url, commit: sources.compiler.sourceCommit, bytes: bytes.length, sha256: hash(bytes) })
     }
 
     const warm = yield* BackendToolkit.ensure("kubeconform").pipe(Effect.provideService(BackendToolkit.Root, root))

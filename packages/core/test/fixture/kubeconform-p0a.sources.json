@@ -39,6 +39,34 @@
       }
     ]
   },
+  "compiler": {
+    "kind": "observed-binary-compiler",
+    "version": "go1.26.3",
+    "sourceCommit": "2dc996f71b0ebafb77e64433e58333e049488a3c",
+    "sourceRef": "refs/tags/go1.26.3",
+    "sourceRefURL": "https://api.github.com/repos/golang/go/git/ref/tags/go1.26.3",
+    "observedBuildInfo": {
+      "runID": 46101713306,
+      "artifactID": 15245686332,
+      "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4"
+    },
+    "files": [
+      {
+        "path": "LICENSE",
+        "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+        "bytes": 1453,
+        "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/LICENSE",
+        "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+      },
+      {
+        "path": "PATENTS",
+        "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+        "bytes": 1303,
+        "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/PATENTS",
+        "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+      }
+    ]
+  },
   "files": [
     {
       "kind": "notice",
