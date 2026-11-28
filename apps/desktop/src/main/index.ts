@@ -461,7 +461,7 @@ const main = Effect.gen(function* () {
     if (SIDECAR_MODE === "shared") {
       logger.log("starting shared background sidecar")
       const sidecar = yield* Effect.promise(() => shutdown.startup.acquire(
-        (signal) => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME, signal),
+        (signal) => shellEnvReady.then((shellEnv) => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME, signal)),
         () => {},
         // This daemon is shared and deliberately outlives this desktop. Only its startup request is joined.
         async () => {},
