@@ -83,7 +83,9 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
   // Capture the per-launch credentials before an installation can start subprocesses.
   const launchPassword = process.env.ORCHESTRA_SERVER_PASSWORD
   const isolation = Flag.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
+  const applyRoot = Flag.ORCHESTRA_ACTIVITY_APPLY_ROOT
   delete process.env.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
+  delete process.env.ORCHESTRA_ACTIVITY_APPLY_ROOT
   delete process.env.ORCHESTRA_SERVER_PASSWORD
   delete process.env.ORCHESTRA_SERVER_USERNAME
   const privateExtension = input.activityApprovalStdin ? yield* Effect.gen(function* () {
@@ -101,15 +103,20 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
     const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
     const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
     const database = Context.get(scope, Database.Service)
-    // The current Linux worktree observer cannot reserve a directory entry against replacement.
-    const apply = ActivityApplyService.make(database)
-    const arm = process.platform === "linux" ? yield* Effect.gen(function* () {
+    const linux = process.platform === "linux" ? yield* Effect.gen(function* () {
       const { ActivityArmObjects } = yield* Effect.promise(() => import("@orchestra/core/activity-arm-objects"))
       const { AppProcess } = yield* Effect.promise(() => import("@orchestra/core/process"))
       const processScope = yield* Layer.build(AppNodeBuilder.build(AppProcess.node))
       const processService = Context.get(processScope, AppProcess.Service)
-      return ActivityArmLedger.make(database, { ...ActivityArmObjects.make(database, processService), maxSelection: 1 })
-    }) : ActivityArmLedger.make(database)
+      const protection = applyRoot ? yield* Effect.promise(async () => {
+        const { ActivityApplyLinux } = await import("@orchestra/core/activity-apply-linux")
+        return ActivityApplyLinux.open(applyRoot)
+      }) : undefined
+      const objects = ActivityArmObjects.make(database, processService, { inspectProtectedSource: protection?.inspectProtectedSource })
+      return { arm: ActivityArmLedger.make(database, { ...objects, maxSelection: 1 }), apply: protection?.authority(objects) }
+    }) : undefined
+    const arm = linux?.arm ?? ActivityArmLedger.make(database)
+    const apply = ActivityApplyService.make(database, { authority: linux?.apply })
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
     const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
     if (custody) {

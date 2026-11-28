@@ -70,6 +70,27 @@ export async function quarantine(): Promise<Quarantine | undefined> {
   }
 }
 
+export type ProtectedQuarantine = {
+  quarantineProtectedInspect: (root: string, file: string) => Promise<string | null>
+  quarantineProtectedRename: (root: string, source: string, destination: string, identity: string) =>
+    Promise<"accepted" | "refused" | "unknown">
+}
+
+/** This capability uses the credentials of an already trusted Linux sidecar. */
+export async function quarantineLinuxProtected(root: string): Promise<ProtectedQuarantine | undefined> {
+  if (process.platform !== "linux" || process.geteuid?.() !== 0) return undefined
+  const candidate = await load() as Binding & Partial<ProtectedQuarantine & {
+    quarantineProtectedAvailable: (root: string) => Promise<boolean>
+  }>
+  if (typeof candidate.quarantineProtectedAvailable !== "function" ||
+    typeof candidate.quarantineProtectedInspect !== "function" || typeof candidate.quarantineProtectedRename !== "function" ||
+    !(await candidate.quarantineProtectedAvailable(root))) return undefined
+  return {
+    quarantineProtectedInspect: candidate.quarantineProtectedInspect,
+    quarantineProtectedRename: candidate.quarantineProtectedRename,
+  }
+}
+
 type DisposeBatch = (items: readonly { path: string; identity: string }[]) => Promise<"accepted" | "refused" | "unknown">
 
 /** The supported native operation pins the whole batch before disposing any item. */
