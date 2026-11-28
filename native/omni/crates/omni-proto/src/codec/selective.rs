@@ -154,3 +154,6 @@ fn member_count(r: &mut Reader<'_>, nonempty: bool, item_size: usize) -> Result<
     }
     Ok(count)
 }
+
+#[cfg(test)]
+mod tests;

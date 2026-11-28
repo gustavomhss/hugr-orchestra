@@ -1,5 +1,7 @@
 use super::trees::Trees;
-use omni_proto::{Ack, ControlMember, FreezeOutcome, Msg};
+#[cfg(target_os = "linux")]
+use omni_proto::FreezeOutcome;
+use omni_proto::{Ack, ControlMember, Msg};
 
 #[cfg(target_os = "linux")]
 pub(super) fn list(trees: &mut Trees, req: u64, id: u64, out: &mut Vec<Msg>) {

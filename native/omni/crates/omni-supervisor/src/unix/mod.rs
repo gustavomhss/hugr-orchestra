@@ -32,7 +32,7 @@ use std::os::fd::{AsRawFd, OwnedFd};
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, FailCode, INFO_OBSERVE, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, VERSION};
+use omni_proto::{Ack, INFO_OBSERVE, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, VERSION};
 
 use crate::Args;
 use chan::{Chan, Closed};
