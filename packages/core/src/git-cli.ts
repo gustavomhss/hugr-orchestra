@@ -395,7 +395,7 @@ export const layerWith = (window: Duration.Input) => Layer.effect(
 
     const stats = Effect.fn("Git.stats")(function* (cwd: string, ref: string) {
       return nuls(
-        yield* text(["diff", "--no-ext-diff", "--no-renames", "--numstat", "-z", ref, "--", "."], { cwd }),
+        yield* text(["-c", "diff.autoRefreshIndex=false", "diff", "--no-ext-diff", "--no-renames", "--numstat", "-z", ref, "--", "."], { cwd }),
       ).flatMap((item) => {
         const stat = numstat(item)
         return stat ? [stat] : []
