@@ -85,7 +85,9 @@ impl Trees {
             if t.empty_scans >= 2 && reap(t.pid) {
                 t.gone = true;
                 #[cfg(target_os = "linux")]
-                { t.member = None; }
+                {
+                    t.member = None;
+                }
                 t.master = None;
                 exited_msg(id, t, out);
                 for req in t.stop.take().map(|s| s.waiters).unwrap_or_default() {

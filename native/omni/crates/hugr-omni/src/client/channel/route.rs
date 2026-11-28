@@ -253,7 +253,11 @@ impl Gen {
                     let (_, budget) = pending.due.take()?;
                     let waiter = matches!(
                         pending.want,
-                        Want::ObserveList | Want::ObserveFootprint | Want::ControlList | Want::ControlStop { .. } | Want::ControlFreeze
+                        Want::ObserveList
+                            | Want::ObserveFootprint
+                            | Want::ControlList
+                            | Want::ControlStop { .. }
+                            | Want::ControlFreeze
                     )
                     .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
                     Some((pending.want, budget, waiter))

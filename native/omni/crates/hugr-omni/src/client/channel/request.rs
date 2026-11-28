@@ -99,11 +99,12 @@ impl Gen {
                 if !supported {
                     return Err(Error::selective_unavailable());
                 }
-                if st
-                    .pending
-                    .values()
-                    .any(|p| matches!(p.want, Want::ControlList | Want::ControlStop { .. } | Want::ControlFreeze))
-                {
+                if st.pending.values().any(|p| {
+                    matches!(
+                        p.want,
+                        Want::ControlList | Want::ControlStop { .. } | Want::ControlFreeze
+                    )
+                }) {
                     return Err(Error::selective_pending());
                 }
             }

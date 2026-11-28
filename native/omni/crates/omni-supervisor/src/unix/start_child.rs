@@ -1,9 +1,9 @@
-use std::os::fd::{AsFd, OwnedFd};
-use std::time::Instant;
-use omni_proto::{FailCode, Msg, Slot, Spawn};
-use super::{Closed, Sup, fork, spawn};
 use super::spawn::{Fail, Prepared};
 use super::trees::{Exec, MAX_TREES};
+use super::{Closed, Sup, fork, spawn};
+use omni_proto::{FailCode, Msg, Slot, Spawn};
+use std::os::fd::{AsFd, OwnedFd};
+use std::time::Instant;
 
 #[cfg(target_os = "linux")]
 type Member = super::isolated::Member;
@@ -36,7 +36,11 @@ impl Sup {
                 Some((cols, rows)) => {
                     #[cfg(target_os = "linux")]
                     if self.isolation.is_some() {
-                        return Err(Fail::new(FailCode::Invalid, 0, "isolated mode does not admit PTY commands".into()));
+                        return Err(Fail::new(
+                            FailCode::Invalid,
+                            0,
+                            "isolated mode does not admit PTY commands".into(),
+                        ));
                     }
                     let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
                     Ok((pid, Some(master), Exec::Held(held), None))
@@ -51,7 +55,9 @@ impl Sup {
         // Registered before anything that can notice host death, so the child always gets its stop.
         let id = self.trees.insert(pid, master, s.grace_ms, exec);
         #[cfg(target_os = "linux")]
-        if let Some(tree) = self.trees.map.get_mut(&id) { tree.member = member; }
+        if let Some(tree) = self.trees.map.get_mut(&id) {
+            tree.member = member;
+        }
         #[cfg(target_os = "macos")]
         let _ = member;
         let host_end = match self.trees.master(id).map(OwnedFd::try_clone).transpose() {
@@ -74,5 +80,4 @@ impl Sup {
         };
         self.chan.send(&msg, host_end).map_err(|e| Closed::Proto(e.0))
     }
-
 }

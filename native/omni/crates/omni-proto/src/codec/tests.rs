@@ -61,10 +61,27 @@ fn all() -> Vec<Msg> {
                 birth: u64::MAX,
             }],
         },
-        Msg::ControlFreeze { req: 98, id: 7, member: ControlMember { pid: 42, birth: 123 }, paused: true },
-        Msg::ControlFreezeResult { req: 99, id: 7, outcome: crate::FreezeOutcome::Changed },
-        Msg::ControlFreezeResult { req: 100, id: 7, outcome: crate::FreezeOutcome::Refused },
-        Msg::ControlFreezeResult { req: 101, id: 7, outcome: crate::FreezeOutcome::Unknown },
+        Msg::ControlFreeze {
+            req: 98,
+            id: 7,
+            member: ControlMember { pid: 42, birth: 123 },
+            paused: true,
+        },
+        Msg::ControlFreezeResult {
+            req: 99,
+            id: 7,
+            outcome: crate::FreezeOutcome::Changed,
+        },
+        Msg::ControlFreezeResult {
+            req: 100,
+            id: 7,
+            outcome: crate::FreezeOutcome::Refused,
+        },
+        Msg::ControlFreezeResult {
+            req: 101,
+            id: 7,
+            outcome: crate::FreezeOutcome::Unknown,
+        },
         Msg::ObservedTree {
             req: 92,
             id: u64::MAX,

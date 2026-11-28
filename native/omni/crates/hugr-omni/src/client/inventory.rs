@@ -42,9 +42,20 @@ impl Tree {
     pub(crate) async fn freeze_member(&self, member: ControlMember, paused: bool) -> Result<FreezeOutcome, Error> {
         self.sup.home()?;
         let id = self.id;
-        let answer = self.sup.ask(Want::ControlFreeze, id, Class::Normal, |req| Msg::ControlFreeze { req, id, member, paused }).await?;
+        let answer = self
+            .sup
+            .ask(Want::ControlFreeze, id, Class::Normal, |req| Msg::ControlFreeze {
+                req,
+                id,
+                member,
+                paused,
+            })
+            .await?;
         self.sup.home()?;
-        match answer { Answer::ControlFreeze(outcome) => Ok(outcome), other => Err(self.refused("ControlFreeze", &other)) }
+        match answer {
+            Answer::ControlFreeze(outcome) => Ok(outcome),
+            other => Err(self.refused("ControlFreeze", &other)),
+        }
     }
 
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.

@@ -114,7 +114,11 @@ impl Life {
         self.tree.stop_selected(members).await
     }
 
-    pub(super) async fn freeze_member(&self, member: omni_proto::ControlMember, paused: bool) -> Result<crate::FreezeOutcome, Error> {
+    pub(super) async fn freeze_member(
+        &self,
+        member: omni_proto::ControlMember,
+        paused: bool,
+    ) -> Result<crate::FreezeOutcome, Error> {
         self.tree.freeze_member(member, paused).await
     }
 

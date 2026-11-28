@@ -10,19 +10,19 @@
 //! The control thread never writes to stderr (`diag`).
 
 mod chan;
-#[cfg(target_os = "linux")]
-mod isolated;
-mod member_control;
-mod start_child;
 mod diag;
 mod exits;
 mod footprint;
 mod fork;
+#[cfg(target_os = "linux")]
+mod isolated;
+mod member_control;
 mod observe;
 mod procs;
 mod replies;
 mod setup;
 mod spawn;
+mod start_child;
 mod sweep;
 mod sys;
 mod trees;
@@ -126,7 +126,12 @@ impl Sup {
             | if sup.watch.evented() { INFO_PIDFD_HOST } else { 0 }
             | if pidfd { INFO_PIDFD_MEMBERS } else { 0 };
         #[cfg(target_os = "linux")]
-        let info = info | if sup.isolation.is_some() { omni_proto::INFO_MEMBER_FREEZE } else { 0 };
+        let info = info
+            | if sup.isolation.is_some() {
+                omni_proto::INFO_MEMBER_FREEZE
+            } else {
+                0
+            };
         let pid = std::process::id();
         sup.out.push(Msg::Ready {
             version: VERSION,
@@ -250,7 +255,12 @@ impl Sup {
             Msg::Stop { req, id, grace_ms } => trees.stop(Some(req), id, grace_ms, Instant::now(), out),
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
             Msg::ControlList { req, id } => member_control::list(trees, req, id, out),
-            Msg::ControlFreeze { req, id, member, paused } => member_control::freeze(trees, req, id, member, paused, out),
+            Msg::ControlFreeze {
+                req,
+                id,
+                member,
+                paused,
+            } => member_control::freeze(trees, req, id, member, paused, out),
             Msg::ControlStop { req, id, .. } => {
                 out.push(Msg::Ack {
                     req,

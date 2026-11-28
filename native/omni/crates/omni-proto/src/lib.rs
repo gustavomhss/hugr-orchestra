@@ -28,7 +28,11 @@ pub const INFO_MEMBER_FREEZE: u32 = 32;
 
 /// Result of freezing or resuming a verified member.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum FreezeOutcome { Changed, Refused, Unknown }
+pub enum FreezeOutcome {
+    Changed,
+    Refused,
+    Unknown,
+}
 
 /// Observed state after a selective termination request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -209,7 +213,12 @@ pub enum Msg {
         members: Vec<ControlMember>,
     },
     /// host → supervisor: suspend or resume exactly one process identity.
-    ControlFreeze { req: u64, id: u64, member: ControlMember, paused: bool },
+    ControlFreeze {
+        req: u64,
+        id: u64,
+        member: ControlMember,
+        paused: bool,
+    },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.

@@ -27,20 +27,42 @@ pub(super) fn encode_stop(w: &mut Writer, req: u64, id: u64, members: &[ControlM
 }
 
 pub(super) fn encode_freeze(w: &mut Writer, req: u64, id: u64, member: ControlMember, paused: bool) {
-    w.u8(CONTROL_FREEZE).u64(req).u64(id).u32(member.pid).u64(member.birth).bool(paused);
+    w.u8(CONTROL_FREEZE)
+        .u64(req)
+        .u64(id)
+        .u32(member.pid)
+        .u64(member.birth)
+        .bool(paused);
 }
 
 pub(super) fn encode_freeze_result(w: &mut Writer, req: u64, id: u64, outcome: FreezeOutcome) {
-    w.u8(CONTROL_FREEZE_RESULT).u64(req).u64(id).u8(match outcome { FreezeOutcome::Changed => 0, FreezeOutcome::Refused => 1, FreezeOutcome::Unknown => 2 });
+    w.u8(CONTROL_FREEZE_RESULT).u64(req).u64(id).u8(match outcome {
+        FreezeOutcome::Changed => 0,
+        FreezeOutcome::Refused => 1,
+        FreezeOutcome::Unknown => 2,
+    });
 }
 
 pub(super) fn decode_freeze(r: &mut Reader<'_>) -> Result<Msg, ProtoError> {
-    Ok(Msg::ControlFreeze { req: r.u64()?, id: r.u64()?, member: ControlMember { pid: r.u32()?, birth: r.u64()? }, paused: r.bool()? })
+    Ok(Msg::ControlFreeze {
+        req: r.u64()?,
+        id: r.u64()?,
+        member: ControlMember {
+            pid: r.u32()?,
+            birth: r.u64()?,
+        },
+        paused: r.bool()?,
+    })
 }
 
 pub(super) fn decode_freeze_result(r: &mut Reader<'_>) -> Result<Msg, ProtoError> {
     let (req, id, value) = (r.u64()?, r.u64()?, r.u8()?);
-    let outcome = match value { 0 => FreezeOutcome::Changed, 1 => FreezeOutcome::Refused, 2 => FreezeOutcome::Unknown, n => return Err(ProtoError(format!("bad freeze outcome {n}"))) };
+    let outcome = match value {
+        0 => FreezeOutcome::Changed,
+        1 => FreezeOutcome::Refused,
+        2 => FreezeOutcome::Unknown,
+        n => return Err(ProtoError(format!("bad freeze outcome {n}"))),
+    };
     Ok(Msg::ControlFreezeResult { req, id, outcome })
 }
 
