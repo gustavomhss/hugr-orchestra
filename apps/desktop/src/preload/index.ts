@@ -23,6 +23,7 @@ ipcRenderer.on("before-unload", (_: unknown, id: string) => {
 
 const api: ElectronAPI = {
   armActivityQuarantine: (serverURL, request) => ipcRenderer.invoke("activity-arm-quarantine", serverURL, request),
+  stopActivityTree: (serverURL, request) => ipcRenderer.invoke("activity-stop-tree", serverURL, request),
   appDockLinuxOpen: (bounds, profile) => ipcRenderer.invoke("app-dock-linux-open", bounds, profile),
   appDockLinuxList: () => ipcRenderer.invoke("app-dock-linux-list"),
   appDockLinuxInstall: () => ipcRenderer.invoke("app-dock-linux-install"),

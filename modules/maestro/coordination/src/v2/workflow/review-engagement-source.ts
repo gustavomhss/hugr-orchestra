@@ -27,17 +27,9 @@ export function read(git: GitCli.Interface, input: {
   return Effect.gen(function* () {
     const file = input.prepared.files.find((item) => item.path === input.path)
     if (!file || !acceptedRange(input.startLine, input.endLine)) return yield* refuse("engagement-region")
-    if (!capturedOid(file.oid) || !capturedSize(file.size)) return yield* refuse("engagement-blob")
-    const result = yield* git.run(["cat-file", "blob", file.oid], {
-      cwd: input.worktree,
-      env: gitEnv,
-      maxOutputBytes: blobLimit + 1,
-      timeout: "30 seconds",
-    }).pipe(Effect.mapError(() => failure("engagement-blob")))
-    if (result.exitCode !== 0 || result.truncated || result.stdout.length !== file.size) return yield* refuse("engagement-blob")
-    if (blobOid(result.stdout, file.oid) !== file.oid) return yield* refuse("engagement-blob")
+    const bytes = yield* blob(git, input.worktree, file)
     const text = yield* Effect.try({
-      try: () => utf8(result.stdout),
+      try: () => utf8(bytes),
       catch: () => failure("engagement-encoding"),
     })
     const lines = logicalLines(text)
@@ -46,13 +38,26 @@ export function read(git: GitCli.Interface, input: {
     return {
       path: input.path,
       oid: file.oid,
-      sha256: createHash("sha256").update(result.stdout).digest("hex"),
+      sha256: createHash("sha256").update(bytes).digest("hex"),
       startLine: input.startLine,
       endLine: input.endLine,
       text: quoted.join("\n"),
     }
   })
 }
+
+export const blob = Effect.fn("ReviewEngagementSourceV2.blob")(function* (git: GitCli.Interface, worktree: string, file: ReviewEngagementEvidenceV2.File) {
+  if (!capturedOid(file.oid) || !capturedSize(file.size)) return yield* refuse("engagement-blob")
+  const result = yield* git.run(["cat-file", "blob", file.oid], {
+    cwd: worktree,
+    env: gitEnv,
+    maxOutputBytes: blobLimit + 1,
+    timeout: "30 seconds",
+  }).pipe(Effect.mapError(() => failure("engagement-blob")))
+  if (result.exitCode !== 0 || result.truncated || result.stdout.length !== file.size) return yield* refuse("engagement-blob")
+  if (blobOid(result.stdout, file.oid) !== file.oid) return yield* refuse("engagement-blob")
+  return result.stdout
+})
 
 type Reason = "engagement-region" | "engagement-blob" | "engagement-encoding"
 

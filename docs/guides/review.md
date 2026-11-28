@@ -216,11 +216,63 @@ persists `cancelled`; cancelling a concurrent waiter leaves the owner running. A
 outcome. If the process ended before publishing one, the first retry fails closed as `engagement-interrupted`
 (or records expiry if the original deadline passed); it does not resume a provider with a fresh budget.
 
-This first engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
-history and executable verifier probes are unavailable here. Reports explicitly retain unexamined history and
-probes. Audit variant search and fix review are not built in this slice; compliance requests and `fixReview`
-requests refuse before source capture. Artifact behavioral evaluation remains unexamined without owner permission.
-Those limits remain open even when an individual report completes successfully.
+The engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
+history and general verifier probes remain outside engagement scope. Reports record their coverage gaps.
+Diligence reports can qualify a host-run TypeScript probe for an eligible contract finding.
+Compliance requests refuse before source capture. Artifact behavioral evaluation remains unexamined
+without owner permission. Those limits remain open even when an individual report completes successfully.
+
+### Retesting findings after a fix
+
+Use a new request ID in the original Maestro Session. Keep the profile of the original report, choose a local
+Git revision, and set `fixReview` to the original `reportID` and the selected open `findingIDs`. Lucy captures
+only the files required by those findings and their retained evidence. Removed or renamed required files
+stop the request with a source error.
+
+The retest keeps the original review tier and returns a disposition for each selected finding. An independent
+verifier evaluates the current source and any matching analyzer observation. The native oxlint route requires
+a prepared Linux x64 runtime and equivalent execution settings. The scoped TypeScript probe also requires a
+prepared Linux x64 runtime. It checks one captured TypeScript file with host compiler settings and retains
+the original diagnostic and the new compiler outcome. Source imports and directives that suppress diagnostics
+are outside this probe's authority. Unchanged source or unavailable evidence cannot establish resolution.
+Examine the result's questions and coverage gaps before relying on it.
+
+Keep the exact same input for a retry. A completed result has its own report ID and includes the original
+evidence closure in its receipt. Use the retained evidence reader below to inspect it after the review ends.
+The original report and finding status remain available separately.
+
+### Audit variants
+
+Standard and Deep audit reports can expand independently confirmed findings through at most three generations.
+The host validates every initial seed against the captured source and actual verifier reply before admitting a
+proposal Session. It selects one seed by severity, path, line and finding ID. Other initial seeds remain explicitly
+unexpanded. Each continued generation uses a newly confirmed finding from the immediately preceding generation.
+Diligence and artifact reports have zero generations. Quick audit records independent verification as unavailable;
+a blocked entry or a review without a confirmed finding records that no confirmed seed was available.
+
+A proposal makes exactly one native `code_search` attempt over the complete captured authority, using
+`paths:["**"]`, `offset:0`, `limit:200` and `context:0`. That same generalized search must find the known seed at
+its primary path and line. Explicit paths can include admitted files excluded by repository ignore rules; they
+cannot expand the captured authority. Pagination, omitted files, reported skipped binaries or another incomplete search stop
+the generation. A successful tool display alone is insufficient: the host requires the captured operation and
+its matching native completion.
+
+Every new distinct path-and-line match enters the denominator, including a location omitted from the proposal.
+The host excludes the selected seed, already confirmed findings of the same class and locations processed in
+earlier generations. It selects at most four proposed candidates within the pinned verifier budget, then reads
+their captured regions and creates a fresh independent verifier. An unreadable selected region does not free a
+slot for another candidate. Omitted, over-budget, unreadable and invalid-return candidates remain not examined;
+questions remain separate from confirmed findings.
+
+Variant expansion stops when verification is incomplete, no new matches remain, noise is at least half the new
+matches, or the third generation settles. Exactly half noise stops expansion. Counts come from native matches
+and verified dispositions. One original deadline and the existing two-Session running limit cover the whole
+engagement, including variants and final publication. Cancelled, expired or failed requests publish no partial report or evidence receipt.
+
+The report's host-owned `audit:variants` coverage records the actual stop, unexpanded initial seeds and unexamined
+matches. Newly completed evidence receipts also retain the generation journal, native replies and captured regions.
+Replay checks their identities, accounting, lineage and decisions against retained bodies without rerunning Git,
+a model, a search or an analyzer. This evidence supports the report; it grants no execution or merge authority.
 
 ### Reading retained engagement evidence
 
@@ -265,8 +317,10 @@ Exceeding a publication bound fails the request; it does not silently drop evide
 publication use the original review deadline. Cancelled, expired and failed reports have no public receipt and
 name the evidence-publication gap. Their retries retain the same stopped result.
 
-Reports saved by the earlier format retain exact report replay and return explicit `legacy-record` evidence
-unavailability. A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
+Reports saved before durable evidence retain exact report replay and return explicit `legacy-record` evidence
+unavailability. Historical state-v2 / receipt-v1 records retain exact report and evidence replay. New ordinary admissions
+use state-v3 / receipt-v2, including an explicit zero-generation section for diligence and artifact reports.
+A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
 The reader and retry preserve that terminal record and do not rebuild a receipt from model messages or temporary
 files. The evidence receipt carries no governed approval or execution permission.
 
@@ -320,7 +374,7 @@ The same lockfile change also runs pinned syft 1.57.1 as `scan dir:<copy> --base
 
 The same review runs pinned staticcheck 2026.2.2 and pinned gosec 2.30.0 on those packages. The host names both binaries. staticcheck gets no flag. gosec gets only `-fmt sarif` and an output path in the copy. It does not send findings to an external service. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
 
-A Go concurrency candidate can be probed with `go test -race` in the scratch copy. The host fixes that command. The verifier reads the result from the race proof leaf and does not name the command. It does not install Go. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Other languages are not offered that probe, because they have no race detector in the catalog. Mutants, interleave and property still do not run.
+A Go concurrency candidate can be probed with `go test -race` in the scratch copy. The host fixes that command. The verifier reads the result from the race proof leaf and does not name the command. It does not install Go. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Other languages are not offered that probe, because they have no race detector in the catalog. The bounded mutation, interleave and property adapters are described under Advanced proofs below.
 
 The same trusted review also runs one pinned type-aware rule, `typescript(no-floating-promises)`, with the pinned
 `oxlint` and `tsgolint`. It does not install a project tool and it does not search `PATH` for a binary. On a machine
@@ -393,8 +447,9 @@ latest retained analysis rather than the earlier run.
 
 Governed and PR review raw CODE, probe and history output stays in the review's OS-managed temporary analysis cache
 after its Sessions and scratch copies close. Newly completed independent engagements additionally retain their
-required CODE and analysis evidence in the durable receipt described above. History and executable verifier probes
-remain unavailable in independent engagements.
+required CODE and analysis evidence in the durable receipt described above. For eligible diligence findings on
+Linux x64, the scoped TypeScript probe also retains its diagnostic and compiler outcome. History and general
+verifier probes remain outside independent engagement scope.
 
 A card states its limits; it never claims "no problems" for anything it did not look at.
 
@@ -439,9 +494,9 @@ platform, or a tool may be missing. The review policy requires a `blocked` card 
 unless the owner has accepted that unavailable lane where acceptance is allowed.
 
 To accept a lane where allowed, list it in the project setting `review.acceptedUnavailable` (board project settings).
-The method expects the card to report it as `not-run` with its reason, list it under "not examined", and cite other
-recorded checks, such as CI results. The current PR card validator does not independently verify those decisions or
-the completeness of the checks list; an `APPROVE` alone does not establish that this policy was satisfied.
+The card must report the host-retained checks, including unavailable checks and their reasons. The PR validator
+requires an exact match and validates accepted exceptions against host settings. Required acquisition errors and
+unaccepted unavailable checks remain blockers; a required repository-command failure prevents `APPROVE`.
 
 Accept a lane only when you rely on another check for it, such as CI. Security and private-cache refusals are not
 lanes that this setting can accept.

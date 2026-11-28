@@ -19,10 +19,12 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewResultV2 } from "../governance/review-result"
 import type { ReviewCardV2 } from "./review-card"
 import { ReviewChecksV2 } from "./review-checks"
-import { ReviewVerdictV2 } from "./review-verdict"
 import { reorderDiff, sliceDiff } from "./review-diff"
 import { ReviewCandidatesV2 } from "./review-candidates"
 import { ReviewFanoutSupportV2 } from "./review-fanout-support"
+import { ReviewFanoutVerificationV2 } from "./review-fanout-verification"
+import type { ReviewScopedProbeV2 } from "./review-scoped-probe"
+import type { ReviewVariantsV2 } from "./review-variants"
 
 export { baseRules, changes, hunks, RULE_FILES, sliceDiff } from "./review-diff"
 
@@ -38,6 +40,10 @@ export const TAGS = { entry: "review-entry", lens: "review-lens", verify: "revie
 // are maxima under it. Probes keep their own cap inside `ReviewProbe`.
 export const LIMITS = { sessions: 2 } as const
 const RUNNING = Semaphore.makeUnsafe(LIMITS.sessions)
+
+export function withSessionPermit<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> {
+  return RUNNING.withPermit(effect)
+}
 
 // No scope ever carries a delegation tool, whatever the stage sets list.
 const ENTRY_NODE = "lucy-review"
@@ -88,6 +94,7 @@ export type AnalyzeInput = {
 
 /** The Session work the host does for the fan-out; `tools/review.ts` binds it to the process's Session service. */
 export type Port = {
+  readonly scopedProbe?: ReviewScopedProbeV2.Run
   /** Creates the Session (a retried call adopts the one it created) and returns its id. */
   readonly create: (input: { readonly key: string; readonly role: Role }) => Effect.Effect<SessionSchema.ID, Tool.Failure>
   /** Admits the brief and drains the Session; the reply text of that turn. `finish` opens the record tool. */
@@ -135,6 +142,8 @@ export type Stages = {
 
 export type Input = {
   readonly completion?: "governed" | "card-only" | "report"
+  /** New report admissions only; runs once before the final lead turn, under the original request lifetime. */
+  readonly afterConfirmed?: (context: ReviewVariantsV2.Context, stages: ReviewVariantsV2.Stages) => Effect.Effect<ReviewVariantsV2.Result, Tool.Failure, Scope.Scope>
   /** Host-owned captured file authority. Omission preserves the diff-review contract. */
   readonly repositoryFiles?: ReadonlyArray<string>
   readonly request: ReviewRoute.Request
@@ -198,6 +207,7 @@ type Counts = {
 
 export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port: Port) {
   if (input.firstRound && input.firstRound.reviewed === input.reviewed) return { status: "unaddressed" } as Result
+  const runStage: Port["run"] = (sessionID, brief, turn) => withSessionPermit(port.run(sessionID, brief, turn))
   const cardOnly = input.completion === "card-only"
   const report = input.completion === "report"
   if (report && input.repositoryFiles === undefined)
@@ -294,7 +304,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     report ? ReviewFanoutSupportV2.data("captured repository files", JSON.stringify(files)) : ReviewFanoutSupportV2.data("diff", input.facts.diff),
     `Reply with exactly one \`\`\`${TAGS.entry} block holding the entry record as JSON.`,
   ].join("\n\n")
-  const entryReply = yield* RUNNING.withPermit(port.run(lead, entryBrief, { key: "entry", finish: false }))
+  const entryReply = yield* runStage(lead, entryBrief, { key: "entry", finish: false })
   const parsedEntry = ReviewResultV2.parseEntry(ReviewFanoutSupportV2.block(entryReply, TAGS.entry))
   const scopedEntry = parsedEntry && authority ? ReviewFanoutSupportV2.scopeEntry(parsedEntry, authority) : undefined
   const returnedEntry = scopedEntry?.value ?? parsedEntry
@@ -323,6 +333,26 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   // New attempts only. settle already appended the shared ledger; copying it would record the attempt twice.
   const observeProbes = (items: ReadonlyArray<ReviewProbe.Observed>) => {
     for (const item of items) observed.push(item)
+  }
+  const verify = (request: ReviewFanoutVerificationV2.Request, routing: ReviewRouting.Record, intent: ReviewFanoutVerificationV2.Intent) =>
+    ReviewFanoutVerificationV2.run({ catalog, routing, tier, intent, report, analysis, verifierModel: input.verifierModel,
+      reviewed: input.reviewed, ...(port.scopedProbe ? { scopedProbe: port.scopedProbe } : {}), teamStack, auditNodes, allowedNodes: (nodes) => allowedNodes(nodes, routing),
+      tools: stageTools(input.stages.verifier), create: port.create, run: runStage, region: port.region,
+      bind: (child, offered) => bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes }),
+      narrow: (child, scope) => ReviewFanoutSupportV2.narrow(input.store, child, scope),
+      deliver: (scope, node) => ReviewFanoutSupportV2.deliver(input, scope, node),
+      deviations: (child) => ReviewFanoutSupportV2.deviationsOf(input.store, child, "verify", 0), observeProbes }, request)
+  const afterConfirmed = (context: Omit<ReviewVariantsV2.Context, "catalog" | "tier">): Effect.Effect<ReviewVariantsV2.Result, Tool.Failure, Scope.Scope> => {
+    if (!report || !input.afterConfirmed) return Effect.succeed({ confirmed: [], questions: [], notExamined: [],
+      counts: { proposalChildren: 0, verifiers: 0, candidates: 0, dropped: 0 } })
+    return input.afterConfirmed({ ...context, catalog, tier }, {
+      create: port.create, run: runStage, bind,
+      narrow: (child, scope) => ReviewFanoutSupportV2.narrow(input.store, child, scope),
+      deliver: (scope, node) => ReviewFanoutSupportV2.deliver(input, scope, node),
+      tools: stageTools(input.stages.lens).filter((id) => id === "skill" || ReviewSeatTools.CODE.some((tool) => tool === id)),
+      verify: (request) => context.intent ? verify(request, context.routing, context.intent)
+        : Effect.fail(new Tool.Failure({ message: "engagement-report-invalid: variant verification has no admitted intent", metadata: { reason: "engagement-report-invalid" } })),
+    })
   }
   let decisions: ReadonlyArray<ReviewOutcomes.Decision> = []
   const finishTurn = (
@@ -371,7 +401,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         },
         seal,
       }
-      const reply = yield* RUNNING.withPermit(port.run(lead, [
+      const reply = yield* runStage(lead, [
         ...body,
         ...(report ? [`Scope: ${JSON.stringify(input.facts.scope)}`, "The report must omit the verdict property. Return no governed receipt or record call."] : []),
         `reviewMethodVersion: ${method}`,
@@ -384,7 +414,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         key: "finish",
         finish: !standalone,
         ...(standalone ? {} : { authorization }),
-      }))
+      })
       const closing = yield* ReviewFanoutSupportV2.deviationsOf(input.store, lead, "finish", leadEntryDeviations.length)
       return {
         status: "ran",
@@ -401,6 +431,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
 
   if (!entry || !entered) {
     const blocker = value?.status === "blocked" ? value.blocker : { kind: "entry-record", reason: "the entry record did not decode" }
+    const additional = yield* afterConfirmed({ confirmation: "none", confirmations: [], questions: [], routing: afterEntry })
     return yield* finishTurn(
       afterEntry,
       [
@@ -408,6 +439,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
           : cardOnly ? "Stage: finish. The entry stage returned no eligible record; write a blocked card." : "Stage: finish. The entry stage returned no eligible record; write a blocked card and do not call maestro_record_review.",
         `Blocker: ${JSON.stringify(blocker)}`,
         `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(afterEntry)}`,
+        ...(additional.notExamined.length ? [`Coverage the host recorded:\n${JSON.stringify({ examined: [], notExamined: additional.notExamined })}`] : []),
         `Reply with exactly one \`\`\`${ReviewResultV2.TAG} block.`,
       ],
       { lensChildren: 0, verifiers: 0, candidates: 0, confirmed: 0, questions: 0, dropped: 0 },
@@ -445,6 +477,8 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   }
 
   if (tier.id === "quick") {
+    const additional = yield* afterConfirmed({ confirmation: "unavailable", confirmations: [], questions: [], routing: afterEntry,
+      intent: { intent: entry.context.intent, acceptance: entry.context.acceptance } })
     if (port.allow) yield* port.allow(running.map((lens) => lens.id))
     for (const lens of running) observeFor(lead)(capItems(lens.id))
     const nodes = yield* Effect.forEach(running, (lens) => ReviewFanoutSupportV2.deliver(input, leadScope, lens.node))
@@ -460,7 +494,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
           ReviewFanoutSupportV2.data(`analyzer items for ${lens.id} (${capItems(lens.id).length} shown, ${analysis.retained.unread[lens.id] ?? 0} more retained at ${analysis.retained.uri})`, JSON.stringify(capItems(lens.id))),
         ),
         `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(afterEntry)}`,
-        `Coverage the host recorded:\n${JSON.stringify({ examined: running.map((lens) => `lens:${lens.id}`), notExamined: notRun, unread: running.map((lens) => ({ lens: lens.id, count: analysis.retained.unread[lens.id] ?? 0 })) })}`,
+        `Coverage the host recorded:\n${JSON.stringify({ examined: running.map((lens) => `lens:${lens.id}`), notExamined: [...notRun, ...additional.notExamined], unread: running.map((lens) => ({ lens: lens.id, count: analysis.retained.unread[lens.id] ?? 0 })) })}`,
         ...record,
         `Reply with exactly one \`\`\`${ReviewResultV2.TAG} block.`,
       ],
@@ -511,7 +545,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
             : ReviewFanoutSupportV2.data("diff slice", job.sample === 0 ? sliced : reorderDiff(sliced)),
           `Reply with exactly one \`\`\`${TAGS.lens} block holding your lens return as JSON.`,
         ].join("\n\n")
-        const reply = yield* RUNNING.withPermit(port.run(child, brief, { key: "hunt", finish: false }))
+        const reply = yield* runStage(child, brief, { key: "hunt", finish: false })
         const parsed = ReviewResultV2.parseLens(ReviewFanoutSupportV2.block(reply, TAGS.lens))
         const bounded = parsed && authority ? ReviewFanoutSupportV2.scopeLens(parsed, authority) : undefined
         const returned = bounded?.value ?? parsed
@@ -553,98 +587,20 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const queued = batches.flatMap((batch) => batch.candidates.map((candidate) => candidate.id))
   const overflow = merged.filter((candidate) => !queued.includes(candidate.id))
   const intent = { intent: entry.context.intent, acceptance: entry.context.acceptance }
-  // An engagement without a scoped probe executor cannot offer an executable proof rung.
-  const optionsFor = (candidate: ReviewCandidatesV2.Merged) => ReviewCandidatesV2.options(catalog, tier, afterEntry, candidate)
-    .filter((option) => !report || !option.id.startsWith("probe:"))
   const verified = yield* Effect.forEach(
     batches,
-    (batch) =>
-      Effect.gen(function* () {
-        const child = yield* port.create({ key: `verify:${batch.class}`, role: "verifier" })
-        const offered = Object.fromEntries(batch.candidates.map((candidate) =>
-          [candidate.id, optionsFor(candidate).map((option) => option.id)]))
-        const bound = yield* bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes })
-        if (bound.probeUnavailable) {
-          const reason = bound.probeUnavailable
-          for (const [candidate, ids] of Object.entries(offered)) {
-            for (const option of ids) {
-              if (!ReviewProbe.BUILT.some((built) => built === option)) continue
-              observed.push({
-                candidate,
-                option,
-                result: {
-                  status: "not-run",
-                  reason,
-                  durationMs: 0,
-                  excerpt: reason,
-                  uri: "scratch-unavailable",
-                  tree: input.reviewed,
-                },
-              })
-            }
-          }
-        }
-        const proof = catalog.classes.find((entry) => entry.id === batch.class)?.node ?? QUOTE_NODE
-        if (auditNodes.has(proof)) return yield* new Tool.Failure({ message: "Review verifier cannot receive an audit node" })
-        if (!allowedNodes([proof], afterEntry).includes(proof))
-          return yield* new Tool.Failure({ message: "Review verifier cannot receive an unrouted release node" })
-        const scope: SessionScope.Scope = {
-          skills: { entry: proof, allow: allowedNodes(unique([...batch.candidates.map((candidate) => candidate.node), ...teamStack]), afterEntry).filter((name) => name !== proof) },
-          tools: stageTools(input.stages.verifier),
-          budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
-        }
-        yield* ReviewFanoutSupportV2.narrow(input.store, child, scope)
-        const candidates = yield* Effect.forEach(batch.candidates, (candidate) =>
-          port.region(candidate.path, report ? candidate.line : Math.max(1, candidate.line - 3),
-            (candidate.endLine ?? candidate.line) + (report ? 0 : 3)).pipe(
-            Effect.map((region) => ({
-              id: candidate.id,
-              class: candidate.class,
-              node: candidate.node,
-              path: candidate.path,
-              line: candidate.line,
-              ...(candidate.endLine ? { endLine: candidate.endLine } : {}),
-              severity: candidate.severity,
-              claim: candidate.trigger,
-              region,
-              options: optionsFor(candidate),
-            })),
-          ),
-        )
-        const brief = [
-          `Stage: verify, class ${batch.class}. Settle each candidate at the first rung that settles it: confirmed with the highest rung and its evidence, question with the reason, or dropped with the refutation. Take only the options offered for a candidate.`,
-          ...(input.verifierModel === "same"
-            ? ["Another Session raised these candidates. Try to refute each one before you confirm it; confirm only on evidence."]
-            : []),
-          yield* ReviewFanoutSupportV2.deliver(input, scope, proof),
-          DATA_RULE,
-          ReviewFanoutSupportV2.data("intent and acceptance", JSON.stringify(intent)),
-          ReviewFanoutSupportV2.data("candidates", JSON.stringify(candidates)),
-          `Reply with exactly one \`\`\`${TAGS.verify} block holding your verifier return as JSON.`,
-        ].join("\n\n")
-        const reply = yield* RUNNING.withPermit(port.run(child, brief, { key: "verify", finish: false }))
-        const parsed = ReviewResultV2.parseVerifier(ReviewFanoutSupportV2.block(reply, TAGS.verify))
-        const result = parsed ? ReviewResultV2.capVerifier(parsed, batch.candidates.length, child) : undefined
-        const scoped = yield* ReviewFanoutSupportV2.deviationsOf(input.store, child, "verify", 0)
-        return {
-          batch,
-          results: (result?.value.results ?? []).map((verdict) => ReviewVerdictV2.validate(verdict, offered[verdict.candidate] ?? [])),
-          deviations: [
-            ...(bound.probeUnavailable ? [ReviewFanoutSupportV2.deviation("verify", "check-unavailable", bound.probeUnavailable, child)] : []),
-            ...(result?.deviations ?? []),
-            ...scoped,
-            ...(parsed ? [] : [ReviewFanoutSupportV2.deviation("verify", "stage-return", `the ${batch.class} return did not decode`, child)]),
-          ],
-        }
-      }),
+    (batch) => verify({ ...batch, kind: "ordinary" }, afterEntry, intent).pipe(Effect.map((verified) => ({ ...verified, batch }))),
     { concurrency: "unbounded" },
   )
 
   // 7. Finish (the lead, resumed).
   const settled = verified.flatMap((entry) =>
-    entry.batch.candidates.map((candidate) => ({ candidate, result: entry.results.find((item) => item.candidate === candidate.id) })),
+    entry.batch.candidates.map((candidate) => {
+      const verdict = entry.results.find((item) => item.value.candidate === candidate.id)
+      return { candidate, result: verdict?.value, verdict, verified: entry }
+    }),
   )
-  const confirmed = settled.flatMap((item) =>
+  const initialConfirmed = settled.flatMap((item) =>
     item.result?.state === "confirmed"
       ? [
           {
@@ -678,7 +634,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     question: candidate.trigger,
     reason,
   })
-  const questions = [
+  const initialQuestions = [
     ...settled.flatMap((item) =>
       item.result?.state === "question"
         ? [question(item.candidate, item.result.reason)]
@@ -700,18 +656,40 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         : []),
     ],
   }
+  const confirmations = settled.flatMap<ReviewFanoutVerificationV2.InitialConfirmation>((item) => {
+    if (item.result?.state !== "confirmed" || !item.verdict) return []
+    const candidate = item.candidate
+    const result = item.result
+    return [{ candidate, verifierSessionID: item.verified.sessionID,
+      childKey: item.verified.childKey, turnKey: item.verified.turnKey,
+      offered: item.verified.offered[candidate.id] ?? [], candidateCap: item.verified.candidateCap,
+      verdictIndex: item.verdict.index, rawVerdict: item.verdict.raw, verdict: result,
+      finding: { id: candidate.id, path: candidate.path, line: candidate.line,
+        ...(candidate.endLine ? { endLine: candidate.endLine } : {}), severity: candidate.severity,
+        class: candidate.class, node: candidate.node, lens: candidate.lenses[0],
+        rule: result.evidence.kind === "tool" ? result.evidence.rule : candidate.class,
+        trigger: candidate.trigger, rung: result.rung, rungs: result.history.map((entry) => entry.option),
+        history: result.history, evidence: result.evidence } }]
+  })
+  const additional = yield* afterConfirmed({ confirmation: confirmations.length ? "independent" : "none",
+    confirmations, questions: initialQuestions, routing: final, intent })
+  const confirmed = [...initialConfirmed, ...additional.confirmed.map(({ history, ...finding }) => {
+    void history
+    return finding
+  })]
+  const questions = [...initialQuestions, ...additional.questions]
   const counts = {
-    lensChildren: hunts.length,
-    verifiers: verified.length,
-    candidates: merged.length,
+    lensChildren: hunts.length + additional.counts.proposalChildren,
+    verifiers: verified.length + additional.counts.verifiers,
+    candidates: merged.length + additional.counts.candidates,
     confirmed: confirmed.length,
     questions: questions.length,
-    dropped,
+    dropped: dropped + additional.counts.dropped,
   }
   decisions = ReviewCandidatesV2.outcomeDecisions(settled, overflow)
   const coverage = {
     examined: [...running.map((lens) => `lens:${lens.id}`), ...hunts.flatMap((hunt) => (hunt.value?.hunks ?? []).map((hunk) => `${hunk.path}:${hunk.startLine}-${hunk.endLine}`))],
-    notExamined: notRun,
+    notExamined: [...notRun, ...additional.notExamined],
     unread: running.map((lens) => ({ lens: lens.id, count: unreadOf(lens.id) })),
   }
   return yield* finishTurn(

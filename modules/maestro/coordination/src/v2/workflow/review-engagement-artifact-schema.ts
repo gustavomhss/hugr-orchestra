@@ -6,7 +6,9 @@ import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { Tool } from "@orchestra/core/tool/tool"
+import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import { ReviewEngagementReportV2 } from "./review-engagement-report"
+import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 
 export const limits = { body: 16 * 1024 * 1024, total: 64 * 1024 * 1024, artifacts: 256,
   code: 128, receipt: 1024 * 1024, page: 4096, cursor: 1024 } as const
@@ -33,7 +35,7 @@ export const Cursor = Schema.Struct({ schema: Schema.Literal("review-engagement-
 export const Artifact = Schema.Struct({
   artifactID: Digest, kind: Schema.Literals(["code-result", "code-snapshot", "citation", "analysis-result",
     "analysis-retained", "analysis-debt", "analyzer-stdout", "analyzer-stderr", "analyzer-path-map",
-    "analyzer-inputs", "analyzer-config", "analyzer-recipe"]),
+    "analyzer-inputs", "analyzer-config", "analyzer-recipe", "scoped-probe"]),
   sha256: Digest, bytes: Count.check(Schema.isLessThanOrEqualTo(limits.body)), mime: Text,
   complete: Schema.Boolean, uri: Schema.optional(Text),
 })
@@ -98,13 +100,20 @@ export const AnalysisResult = Schema.Struct({
     debt: Schema.Struct({ uri: Text, total: Count }) }),
 })
 export type AnalysisResult = typeof AnalysisResult.Type
-export const Receipt = Schema.Struct({
+export const ReceiptV1 = Schema.Struct({
   schema: Schema.Literal("review-engagement-evidence-v1"), reportID: Digest, inputHash: Digest,
   sessionID: Text, sourceSha256: Digest, budget: ReviewEngagementReportV2.Budget,
   finalAnalysisOperationID: Digest, operations: Schema.Array(Schema.Union([CodeOperation, AnalysisOperation])),
   artifacts: Schema.Array(Artifact), citations: Schema.Array(Schema.Struct({ uri: Text, artifactID: Digest })),
   hostProofs: Schema.Array(Proof), notExamined: Schema.Array(Schema.Struct({ item: Text, reason: Text })),
 })
+export type ReceiptV1 = typeof ReceiptV1.Type
+export const ReceiptV2 = Schema.Struct({ ...ReceiptV1.fields,
+  scopedProbes: Schema.optional(Schema.Array(ReviewScopedProbeEvidenceV2.Reference)),
+  schema: Schema.Literal("review-engagement-evidence-v2"), variants: ReviewVariantSchemaV2.Variants,
+})
+export type ReceiptV2 = typeof ReceiptV2.Type
+export const Receipt = Schema.Union([ReceiptV1, ReceiptV2])
 export type Receipt = typeof Receipt.Type
 export type Bodies = ReadonlyMap<string, Uint8Array>
 

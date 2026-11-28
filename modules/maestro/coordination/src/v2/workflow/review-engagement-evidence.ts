@@ -35,15 +35,30 @@ export function prepare(git: GitCli.Interface, input: {
   readonly worktree: string
   readonly revision?: string
   readonly paths?: readonly string[]
+  readonly requiredFiles?: readonly string[]
 }): Effect.Effect<Prepared, Tool.Failure> {
   return Effect.gen(function* () {
     const revision = input.revision ?? "HEAD"
     if (!boundedRevision(revision)) return yield* refuse("engagement-reference", "revision is not a bounded ref")
     const paths = input.paths ?? ["."]
     if (!boundedScope(paths)) return yield* refuse("engagement-scope", "paths are not a canonical scope")
+    if (input.requiredFiles) {
+      const required = input.requiredFiles
+      if (!boundedScope(required) || required.includes(".") || required.some((file) => !paths.some((prefix) => prefix === "." || covers(prefix, file))) || paths.some((prefix) => !required.some((file) => prefix === "." || covers(prefix, file))))
+        return yield* refuse("engagement-fix-scope-invalid", "paths do not cover exactly the required authority")
+    }
     const commit = yield* resolveCommit(git, input.worktree, revision)
     const entries = yield* listTree(git, input.worktree, commit)
-    const selected = select(entries, paths)
+    if (input.requiredFiles) {
+      for (const file of input.requiredFiles) {
+        const entry = entries.find((item) => entryPath(item) === file)
+        if (!entry || entry.kind === "skip") {
+          const reason = entry ? "required-file-nonregular" : "required-file-missing"
+          return yield* new Tool.Failure({ message: `engagement-fix-source-unavailable: ${file}: ${reason}`, metadata: { reason: "engagement-fix-source-unavailable", gap: { item: file, reason } } })
+        }
+      }
+    }
+    const selected = select(entries, input.requiredFiles ?? paths)
     if (!selected) return yield* refuse("engagement-scope", "a requested path is absent")
     if (selected.files.length === 0) return yield* refuse("engagement-empty", "no reviewable files in scope")
     return {

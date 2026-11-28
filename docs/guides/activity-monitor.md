@@ -81,9 +81,11 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
 
-When an owned Desktop sidecar has a **Ready** object, **Arm quarantine** opens a system dialog with the selected object, its recorded owner, ID and generation. Confirming records **Armed** in the ledger. Cancel leaves the ledger unchanged. Arming leaves the object in its original location.
+**IN/OUT** is read-only. **Ready** reflects the recorded observation. The view also shows saved approvals and flags changed records as **Refused**. Arming requires live verification of the object's identity and eligibility, which is pending.
 
-**Quarantine** shows **collection unavailable** while the filesystem capability is absent. Process control remains unavailable in Trees.
+**Quarantine** shows **collection unavailable** while the filesystem capability is absent.
+
+In Trees on Windows, **Stop members…** on a row with a live member reading shows a native confirmation in the Desktop app. The owned sidecar rereads the supervisor's list and presents the exact member identities and generation. A changed list requires a fresh confirmation. After approval, the supervisor stops only those members. If the supervisor cannot confirm an exit, the outcome stays unconfirmed and you can read the members again.
 
 ## Docker
 
