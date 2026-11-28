@@ -1,0 +1,27 @@
+{
+  "state": "FRESH_SEMANTIC_PAIR_PASS_PENDING_HOSTED_RESULT_REPLAY",
+  "identity": {
+    "state": "PREFLIGHT_HASH_ONLY_HOSTED_SEAL_STILL_REQUIRED",
+    "primary_key": "s2.l1.desktop-web",
+    "snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+    "old_result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+    "result_id": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+    "body_id": "5e800bb408b96c79b416a256591542d43f6553ce7e16bc922b9b146902cc9b09",
+    "body_sha256": "a93c5c536094fcb195b8b75f61f829aa7953861f5f99dc2e738d33a15329ebd7",
+    "producer_response_sha256": "fdd1146c9de64eb32bf75c0dd8c80d092e24ba3ab970377197e8e98244e7b001",
+    "authority_basis_serialized": "native authored provenance values, serialized as text to satisfy Atlas authority basis schema",
+    "gaps": 1,
+    "evidence": 5
+  },
+  "reviewers": {
+    "/root/s2_admission_j1": {
+      "host_event": "amsg_01a2231d-78aa-76a2-9ff8-5fb9473451a4",
+      "response_sha256": "1ad463b4d70b4a040602935ee5e7d93d5be21c9735db477f8041b33b96106017"
+    },
+    "/root/s2_admission_j2": {
+      "host_event": "amsg_01a2231d-af58-7551-bb98-fc7149e59907",
+      "response_sha256": "7ed3ed1ddde29949de3b9b906fe359ae9108fc7423524f0092290d36c6bc5e4b"
+    }
+  },
+  "before_current_proof": "Hosted sealer run 46168214221 reached the expected first snapshot, but the native authored provenance was an object, outside the text authority basis schema. Operator normalized the same provenance values to text; the basis and first reviewed result have the new exact identity above. No admission of the invalid draft."
+}

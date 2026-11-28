@@ -128,7 +128,7 @@ async function main() {
     requireValue(sha(raw) === producer.response.sha256 && raw.length > 0, `producer-response-drift:${key}`)
     const value = JSON.parse(raw.toString("utf8"))
     requireValue(value.producer_id === producer.producer_id && value.snapshot_sha256 === snapshotSha && typeof value.body === "string" && value.body.length > 0
-      && value.validity !== "blocked", `producer-response-not-exact:${key}`)
+      && value.validity !== "blocked" && (value.authorityBasis === undefined || (typeof value.authorityBasis === "string" && value.authorityBasis.trim() !== "")), `producer-response-not-exact:${key}`)
     const body = { kind: "ownership-body", version: 1, bytes: Array.from(Buffer.from(value.body, "utf8")) }
     const result = { kind: "ownership-result", version: 1, body: id(body),
       authority: { scope: entry.artifact.scope, basis: value.authorityBasis ?? previous.metadata.authority.basis }, validity: "supported",

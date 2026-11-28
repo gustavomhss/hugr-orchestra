@@ -10,7 +10,10 @@
       "snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
       "producer_id": "/root/s2_content_delta_luna",
       "response": "script/genesis-s2/u1-producers/l1-desktop-web-response.json",
-      "decisions": []
+      "decisions": [
+        "script/genesis-s2/u1-producers/l1-desktop-web-j1.json",
+        "script/genesis-s2/u1-producers/l1-desktop-web-j2.json"
+      ]
     }
   ]
 }
