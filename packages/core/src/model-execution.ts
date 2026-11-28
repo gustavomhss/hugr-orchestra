@@ -114,7 +114,7 @@ export const layer = Layer.effect(
           return yield* new ContextError({ reason: "location-mismatch" })
         const command = input.command === undefined ? undefined : yield* commands.get(input.command)
         if (input.command !== undefined && !command &&
-          !(yield* SlashCommand.findPrompt(input.command).pipe(Effect.provideService(Mcp.Service, mcp))))
+          !(yield* SlashCommand.findPrompt(input.command, true).pipe(Effect.provideService(Mcp.Service, mcp))))
           return yield* new ContextError({ reason: "command-missing" })
         const target = command ? yield* SlashCommand.target(command).pipe(Effect.provideService(AgentV2.Service, agents)) : undefined
         const overrides = target?.subtask === false ? target : undefined

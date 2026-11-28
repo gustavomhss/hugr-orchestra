@@ -103,7 +103,7 @@ export interface Interface {
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
   readonly readResource: (uri: string) => Effect.Effect<ReadResourceResult["contents"] | undefined, RequestError>
   /** The prompts of the connected servers. */
-  readonly prompts: () => Effect.Effect<Prompt[]>
+  readonly prompts: (options?: { readonly connectedOnly?: boolean; readonly server?: string }) => Effect.Effect<Prompt[]>
   /** Renders a server's prompt with its arguments and returns the text of its messages. */
   readonly getPrompt: (
     server: string,
@@ -640,10 +640,10 @@ const layer = Layer.effect(
       return result.contents
     })
 
-    const prompts = Effect.fn("Mcp.prompts")(function* () {
-      yield* ready()
+    const prompts = Effect.fn("Mcp.prompts")(function* (options?: Parameters<Interface["prompts"]>[0]) {
+      if (!options?.connectedOnly) yield* ready()
       const listed = yield* Effect.forEach(
-        connected(),
+        connected().filter((item) => options?.server === undefined || McpCatalog.sanitize(item.server) === options.server),
         (item) =>
           Effect.tryPromise(() => McpCatalog.prompts(item.client, DEFAULT_TIMEOUT)).pipe(
             Effect.map((found) => found.map((prompt) => ({ ...prompt, server: item.server }))),

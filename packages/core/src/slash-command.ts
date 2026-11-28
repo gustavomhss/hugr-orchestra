@@ -196,10 +196,11 @@ export function expand(template: string, args: string) {
 }
 
 /** MCP slash commands have a server prefix. Inspect availability without requesting the prompt. */
-export const findPrompt = Effect.fn("SlashCommand.findPrompt")(function* (name: string) {
-  if (!name.includes(":")) return undefined
+export const findPrompt = Effect.fn("SlashCommand.findPrompt")(function* (name: string, connectedOnly = false) {
+  const separator = name.indexOf(":")
+  if (separator < 0) return undefined
   const mcp = yield* Mcp.Service
-  return (yield* mcp.prompts()).find((item) => promptName(item) === name)
+  return (yield* mcp.prompts({ connectedOnly, server: name.slice(0, separator) })).find((item) => promptName(item) === name)
 })
 
 function promptName(prompt: Mcp.Prompt) {

@@ -209,6 +209,7 @@ it.effect("API E6: command preflight applies the actual target without rendering
   })
   expect((yield* assess("delegated")).selection).toMatchObject({ ref: caller, engine: "orchestra", status: "ready" })
   expect(yield* assess("removed-command").pipe(Effect.flip)).toMatchObject({ reason: "command-missing" })
+  expect(yield* assess("removed-server:prompt").pipe(Effect.flip)).toMatchObject({ reason: "command-missing" })
   expect(EligibilityFixture.state.options).toEqual([])
 }))
 
