@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "bun",
+    "scripts/genesis-evaluation.ts",
+    "read",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/u1-operation/m0-current-read.query.json"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "3eb6c02c5a2036c12232ac7e7acd170c4ffbb4c0af63b15f1bdcd66ef2252299",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "bun",
+    "/home/runner/work/hugr-orchestra/hugr-orchestra/script/genesis-s2/u1-driver.ts",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/u1-operation/drift-plan.request.json"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "d57cce5f690e4610e18fcf0f3aa826acf78b7e899dca90cc6fbc85efaf481abc",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

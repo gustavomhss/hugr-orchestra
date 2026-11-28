@@ -1,0 +1,10 @@
+{
+  "argv": [
+    "bun",
+    "/home/runner/work/hugr-orchestra/hugr-orchestra/script/genesis-s2/u1-driver.ts",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/u1-operation/changed-prepare.request.json"
+  ],
+  "exit_code": 1,
+  "stdout_sha256": "a4e4de373e0ddc0d5ae288f4e3b191693b5ab7c9697af87ef6d8259844517846",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

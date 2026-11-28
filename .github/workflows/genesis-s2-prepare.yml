@@ -191,7 +191,14 @@ jobs:
             --output "$U1_ROOT/evidence/admission"
       - name: Run actual reuse and isolated drift planning
         if: ${{ inputs.admit_exact_m0 == true && inputs.run_reuse_and_drift == true }}
-        run: python3 script/genesis-s2/u1-operate.py --summary "$U1_ROOT/evidence/admission/summary.json"
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--summary "$U1_ROOT/evidence/admission/summary.json")
+          if [[ -f script/genesis-s2/u1-producers/manifest.json ]]; then
+            args+=(--producer-manifest script/genesis-s2/u1-producers/manifest.json)
+          fi
+          python3 script/genesis-s2/u1-operate.py "${args[@]}"
       - name: Preserve baseline evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -199,4 +206,5 @@ jobs:
           name: genesis-s2-u1-baseline-${{ github.sha }}-${{ github.run_attempt }}
           if-no-files-found: warn
           path: ${{ env.U1_ROOT }}/evidence
+          include-hidden-files: true
           retention-days: 30

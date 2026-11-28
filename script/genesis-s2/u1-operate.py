@@ -31,8 +31,7 @@ def encoded(value):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--summary', type=Path, required=True)
-    parser.add_argument('--outputs-file', type=Path)
-    parser.add_argument('--outputs-sha256')
+    parser.add_argument('--producer-manifest', type=Path)
     args = parser.parse_args()
     require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
             and os.environ.get('GITHUB_REPOSITORY') == 'gustavomhss/hugr-orchestra'
@@ -97,10 +96,10 @@ def main():
         request = {'runtime_root': str(runtime), 'corpus_root': str(root), 'baseline_file': str(prepared_path), 'manifest': manifest,
                    'context': context, 'target_generation': target_generation, 'recipes': recipes}
         env = {**os.environ, 'ATLAS_ACTOR': '/root'}
-        def invoke(tag, payload):
+        def invoke(tag, payload, entrypoint=driver):
             path = out / (tag + '.request.json')
             path.write_bytes(encoded(payload))
-            argv = ['bun', str(driver), str(path)]
+            argv = ['bun', str(entrypoint), str(path)]
             result = subprocess.run(argv, cwd=runtime / 'modules/atlas', env=env, stdin=subprocess.DEVNULL, capture_output=True, check=False)
             (out / (tag + '.stdout.txt')).write_bytes(result.stdout)
             (out / (tag + '.stderr.txt')).write_bytes(result.stderr)
@@ -182,21 +181,43 @@ def main():
         ledger['planner'] = {'status': 'OBSERVED', 'affected': actual['affected'], 'frontier': actual['frontier'],
                              'unaffected': actual['unaffected'], 'direct': sorted({x['artifact'] for x in actual['changes']})}
         target_request = {**changed_request, 'mode': 'prepare', 'checkpoint_dir': str(out / 'target-checkpoint')}
-        if args.outputs_file:
-            def committed(path):
-                resolved = path.resolve(strict=True)
-                require(resolved.is_relative_to(repo), 'evidence must be committed in this checkout')
+        if args.producer_manifest:
+            def committed(relative):
+                resolved = (repo / relative).resolve(strict=True)
+                require(resolved.is_relative_to(repo / 'script/genesis-s2/u1-producers'), 'producer evidence escaped its scope')
                 data = resolved.read_bytes()
-                require(data == subprocess.check_output(['git', '-C', str(repo), 'show', 'HEAD:' + resolved.relative_to(repo).as_posix()]),
-                        'evidence differs from committed bytes: ' + str(resolved))
-                return data
-            registry_bytes = committed(args.outputs_file)
-            require(args.outputs_sha256 is not None and sha(registry_bytes) == args.outputs_sha256, 'sealed output registry hash mismatch')
-            for record in json.loads(registry_bytes):
-                require(sha(committed(Path(record['output_file']))) == record['output_sha256'], 'producer response differs')
-                for evidence in record.get('semantic_evidence', []):
-                    require(sha(committed(Path(evidence['response_file']))) == evidence['response_sha256'], 'semantic response differs')
-            target_request.update({'outputs_file': str(args.outputs_file.resolve(strict=True)), 'outputs_sha256': args.outputs_sha256})
+                path = resolved.relative_to(repo).as_posix()
+                require(data == subprocess.check_output(['git', '-C', str(repo), 'show', 'HEAD:' + path]), 'producer evidence differs from commit: ' + path)
+                return {'path': str(resolved), 'sha256': sha(data)}
+
+            manifest_ref = committed(args.producer_manifest)
+            staged = json.loads(Path(manifest_ref['path']).read_bytes())
+            require(staged['schema'] == 'genesis-s2-u1-producer-evidence/v1' and staged['baseline_candidate'] == baseline['candidate_id']
+                    and staged['baseline_manifest'] == manifest and staged['generation'] == target_generation, 'producer evidence targets a different rebuild')
+            first_dir = out / 'first-callback'
+            first = invoke('capture-first', {**target_request, 'checkpoint_dir': str(first_dir)})
+            first_hold = json.loads(first.stdout)
+            require(first.returncode == 1 and first_hold['kind'] == 'hold'
+                    and any('sealed-producer-output-required:' in message for message in first_hold['evidence']), 'first callback did not reach the producer gate')
+            snapshots = list(first_dir.glob('snapshot-*.json'))
+            require(len(snapshots) == 1 and sha(snapshots[0].read_bytes()) == staged['first_snapshot_sha256'], 'first callback digest drift')
+            producers = []
+            for item in staged['producers']:
+                producers.append({'key': item['key'], 'snapshot_sha256': item['snapshot_sha256'], 'producer_id': item['producer_id'],
+                    'response': committed(item['response']), 'decisions': [committed(file) for file in item.get('decisions', [])]})
+            sealer = repo / 'script/genesis-s2/u1-output-seal.ts'
+            require(sealer.read_bytes() == subprocess.check_output(['git', '-C', str(repo), 'show', 'HEAD:script/genesis-s2/u1-output-seal.ts']), 'output sealer differs from commit')
+            sealed_dir = out / 'sealed-producers'
+            seal_request = {**changed_request, 'planner_file': str(out / 'drift-plan.stdout.txt'), 'snapshot_file': str(snapshots[0]),
+                'checkpoint_dir': str(first_dir), 'producers': producers, 'output_dir': str(sealed_dir)}
+            staged_result = invoke('seal-producers', seal_request, sealer)
+            require(staged_result.returncode in (0, 2), 'producer evidence sealer refused; inspect receipt')
+            staged_result = json.loads(staged_result.stdout)
+            registry = sealed_dir / 'outputs.json'
+            require(staged_result['registry_path'] == str(registry) and sha(registry.read_bytes()) == staged_result['registry_sha256'], 'staged output registry differs')
+            ledger['producer_evidence'] = {**manifest_ref, 'status': staged_result['status'], 'pending': staged_result.get('pending'),
+                'steps': staged_result['steps'], 'registry_sha256': staged_result['registry_sha256']}
+            target_request.update({'outputs_file': str(registry), 'outputs_sha256': staged_result['registry_sha256']})
         target_run = invoke('changed-prepare', target_request)
         target = json.loads(target_run.stdout) if target_run.stdout else None
         if target and target.get('kind') == 'hold' and any('sealed-producer-output-required:' in x or 'new-semantic-evidence-required' in x for x in target.get('evidence', [])):

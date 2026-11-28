@@ -100,136 +100,206 @@
       "id": "S2-C1",
       "kind": "permitted-change",
       "depth": "deep",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "HOLD",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
     },
     {
       "id": "S2-C2",
       "kind": "contract-violation",
       "depth": "deep",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "HOLD",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
     },
     {
       "id": "S2-C3",
       "kind": "cross-component-impact",
       "depth": "deep",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-C4",
       "kind": "operational-failure",
       "depth": "deep",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "HOLD",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
     },
     {
       "id": "S2-C5",
       "kind": "out-of-scope",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I1D",
       "kind": "direct-L1",
       "target": "s2.l1.desktop-web",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I1A",
       "kind": "direct-L1",
       "target": "s2.l1.app-session",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I1U",
       "kind": "direct-L1",
       "target": "s2.l1.design-tui",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I2D",
       "kind": "direct-L2",
       "target": "s2.l2.desktop-web",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I2A",
       "kind": "direct-L2",
       "target": "s2.l2.app-session",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I2U",
       "kind": "direct-L2",
       "target": "s2.l2.design-tui",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "HOLD",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
     },
     {
       "id": "S2-I3D",
       "kind": "direct-L3",
       "target": "s2.l3.desktop-web",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I3A",
       "kind": "direct-L3",
       "target": "s2.l3.app-session",
       "depth": "deep",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     },
     {
       "id": "S2-I3U",
       "kind": "direct-L3",
       "target": "s2.l3.design-tui",
       "depth": "routine",
-      "state": "NOT_RUN",
-      "trace_refs": [],
-      "evaluation_refs": [],
-      "remaining_proof": "Real ownership.index/read trace, exact versions/read bounds, observed isolation, and independent evaluation."
+      "state": "PASS_IN_ISOLATED_EVALUATION",
+      "trace_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+      ],
+      "evaluation_refs": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+      ],
+      "remaining_proof": "Original dual case decisions and exact reader provenance sealed."
     }
   ],
   "update": {
@@ -527,5 +597,36 @@
     "actual_receipt": "export-receipt.json",
     "external_to_payload": true,
     "reason": "Avoid self-referential archive/hash cycle; these external files bind this handoff by exact bytes."
+  },
+  "isolated_evaluation_followup": {
+    "state": "INCOMPLETE_BLOCKED",
+    "reviewed_consumption": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/checkpoint.json",
+      "sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1"
+    },
+    "dual_pass_count": 10,
+    "consumer_holds": [
+      "S2-C1",
+      "S2-C2",
+      "S2-C4",
+      "S2-I2U"
+    ],
+    "consumer_fix_proposal": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/proposed-knowledge-corrections.md",
+      "sha256": "3d1d91543b988ce3343303ecabeff462204c53477cd0138c844e44663120fb9c"
+    },
+    "approved_first_admission": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/admission-ade18f60/run-46162067144/checkpoint.json",
+      "sha256": "3f76ef70203b4f01ec664619ada23b774b0b249a8c5853a7e997ce96a4f907f3"
+    },
+    "s2_u1": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46167550086/checkpoint.json",
+      "sha256": "23a038a842a88fd80388460de326bc80602b7a537333c54f79671d5d10b279f8"
+    },
+    "u1_first_producer": {
+      "path": "script/genesis-s2/u1-producers/manifest.json",
+      "sha256": "8ba4bc0ecfc729e24d613ba814cd467d713b00ffa9f0ed642d30176828ce2761"
+    },
+    "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE"
   }
 }

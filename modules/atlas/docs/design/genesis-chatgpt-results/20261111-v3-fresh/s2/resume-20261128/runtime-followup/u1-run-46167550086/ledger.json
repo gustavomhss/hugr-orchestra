@@ -1,0 +1,59 @@
+{
+  "schema": "s2-u1-operation/v1",
+  "status": "AWAITING_REAL_PRODUCER_OR_SEMANTIC_EVIDENCE",
+  "baseline_root": "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus",
+  "changed_root": "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus-u1-changed",
+  "production_promotion": "NOT_RUN",
+  "current_read_drift_probe": {
+    "drift": "HOLD_EVALUATION_INPUT_DRIFT",
+    "exact_restore": "READY_SAME_M0_MANIFEST"
+  },
+  "reuse": "OBSERVED_SAME_MANIFEST_ZERO_CALLS",
+  "manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "candidate_id": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "plan_sha256": "d558519ccf0f0bcf87653afcc3d40e01914a67e9095ba70333d29b9d5e3404d5",
+  "driver_sha256": "9c3f3858b0b6021034f5f90a3057253cb3c01202d5eee279cac8e3d8297e70f8",
+  "gate_sha256": "f87114bbec2cbbc2795deb63882cc2b678e5d7f434d27c341c6df5012d1c6ff2",
+  "planner": {
+    "status": "OBSERVED",
+    "affected": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "frontier": [
+      "s2.l1.desktop-web"
+    ],
+    "unaffected": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "direct": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ]
+  },
+  "target_hold": {
+    "kind": "hold",
+    "reason": "ownership-review",
+    "evidence": [
+      "sealed-producer-output-required:s2.l1.desktop-web:79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df"
+    ],
+    "evaluation": {
+      "phase": "evaluation",
+      "evaluationPlan": "619dfe60a6a6afd99fb115cb5d48bda061ca5f05995407b950965411eb8d3114",
+      "obligationSet": "4c76c66cedd2f82c650e6aaee4d486cbd530091f98c90d137fbff11693900059",
+      "evaluationCandidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+      "generation": "92befe47245fb016c19723198b10d515f062ad8c45c2db85fa0fd3669b0e1bc9",
+      "manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3"
+    }
+  }
+}

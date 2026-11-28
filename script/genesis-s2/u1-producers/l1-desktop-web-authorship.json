@@ -1,0 +1,37 @@
+{
+  "schema": "s2-u1-producer-result/v1",
+  "operationRun": 46167550086,
+  "target": "s2.l1.desktop-web",
+  "author": "Codex agent /root/s2_content_delta_luna",
+  "event": {
+    "kind": "callback-enter",
+    "key": "s2.l1.desktop-web",
+    "snapshotSha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+    "observedResult": "callback-hold: sealed-producer-output-required; matches=0",
+    "sourceEventPath": "/private/tmp/orchestra-genesis-close-gmJ7bX/evidence/s2-u1-operation-46167550086/genesis-s2-u1-baseline-309a7243524810f7f1fc86899200f5dd53df8c13-1/u1-operation/target-checkpoint/callbacks.jsonl"
+  },
+  "baseline": {
+    "artifact": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/desktop-web/l1.md",
+    "bodySha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+    "bytes": 29075
+  },
+  "output": {
+    "path": "/private/tmp/orchestra-genesis-close-gmJ7bX/evidence/s2-u1-producer-l1/output.json",
+    "bodySha256": "a93c5c536094fcb195b8b75f61f829aa7953861f5f99dc2e738d33a15329ebd7",
+    "bytes": 29075
+  },
+  "changedSpan": {
+    "locator": "Readiness races authenticated `/api/health`, the first child's exit and a 120-second ceiling.",
+    "before": "Readiness races authenticated `/api/health`, the first child's exit and a 120-second ceiling.",
+    "after": "Readiness races authenticated `/api/health`, the first child's exit and a 150-second ceiling.",
+    "count": 1,
+    "interpretation": "revises the cited source observation from 120 seconds to 150 seconds; all other body bytes preserved"
+  },
+  "sourceCapture": {
+    "path": "/private/tmp/orchestra-genesis-close-gmJ7bX/evidence/s2-u1-operation-46167550086/genesis-s2-u1-baseline-309a7243524810f7f1fc86899200f5dd53df8c13-1/u1-operation/target-checkpoint/capture-9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08.bin",
+    "sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+    "verifiedText": "const READY_TIMEOUT = 150_000"
+  },
+  "review": null,
+  "laterCallbacksAuthored": false
+}

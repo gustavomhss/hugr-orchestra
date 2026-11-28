@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-s2-u1-producer-evidence/v1",
+  "baseline_candidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "baseline_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "generation": "178e09746ca0e6b5781ea452cf35109976011b135e23020a0482391bf258c3b0",
+  "first_snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+  "producers": [
+    {
+      "key": "s2.l1.desktop-web",
+      "snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+      "producer_id": "/root/s2_content_delta_luna",
+      "response": "script/genesis-s2/u1-producers/l1-desktop-web-response.json",
+      "decisions": []
+    }
+  ]
+}

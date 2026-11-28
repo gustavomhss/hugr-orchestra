@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "bun",
+    "scripts/genesis-evaluation.ts",
+    "admit",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus",
+    "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/u1-prepared.json",
+    "s2-binding/approval.json"
+  ],
+  "actor": "/root",
+  "exit_code": 0,
+  "stdout_sha256": "2b0011cb81bbcb3c0eba0961650d7bcf1223ba480081d7bc7e4a206cecffcd7e",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

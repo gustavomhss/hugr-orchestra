@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-s2-u1-observed-baseline/v1",
+  "run_id": 46167550086,
+  "run_head": "309a7243524810f7f1fc86899200f5dd53df8c13",
+  "artifact_id": 15271993939,
+  "artifact_zip_sha256": "8e8894f46eebefa61bf658ed1f6273cf98549b4119164011cb885b26f0badfd8",
+  "m0_candidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "m0_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "emission": {
+    "emitted": true,
+    "id": "b933b36b5f0fc1485aa5b996448536a24eca798220e2c1b53564392088f6fa8a",
+    "nodeKey": "eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86"
+  },
+  "current_read_drift": [
+    "evaluation-input-drift"
+  ],
+  "current_read_after_exact_restore": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+  "reuse": "OBSERVED_SAME_MANIFEST_ZERO_CALLS",
+  "planner": {
+    "status": "OBSERVED",
+    "affected": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "frontier": [
+      "s2.l1.desktop-web"
+    ],
+    "unaffected": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "direct": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ]
+  },
+  "first_required_snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+  "target_capture_sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+  "changed_target_state": "AWAITING_REAL_PRODUCER_OR_SEMANTIC_EVIDENCE",
+  "files": {
+    "ledger.json": "3c312a71ace67d89636580720b7e94d0f86c736c1de35c50b22d50f77b26804f",
+    "reuse.receipt.json": "9936c5c5d44e9eec10461188f74d611c2cf1ab17bb308a815c3abe26feb7823c",
+    "drift-plan.stdout.txt": "d57cce5f690e4610e18fcf0f3aa826acf78b7e899dca90cc6fbc85efaf481abc",
+    "drift-plan.receipt.json": "ecac3969f18a8027dc42b449d9300c075082336285ec9ac9e783d4bbdfa2d132",
+    "m0-drift-current.stdout.json": "56667d26459544c92e1e329d6a3cd6f50a76c93a424d9f888476c85f7344c55b",
+    "m0-drift-current.receipt.json": "67e25f46570df634cd7cb3db4fe58b398ebd6d4b340b7ad6f004a80653c63804",
+    "m0-restored-current.stdout.json": "3eb6c02c5a2036c12232ac7e7acd170c4ffbb4c0af63b15f1bdcd66ef2252299",
+    "m0-restored-current.receipt.json": "5a2487c59373b05e8bc45358eb34c4ce42cfcfb7f7081f68e234869b8ee7618d",
+    "changed-prepare.stdout.txt": "a4e4de373e0ddc0d5ae288f4e3b191693b5ab7c9697af87ef6d8259844517846",
+    "changed-prepare.receipt.json": "ef64f5edc9bb2d0c077b7f8af521206c8d118fc7473a4d22dd06ee1c34b9d95b",
+    "admit.stdout.json": "2b0011cb81bbcb3c0eba0961650d7bcf1223ba480081d7bc7e4a206cecffcd7e",
+    "admit.receipt.json": "87c984376c725e7869677f4cd3b8705460f457219d78702149c3e2fafe64eda3"
+  },
+  "pending": "Actual changed output and both result-specific semantic reviews, complete M1 candidate/admission/read, M2 restore and remaining controls."
+}
