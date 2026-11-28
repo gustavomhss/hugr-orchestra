@@ -34,8 +34,8 @@ export function registerLiveTray(options: { loop: LiveLoop }) {
     tray.setContextMenu(
       Menu.buildFromTemplate([
         run.running
-          ? { label: "Stop meeting", click: () => void options.loop.stop() }
-          : { label: "Start meeting", click: () => void options.loop.start() },
+          ? { label: "Stop meeting", click: () => void options.loop.stop().catch(() => console.warn("Could not stop the live meeting.")) }
+          : { label: "Start meeting", click: () => void options.loop.start().catch(() => console.warn("Could not start the live meeting.")) },
         { label: "Open", click: () => open("orchestra://live") },
         ...(last ? [{ label: last.title, click: () => open(`orchestra://live?meeting=${encodeURIComponent(last.id)}`) }] : []),
       ]),

@@ -52,9 +52,11 @@ export function createSessionManagementForServer(input: {
   }
   const writes = new Map<string, Promise<SubagentModelPolicy>>()
   const versions = new Map<string, number>()
+  const [versionRevision, setVersionRevision] = createSignal(0)
   lifetime?.addEventListener("abort", () => {
     writes.clear()
     versions.clear()
+    setVersionRevision((value) => value + 1)
   }, { once: true })
   return {
     /** Resolves true when archive, restore and the archived list can use the V2 session routes. */
@@ -115,10 +117,13 @@ export function createSessionManagementForServer(input: {
         return acknowledged
       })
       writes.set(sessionID, write)
+      // Install the pending-write barrier before reactive readers observe its new generation.
+      setVersionRevision((value) => value + 1)
       void write.catch(() => {})
       return write
     },
     subagentModelsWriteVersion(id: string): number {
+      versionRevision()
       return versions.get(id) ?? 0
     },
     waitSubagentModels(id: string): Promise<void> {

@@ -1,6 +1,7 @@
 export * as MaestroReviewTools from "./review"
 
 export { analysisStore, rawArtifactPath, reviewBinding } from "./review-binding"
+export { analyzeLane } from "./review-analysis"
 
 import { createHash } from "node:crypto"
 import { and, desc, eq } from "drizzle-orm"
@@ -15,12 +16,10 @@ import type { Global } from "@orchestra/core/global"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
 import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
-import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ReviewSettings } from "@orchestra/core/review/settings"
 import { ReviewReleaseEvidence } from "@orchestra/core/review-toolkit/release-evidence"
 import { ReviewReleaseRequestV2 } from "./review-release"
-import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { AppProcess } from "@orchestra/core/process"
@@ -36,6 +35,7 @@ import { GovernanceRecordsV2 } from "../governance/records"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
 import { ReviewArtifactsV2 } from "./review-artifacts"
+import { ReviewAnalysisV2 } from "./review-analysis"
 import { ReviewBindingV2 } from "./review-binding"
 import { MaestroReviewRecords } from "./review-records"
 import { ReviewPRRequestV2 } from "./review-pr"
@@ -123,60 +123,7 @@ const ReviewInput = Schema.Struct({
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
 
-/** The host's analyze step (fan-out step 2), at the reviewed revisions. */
-export type Analyze = (
-  input: ReviewFanoutV2.AnalyzeInput & {
-    readonly worktree: string
-    readonly release?: ReviewReleaseEvidence.Captured
-    readonly base: string
-    readonly head: string
-    readonly sessionID: SessionSchema.ID
-    readonly catalog: ReviewCatalog.Catalog
-    readonly evidence?: ReviewAnalyze.Evidence
-    readonly changes?: ReadonlyArray<{ readonly path: string; readonly added: ReadonlyArray<{ readonly line: number }> }>
-  },
-) => Effect.Effect<ReviewFanoutV2.Analysis, Tool.Failure>
-
-/** D6 ceiling. The opened project may enter the build lane. An external target must pass false and stay at repo. */
-export function analyzeLane(trusted: boolean) {
-  return trusted ? "build" as const : "repo" as const
-}
-
-const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
-  const changed: Record<string, { start: number; end: number }[]> = {}
-  for (const change of input.changes ?? []) {
-    const lines = change.added.map((line) => line.line)
-    if (lines.length === 0) continue
-    changed[change.path] = [{ start: Math.min(...lines), end: Math.max(...lines) }]
-  }
-  // This call reviews the project the owner opened. An external target must not reuse it with trusted true.
-  const trusted = true
-  return ReviewAnalyze.run({
-    worktree: input.worktree,
-    base: input.base,
-    head: input.head,
-    tier: input.executionTier ?? ReviewRouting.tier(input.routing),
-    profile: input.routing.profile.id,
-    ...(input.release === undefined ? {} : { release: input.release }),
-    ...(input.evidence === undefined ? {} : { evidence: input.evidence }),
-    store: ReviewBindingV2.analysisStore(input.cache),
-    changed,
-    trusted,
-    catalog: input.catalog,
-    lane: analyzeLane(trusted),
-    packs: input.packs.map((pack) => pack.id),
-    scope: input.repositoryFiles === undefined ? "diff" : "files",
-    files: [...input.files],
-    ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
-  }).pipe(
-    Effect.provideService(AppProcess.Service, processes),
-    Effect.mapError((error) => {
-      const reason = error instanceof ReviewAnalyze.Failed ? error.reason : String(error)
-      return new Tool.Failure({ message: `ReviewAnalyzeFailed: ${reason}`,
-        ...(reason.startsWith("engagement-") ? { metadata: { reason } } : {}) })
-    }),
-  )
-}
+export type Analyze = ReviewAnalysisV2.Analyze
 
 const seatStages: ReviewFanoutV2.Stages = {
   lead: ReviewSeatTools.lead,
@@ -199,7 +146,7 @@ export function tools(input: {
   readonly processes: AppProcess.Interface
 }) {
   const services = input.services
-  const analyze = input.analyze ?? analyzeStep(input.processes)
+  const analyze = input.analyze ?? ReviewAnalysisV2.step(input.processes)
   const stages = input.stages ?? seatStages
   // Lead Sessions in their final turn: the only place the record tool opens for a scoped review Session.
   const finishing = new Set<string>()
@@ -301,10 +248,6 @@ export function tools(input: {
           if (!validation.contextRecordID || !validation.contextHash)
             return yield* new Tool.Failure({ message: "Review delegation requires bound context" })
           const stage = params.stage ?? "plan"
-          if (card)
-            yield* BoardThread.write(services.db, {
-              id: `bno_review_${params.validationRecordID}_${stage}`, issue: card.id, kind: "review", author: "maestro", body: `Review requested (${stage}).`,
-            }).pipe(Effect.orDie)
           if (Option.isNone(input.sessions) || Option.isNone(input.execution))
             return yield* MaestroToolGate.hold(
               "session-execution-unavailable",
@@ -414,6 +357,8 @@ export function tools(input: {
                 )
               : yield* GovernanceEvidenceV2.contextIsCurrent(services, record)
           if (!current) return "LUCY_ERROR: Error: Review context changed before provider execution"
+          const requestID = `bno_review_${lead}_${stage}_${card?.id ?? "unlinked"}`
+          const attempt = card ? yield* BoardThread.association(services.db, requestID, card.id).pipe(Effect.orDie) : null
           const sessionID = (key: string) =>
             key === "lead" ? lead : SessionSchema.ID.make(`ses_lucy_review_${sha256(`${lead}\0${key}`)}`)
           const cache = ReviewReleaseRequestV2.key(`review_${params.validationRecordID}_${stage}`, release)
@@ -442,6 +387,17 @@ export function tools(input: {
                   location: parent.location,
                 })
                 .pipe(
+                  Effect.tap((created) => card && child.role === "lead"
+                    ? BoardThread.write(services.db, {
+                      id: requestID,
+                      issue: card.id,
+                      kind: "review",
+                      author: "maestro",
+                      body: `Review requested (${stage}).`,
+                      attempt,
+                      sessionID: created.id,
+                    }).pipe(Effect.orDie)
+                    : Effect.void),
                   Effect.map((created) => created.id),
                   Effect.mapError(() => new Tool.Failure({ message: `Session ${parent.id} is not available` })),
                 ),
@@ -545,7 +501,7 @@ export function tools(input: {
               "\n",
             )
             if (card)
-              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict }).pipe(Effect.orDie)
+              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}_${card.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict, attempt, sessionID: lead }).pipe(Effect.orDie)
             return verdict
           }
           return ran.reply ? `LUCY_NO_RECEIPT: ${ran.reply}` : `LUCY_NO_RECEIPT: ${ran.lead}`

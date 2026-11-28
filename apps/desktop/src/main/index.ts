@@ -61,6 +61,11 @@ import { createDeepLinkDelivery } from "./deep-links"
 import { registerLiveLoop } from "./live-loop"
 import { registerLiveTray } from "./live-tray"
 import { registerLiveOverlay } from "./live-overlay"
+import { createLiveDeliveryOwner } from "./live-delivery-owner"
+import type { LiveDeliveryOwner } from "./live-delivery-owner-contract"
+import type { LiveDeliveryConnection } from "./live-delivery-contract"
+import { exportLiveRecovery } from "./live-recovery-export"
+import { createStartupFence } from "./desktop-startup"
 
 // These process names keep their inherited values: Electron names the macOS Keychain item that encrypts saved browser
 // data "<name> Safe Storage", so renaming them would sign the MCP Dock out of every site. Menus, window titles and
@@ -202,20 +207,22 @@ const main = Effect.gen(function* () {
     },
   )
   const stopSidecars = async () => {
-    await killSidecar().finally(() => wslServers.stopAll())
+    await killSidecar().finally(() => Promise.all([wslServers.stopAll(), shutdown.dock?.close()]))
   }
   const shutdown = {
     runtimeStop: undefined as (() => Promise<void>) | undefined,
     promise: undefined as Promise<void> | undefined,
+    live: undefined as LiveDeliveryOwner | undefined,
+    liveJobs: new Set<Promise<void>>(),
+    startup: createStartupFence(),
+    dock: undefined as Awaited<ReturnType<typeof startDockChannel>> | undefined,
     done: false,
   }
   // Every quit path lets the windows save unsaved work (at most 3 s) before the sidecars stop.
   const relaunch = () => {
     setAppQuitting()
-    void flushWindows().then(stopSidecars).catch((error: unknown) => logger.error("failed to stop sidecars", error)).finally(() => {
-      app.relaunch()
-      app.quit()
-    })
+    app.relaunch()
+    app.quit()
   }
 
   try {
@@ -279,7 +286,16 @@ const main = Effect.gen(function* () {
     setAppQuitting()
     if (shutdown.done) return
     event.preventDefault()
-    shutdown.promise ??= flushWindows()
+    if (shutdown.promise) return
+    const completed = Promise.withResolvers<void>()
+    shutdown.promise = completed.promise
+    const acquisitions = shutdown.startup.close()
+      .catch((error: unknown) => logger.error("desktop startup cleanup failed", error))
+    const stopping = shutdown.live?.shutdown(flushWindows) ?? Promise.resolve().then(flushWindows)
+    void stopping
+      .catch((error: unknown) => logger.error("failed to flush Live and windows", error))
+      .then(() => acquisitions)
+      .then(() => Promise.allSettled([...shutdown.liveJobs]))
       .then(() =>
         Promise.all([
           stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
@@ -292,10 +308,13 @@ const main = Effect.gen(function* () {
         shutdown.done = true
         app.quit()
       })
+      .then(completed.resolve, completed.reject)
+    void shutdown.promise.catch((error: unknown) => logger.error("desktop shutdown failed", error))
   })
 
   app.on("will-quit", () => {
     setAppQuitting()
+    void shutdown.live?.shutdown().catch((error: unknown) => logger.error("Live fallback shutdown failed", error))
     void stopSidecars()
   })
 
@@ -321,6 +340,7 @@ const main = Effect.gen(function* () {
   const serverReady = Deferred.makeUnsafe<ServerReadyData, unknown>()
 
   yield* Effect.promise(() => app.whenReady())
+  if (shutdown.promise) return
 
   app.setAsDefaultProtocolClient("orchestra")
   registerRendererProtocol()
@@ -339,21 +359,43 @@ const main = Effect.gen(function* () {
     checkForUpdates: () => void showUpdaterDialog(updater, true),
     relaunch,
   }
+  const liveOwner = createLiveDeliveryOwner({
+    userData: app.getPath("userData"),
+    stopCapture: (reason): Promise<void> => liveLoop.stop(reason),
+    exportData: (data, signal) => exportLiveRecovery(data, {
+      signal,
+      choose: async () => {
+        const result = await dialog.showSaveDialog({
+          defaultPath: "orchestra-live-recovery.json",
+          filters: [{ name: "JSON", extensions: ["json"] }],
+        })
+        return result.canceled ? undefined : result.filePath
+      },
+    }),
+  })
   const liveLoop = registerLiveLoop({
     overlay: liveOverlay,
-    server: () =>
-      Effect.runPromise(Deferred.await(serverReady)).then((ready) => ({
-        url: ready.url,
-        username: ready.username ?? undefined,
-        password: ready.password ?? undefined,
-      })),
+    delivery: liveOwner,
+    server: (signal?: AbortSignal) => liveOwner.connection(signal ?? new AbortController().signal).then((value) => value.server),
     logDirectory: join(app.getPath("userData"), "logs", "live"),
     openSettings: () => menuDeps.trigger("settings.open"),
   })
+  shutdown.live = liveOwner
+  const liveConnection = {
+    epoch: {},
+    pid: undefined as number | undefined,
+    server: undefined as LiveDeliveryConnection["server"] | undefined,
+  }
+  const trackLive = (job: Promise<void>) => {
+    const observed = job.catch((error: unknown) => logger.error("Live connection transition failed", error))
+      .finally(() => shutdown.liveJobs.delete(observed))
+    shutdown.liveJobs.add(observed)
+  }
   app.once("will-quit", liveLoop.destroy)
   registerLiveTray({ loop: liveLoop })
   shutdown.runtimeStop = registerIpcHandlers({
     liveLoop,
+    liveRecovery: liveOwner.recovery,
     killSidecar: () => killSidecar(),
     relaunch,
     awaitInitialization: Effect.fnUntraced(
@@ -396,7 +438,16 @@ const main = Effect.gen(function* () {
 
     if (SIDECAR_MODE === "shared") {
       logger.log("starting shared background sidecar")
-      const sidecar = yield* Effect.promise(() => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME))
+      const sidecar = yield* Effect.promise(() => shutdown.startup.acquire(
+        (signal) => startBackgroundCli(logger, shellEnv?.XDG_STATE_HOME, signal),
+        () => {},
+        // This daemon is shared and deliberately outlives this desktop. Only its startup request is joined.
+        async () => {},
+      ))
+      yield* Effect.promise(() => liveOwner.setConnection({
+        mode: "shared", epoch: liveConnection.epoch,
+        server: { url: sidecar.url, username: sidecar.username, password: sidecar.password },
+      }))
       yield* Deferred.succeed(serverReady, {
         url: sidecar.url,
         username: sidecar.username,
@@ -414,13 +465,13 @@ const main = Effect.gen(function* () {
 
     // The child reaches main's Dock handlers through this channel.
     const dock = yield* Effect.promise(() =>
-      startDockChannel({
+      shutdown.startup.acquire(() => startDockChannel({
         onMessage: (message, reply) => {
           if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
         },
         onClose: () =>
           void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
-      }),
+      }), (channel) => { shutdown.dock = channel }, (channel) => channel.close()),
     )
     // The app's global reads (providers, models) name no directory, so the server boots a Location for its cwd. In the
     // home directory that Location watched the whole home and cost about three more seconds of startup; an empty
@@ -428,21 +479,44 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      Promise.all([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME), sidecarLaunchEnv(app.getPath("userData"))]).then(
-        ([binary, env]) =>
-          startOwnedServe({
+      shutdown.startup.acquire((signal) => Promise.allSettled([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME, signal), sidecarLaunchEnv(app.getPath("userData"))]).then(
+        ([binary, env]) => {
+          if (binary.status === "rejected") throw binary.reason
+          if (env.status === "rejected") throw env.reason
+          signal.throwIfAborted()
+          return startOwnedServe({
             logger,
-            command: [binary],
-            env: { ...env, ...dock.env },
+            command: [binary.value],
+            env: { ...env.value, ...dock.env },
             cwd,
             write: (stream, message) =>
               writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
-            onSpawn: (pid) => OmniSmoke.utilityStarted(pid),
-            onEvent: (name, data) => OmniSmoke.event(name, data),
-          }),
-      ),
+            onSpawn: (pid) => {
+              const epoch = {}
+              liveConnection.epoch = epoch
+              liveConnection.pid = pid
+              const stopped = liveOwner.invalidate()
+              trackLive(stopped.then(() => {
+                if (liveConnection.epoch !== epoch || !liveConnection.server) return
+                return liveOwner.setConnection({ mode: "owned", epoch, server: liveConnection.server })
+              }))
+              OmniSmoke.utilityStarted(pid)
+            },
+            onEvent: (name, data) => {
+              if (name === "utility-exit" && (liveConnection.pid === undefined || data.utilityPID === liveConnection.pid)) {
+                liveConnection.epoch = {}
+                trackLive(liveOwner.invalidate())
+              }
+              OmniSmoke.event(name, data)
+            },
+          })
+        },
+      ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => {
+        // A late acquisition skips the normal health await below. Observe before stop aborts that startup.
+        const health = resource.health.wait.catch(() => undefined)
+        return resource.listener.stop().finally(() => health)
+      }),
     )
-    server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -453,6 +527,9 @@ const main = Effect.gen(function* () {
       try: () => owned.health.wait,
       catch: (e) => (e instanceof Error ? e : new Error(String(e))),
     }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
+    const liveServer = { url: owned.url, username: owned.username, password: owned.password }
+    liveConnection.server = liveServer
+    yield* Effect.promise(() => liveOwner.setConnection({ mode: "owned", epoch: liveConnection.epoch, server: liveServer }))
     yield* Deferred.succeed(serverReady, {
       url: owned.url,
       username: owned.username,

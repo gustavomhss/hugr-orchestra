@@ -1,13 +1,14 @@
 import { createSimpleContext } from "@orchestra/ui/context"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { useParams } from "@solidjs/router"
-import { type Accessor, batch, createEffect, createMemo, startTransition } from "solid-js"
+import { type Accessor, batch, createComputed, createEffect, createMemo, onCleanup, startTransition, untrack } from "solid-js"
+import { makeModelExecutionQuery, type ModelExecutionState } from "@orchestra/client"
 import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import { useModels } from "@/context/models"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
 import { Persist, persisted } from "@/utils/persist"
-import { cycleModelVariant, getConfiguredAgentVariant, resolveModelVariant } from "./model-variant"
+import { cycleModelVariant, getConfiguredAgentVariant } from "./model-variant"
 import { useSDK } from "./sdk"
 import { useSync } from "./sync"
 import { useServerSDK } from "./server-sdk"
@@ -100,10 +101,7 @@ export function createLocal(deps: LocalDeps) {
   // The primary conversation uses Maestro's engine, never another seat's engine or host login.
   const agent = {
     current: () => sync().data.agent.find((item) => agentKey(item) === "maestro"),
-    key: () => {
-      const item = agent.current()
-      return item ? agentKey(item) : undefined
-    },
+    key: () => "maestro",
   }
   const engine = () => agent.current()?.engine ?? sync().data.config.agent?.maestro?.engine
 
@@ -130,14 +128,6 @@ export function createLocal(deps: LocalDeps) {
     )
   }
 
-  const firstModel = (...items: Array<() => ModelKey | undefined>) => {
-    for (const item of items) {
-      const model = item()
-      if (!model) continue
-      if (validModel(model)) return model
-    }
-  }
-
   const scope = createMemo<State | undefined>(() => {
     const session = id()
     if (!session) return store.draft ?? store.promoting
@@ -162,47 +152,53 @@ export function createLocal(deps: LocalDeps) {
     setStore("promoting", undefined)
   })
 
-  const configuredModel = () => {
-    const model = resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
-    if (!model) return
-    if (validModel(model)) return model
-  }
+  const configuredModel = () => resolveDefaultModel(providers.defaultModel(), sync().data.config.model)
 
   const recentModel = () => {
     for (const item of models.recent.list()) {
-      if (validModel(item)) return item
+      return item
     }
   }
 
   const defaultModel = () => {
     const defaults = providers.default()
-    for (const provider of providers.connected()) {
+    for (const provider of providers.all().values()) {
       const configured = defaults[provider.id]
       if (configured) {
         const model = { providerID: provider.id, modelID: configured }
-        if (validModel(model)) return model
+        return model
       }
 
-      const first = Object.values(provider.models).find((model) =>
-        validModel({ providerID: provider.id, modelID: model.id }),
-      )
+      const first = Object.values(provider.models)[0]
       if (!first) continue
       const model = { providerID: provider.id, modelID: first.id }
-      if (validModel(model)) return model
+      return model
     }
   }
 
   const fallback = createMemo<ModelKey | undefined>(() => configuredModel() ?? recentModel() ?? defaultModel())
 
-  const current = () => {
-    const item = firstModel(
-      () => scope()?.model,
-      () => agent.current()?.model,
-      fallback,
-    )
-    if (!item) return
-    return models.find(item)
+  const intent = () => ({ model: scope()?.model, variant: scope()?.variant })
+  const candidate = () => intent().model ?? agent.current()?.model ?? fallback()
+  const execution = createModelExecutionView({ sdk, server: serverSDK, sessionID: id, ready: () => savedReady() && models.ready(),
+    metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
+      connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
+    agentID: agent.key, agent: agent.current, intent, candidate,
+    savedVariant: (key) => models.variant.get(key),
+  })
+  const known = new Map<string, NonNullable<ReturnType<typeof models.find>>>()
+  const display = (key: ModelKey | undefined) => {
+    if (!key) return
+    const provider = providers.all().get(key.providerID)
+    const metadata = provider?.models[key.modelID]
+    const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
+      name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
+    const token = JSON.stringify([key.providerID, key.modelID])
+    const selected = intent().model ?? candidate()
+    if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
+    return item ?? known.get(token)
   }
+  const current = () => display(intent().model ?? (execution.ready() ? candidate() : undefined))
 
   const configured = () => {
     const item = agent.current()
@@ -242,10 +238,21 @@ export function createLocal(deps: LocalDeps) {
   const recent = createMemo(() => models.recent.list().filter(validModel).map(models.find).filter(Boolean))
 
   const model = {
-    ready: models.ready,
+    intent,
+    execution,
+    ready: Object.assign(() => savedReady() && models.ready(), { promise: models.ready.promise }),
     current,
     recent,
-    list: () => models.list().filter((model) => validModel({ providerID: model.provider.id, modelID: model.id })),
+    list: () => {
+      const response = execution.read()
+      const items = response.status === "ready" ? response.response.data.models.flatMap((entry) => {
+        const item = display({ providerID: entry.model.providerID, modelID: entry.model.id })
+        return item ? [item] : []
+      }) : models.list()
+      const selected = display(intent().model)
+      return selected && !items.some((item) => item.id === selected.id && item.provider.id === selected.provider.id)
+        ? [...items, selected] : items
+    },
     cycle(direction: 1 | -1) {
       const items = recent()
       const item = current()
@@ -260,10 +267,10 @@ export function createLocal(deps: LocalDeps) {
 
       const entry = items[next]
       if (!entry) return
+      if (!execution.allows({ providerID: entry.provider.id, modelID: entry.id })) return
       model.set({ providerID: entry.provider.id, modelID: entry.id })
     },
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
-      if (item && !validModel(item)) return
       startTransition(() =>
         batch(() => {
           setStore("last", {
@@ -290,16 +297,7 @@ export function createLocal(deps: LocalDeps) {
       configured,
       selected,
       current() {
-        const resolved = resolveModelVariant({
-          variants: this.list(),
-          selected: this.selected(),
-          configured: this.configured(),
-        })
-        if (resolved) return resolved
-        const model = current()
-        if (!model) return
-        const saved = models.variant.get({ providerID: model.provider.id, modelID: model.id })
-        if (saved && this.list().includes(saved)) return saved
+        return execution.input().model?.variant
       },
       list() {
         const item = current()
@@ -378,3 +376,108 @@ export function createLocal(deps: LocalDeps) {
 }
 
 export type ModelSelection = ReturnType<typeof useLocal>["model"]
+
+/** One view owns its query; admissions always acquire independent query owners. */
+export function createModelExecutionView(input: {
+  sdk: ReturnType<typeof useSDK>
+  server?: ReturnType<typeof useServerSDK>
+  sessionID: () => string | undefined
+  agentID: () => string | undefined
+  agent: () => { model?: ModelKey; variant?: string } | undefined
+  intent: () => { model: ModelKey | undefined; variant: string | null | undefined }
+  candidate: () => ModelKey | undefined
+  savedVariant: (model: ModelKey) => string | undefined
+  metadata: () => unknown
+  ready?: () => boolean
+}) {
+  const [view, setView] = createStore<{ value: ModelExecutionState }>({ value: { status: "idle" } })
+  const lifetime = { disposed: false }
+  const context = createMemo(() => JSON.stringify(input.metadata()))
+  const version = () => {
+    const id = input.sessionID()
+    return id ? input.server?.().sessionManagement.subagentModelsWriteVersion?.(id) ?? 0 : 0
+  }
+  const owner = createMemo(() => {
+    const sdk = input.sdk()
+    const server = input.server?.()
+    const model = input.candidate()
+    const intent = input.intent()
+    const agent = input.agent()
+    const variant = typeof intent.variant === "string" ? intent.variant : intent.variant === null ? undefined
+      : model && agent?.model?.providerID === model.providerID && agent.model.modelID === model.modelID && agent.variant !== undefined
+        ? agent.variant : model ? input.savedVariant(model) : undefined
+    const sessionID = input.sessionID()
+    const request = {
+      location: { directory: sdk.directory },
+      context: sessionID ? { type: "session" as const, sessionID, agentID: input.agentID() }
+        : { type: "draft" as const, agentID: input.agentID() },
+      model: model ? { providerID: model.providerID, id: model.modelID, variant } : undefined,
+    }
+    return { sdk, client: sdk.orchestra, server, credentials: JSON.stringify(server?.server?.http), version: version(),
+      context: context(),
+      active: sdk.transportCurrent?.() !== false && server?.transportCurrent?.() !== false,
+      epoch: sdk.connectionEpoch?.() ?? server?.connectionEpoch?.() ?? 0,
+      key: JSON.stringify({ request, intent }), request }
+  }, undefined, { equals: (left, right) => !!left && left.sdk === right.sdk && left.client === right.client &&
+    left.server === right.server && left.credentials === right.credentials && left.version === right.version &&
+    left.active === right.active && left.context === right.context && left.epoch === right.epoch && left.key === right.key })
+  let readyOwner: ReturnType<typeof owner> | undefined
+  const query = makeModelExecutionQuery({
+    changed: (value) => { readyOwner = value.status === "ready" ? owner() : undefined; setView("value", value) },
+    execute: async (request, options) => {
+      const captured = owner()
+      if (captured.sdk.transportCurrent?.() === false || captured.server?.transportCurrent?.() === false)
+        throw new DOMException("", "AbortError")
+      if (request.context.type === "session") await captured.server?.sessionManagement.waitSubagentModels?.(request.context.sessionID)
+      if (owner() !== captured || captured.version !== version()) throw new DOMException("", "AbortError")
+      const response = await captured.client.models.execution(request, options)
+      if (owner() !== captured || captured.version !== version() ||
+        captured.credentials !== JSON.stringify(input.server?.().server?.http) ||
+        captured.sdk.transportCurrent?.() === false || captured.server?.transportCurrent?.() === false) throw new DOMException("", "AbortError")
+      return response
+    },
+  })
+  createComputed(() => {
+    const captured = owner()
+    const ready = input.ready?.() !== false
+    untrack(() => {
+      if (!ready || !captured.request.model) { query.invalidate(); return }
+      void query.load(captured, captured.request)
+    })
+  })
+  onCleanup(() => { lifetime.disposed = true; query.dispose() })
+  return {
+    context,
+    read: () => lifetime.disposed ? query.read() : view.value,
+    input: () => owner().request,
+    reason(key: ModelKey) {
+      const value = view.value
+      if (lifetime.disposed || input.ready?.() === false || value.status !== "ready" || readyOwner !== owner() || readyOwner?.version !== version()) return
+      const requested = owner().request.model
+      const selected = value.response.data.selection
+      if (requested?.providerID === key.providerID && requested.id === key.modelID &&
+        selected?.ref.providerID === key.providerID && selected.ref.id === key.modelID &&
+        selected.ref.variant === requested.variant && selected.status !== "ready") return selected.reason
+      const entry = value.response.data.models.find((item) => item.model.providerID === key.providerID && item.model.id === key.modelID)
+      return entry && entry.status !== "ready" ? entry.reason : undefined
+    },
+    ready() {
+      const value = view.value
+      if (lifetime.disposed || input.ready?.() === false || value.status !== "ready" || readyOwner !== owner() || readyOwner?.version !== version()) return false
+      const selected = value.response.data.selection
+      const model = owner().request.model
+      return selected?.status === "ready" && selected.ref.providerID === model?.providerID &&
+        selected.ref.id === model?.id && selected.ref.variant === model?.variant
+    },
+    allows(key: ModelKey) {
+      const value = view.value
+      if (lifetime.disposed || input.ready?.() === false || value.status !== "ready" || readyOwner !== owner() || readyOwner?.version !== version()) return false
+      const requested = owner().request.model
+      const selection = value.response.data.selection
+      if (requested?.providerID === key.providerID && requested.id === key.modelID &&
+        (selection?.status !== "ready" || selection.ref.providerID !== requested.providerID ||
+          selection.ref.id !== requested.id || selection.ref.variant !== requested.variant)) return false
+      return value.response.data.models.some((entry) => entry.model.id === key.modelID && entry.model.providerID === key.providerID && entry.status === "ready")
+    },
+  }
+}

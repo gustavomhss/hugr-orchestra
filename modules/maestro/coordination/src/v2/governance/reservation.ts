@@ -5,14 +5,15 @@ import { ToolFailure } from "@orchestra/llm"
 import { and, asc, eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
-import type { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
-import { SessionSchema, type SessionStore } from "@orchestra/core/session"
+import { SessionSchema } from "@orchestra/core/session"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { verifyGovernedTask } from "../../governed-task"
 import { taskHash, type TaskHashBinding } from "../../task-hash"
 import { MaestroApprovalTools } from "../tools/approval"
+import { MaestroReviewRecords } from "../tools/review-records"
 import type { GovernanceDispatchV2 } from "./dispatch"
+import { GovernanceEvidenceV2 } from "./evidence"
 import type { GovernanceInputV2 } from "./input"
 import { GovernanceRecordsV2 } from "./records"
 import { WriteRootsV2 } from "./write-roots"
@@ -21,10 +22,8 @@ import { WriteRootsV2 } from "./write-roots"
 // presentation reserves exactly one child Session, write-once, with the permission snapshot it runs under, and is
 // consumed once before that child's first provider turn. Records and refusals are the earlier runtime's, so its reservations replay here.
 
-export type Services = {
-  readonly db: Database.Interface["db"]
+export type Services = GovernanceEvidenceV2.Services & {
   readonly events: EventV2.Interface
-  readonly store: SessionStore.Interface
   readonly canonical: (id: string) => string
 }
 
@@ -132,6 +131,7 @@ export const reserve = Effect.fn("GovernanceReservationV2.reserve")(function* (
   }
   const id = reservedID(suffix)
   const existing = yield* GovernanceRecordsV2.row(services.db, id)
+  if (!existing) yield* requireCurrentEvidence(services, input.governed)
   const permission = existing
     ? yield* replayed(services, existing, reservation)
     : yield* services.events.publish(MaestroEvent.Approval.ReservedV2, reservation, { id }).pipe(
@@ -187,6 +187,7 @@ export const consume = Effect.fn("GovernanceReservationV2.consume")(function* (
   }
   const existing = yield* GovernanceRecordsV2.row(services.db, id)
   if (existing) return yield* sameReceipt(existing, receipt)
+  yield* requireCurrentEvidence(services, reservation)
   yield* services.events.publish(MaestroEvent.Approval.ConsumedV2, receipt, { id }).pipe(
     Effect.catchCause(() =>
       Effect.gen(function* () {
@@ -197,6 +198,46 @@ export const consume = Effect.fn("GovernanceReservationV2.consume")(function* (
     ),
   )
 })
+
+const requireCurrentEvidence = Effect.fn("GovernanceReservationV2.requireCurrentEvidence")(function* (
+  services: Services,
+  binding: Governed,
+) {
+  const validation = yield* GovernanceRecordsV2.readValidation(services.db, binding.validationRecordID)
+  const plan = yield* GovernanceRecordsV2.readPlanRevision(services.db, binding.planRevisionID)
+  const context = validation?.contextRecordID
+    ? yield* GovernanceRecordsV2.readContext(services.db, validation.contextRecordID)
+    : undefined
+  if (!validation || !plan || !context) return yield* denied("approval-evidence-missing")
+  const session = yield* services.store.get(SessionSchema.ID.make(binding.sessionID))
+  if (
+    !session ||
+    session.projectID !== binding.projectID ||
+    session.location.directory !== context.directory ||
+    validation.outcome !== "VALID" ||
+    validation.sessionID !== binding.sessionID ||
+    validation.projectID !== binding.projectID ||
+    validation.planRevisionID !== binding.planRevisionID ||
+    validation.contextRecordID !== context.id ||
+    validation.contextHash !== binding.contextHash ||
+    validation.reviewPolicyHash !== binding.policyHash ||
+    MaestroReviewRecords.hash(validation) !== binding.validationHash ||
+    plan.id !== binding.planRevisionID ||
+    plan.sessionID !== binding.sessionID ||
+    plan.revisionHash !== binding.revisionHash ||
+    context.sessionID !== binding.sessionID ||
+    context.projectID !== binding.projectID ||
+    context.planRevisionID !== plan.id ||
+    context.contextHash !== binding.contextHash ||
+    (context.mode === "GROUNDED" && context.planRevisionHash !== binding.revisionHash)
+  )
+    return yield* denied("approval-evidence-binding-mismatch")
+  if (!(yield* GovernanceEvidenceV2.contextIsCurrent(services, context))) return yield* denied("context-not-current")
+},
+  Effect.catch((error) => error instanceof ToolFailure ? Effect.fail(error) : Effect.fail(denied("approval-evidence-unreadable"))),
+  // Historical record readers decode synchronously. Invalid stored data is expected; other defects retain their cause.
+  Effect.catchDefect((error) => Schema.isSchemaError(error) ? Effect.fail(denied("approval-evidence-invalid")) : Effect.die(error)),
+)
 
 function denied(reason: string) {
   return new ToolFailure({ message: `Governed Task denied: ${reason}` })

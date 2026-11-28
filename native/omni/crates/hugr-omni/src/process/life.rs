@@ -8,7 +8,7 @@ use std::task::{Context, Poll, Waker};
 use std::time::Duration;
 
 use super::exit;
-use crate::client::Tree;
+use crate::client::{InventoryFailure, Tree};
 use crate::error::Error;
 use crate::types::{Exit, ProcessInfo, Reason};
 
@@ -100,11 +100,16 @@ impl Life {
 
     /// The live members `stop` would end now (the supervisor sets `parent_pid` only when the parent is listed).
     pub(super) async fn processes(&self) -> Result<Vec<ProcessInfo>, Error> {
-        Ok(Self::process_info(self.tree.processes().await?))
+        self.inventory().await.map_err(InventoryFailure::into_error)
     }
 
     pub(super) async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
         Ok(Self::process_info(self.tree.observe_processes().await?))
+    }
+
+    /// The same member mapping, retaining the private recoverable/terminal distinction for resource watches.
+    pub(super) async fn inventory(&self) -> Result<Vec<ProcessInfo>, InventoryFailure> {
+        Ok(Self::process_info(self.tree.inventory().await?))
     }
 
     fn process_info(list: Vec<omni_proto::ProcEntry>) -> Vec<ProcessInfo> {
@@ -115,6 +120,11 @@ impl Life {
                 name: p.name,
             })
             .collect()
+    }
+
+    #[cfg(all(test, target_os = "linux"))]
+    pub(super) fn inventory_probe(&self) -> Result<crate::client::inventory_probe::Watch, Error> {
+        self.tree.inventory_probe()
     }
 
     /// Contract §7: the cause is committed when the library acts, before the termination is sent.

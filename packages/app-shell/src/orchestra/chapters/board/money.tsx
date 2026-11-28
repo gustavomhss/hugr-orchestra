@@ -103,7 +103,11 @@ function Amount(props: { value: Meter }) {
         <span class="money-unmetered">
           {language.t("orchestra.money.notMetered", { source: (() => {
             const current = value()
-            return current.kind === "not-metered" ? current.source : ""
+            if (current.kind !== "not-metered") return ""
+            // Also translate the old server wording; a withdrawn scan was not necessarily never fetched.
+            return current.source === "GitHub Actions measurements unavailable" || current.source === "GitHub Actions not fetched yet"
+              ? language.t("orchestra.board.workspace.ciMissing")
+              : current.source
           })() })}
         </span>
       }
@@ -551,8 +555,8 @@ export function ProofPanel(props: { proof: Proof; onDecision: (id: string) => vo
   const checks = () => proofChecks(props.proof)
   const running = () => checks().some((check) => checkTick(check) === "run")
   return (
-    <section class="board-sec money-proof">
-      <h3>{t("orchestra.proof.title")}</h3>
+    <details class="board-sec money-proof" open={!!(props.proof.pr || props.proof.guardrail || props.proof.crashReason || props.proof.banner)}>
+      <summary>{t("orchestra.proof.title")}</summary>
       <Show when={props.proof.banner}>
         <p class="money-banner" role="status">
           {t("orchestra.proof.banner")}
@@ -642,6 +646,6 @@ export function ProofPanel(props: { proof: Proof; onDecision: (id: string) => vo
           </p>
         )}
       </Show>
-    </section>
+    </details>
   )
 }

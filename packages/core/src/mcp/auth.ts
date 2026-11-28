@@ -8,6 +8,7 @@ import { EffectFlock } from "../util/effect-flock"
 import { CredentialCipher } from "../credential/cipher"
 
 export const Tokens = Schema.Struct({
+  issuer: Schema.mutableKey(Schema.optional(Schema.Unknown)),
   accessToken: Schema.mutableKey(Schema.String),
   refreshToken: Schema.mutableKey(Schema.optional(Schema.String)),
   expiresAt: Schema.mutableKey(Schema.optional(Schema.Number)),
@@ -16,6 +17,8 @@ export const Tokens = Schema.Struct({
 export type Tokens = Schema.Schema.Type<typeof Tokens>
 
 export const ClientInfo = Schema.Struct({
+  issuer: Schema.mutableKey(Schema.optional(Schema.Unknown)),
+  source: Schema.mutableKey(Schema.optional(Schema.Unknown)),
   clientId: Schema.mutableKey(Schema.String),
   clientSecret: Schema.mutableKey(Schema.optional(Schema.String)),
   clientIdIssuedAt: Schema.mutableKey(Schema.optional(Schema.Number)),
@@ -23,7 +26,14 @@ export const ClientInfo = Schema.Struct({
 })
 export type ClientInfo = Schema.Schema.Type<typeof ClientInfo>
 
+export const StaticClientBinding = Schema.Struct({ clientId: Schema.String, issuer: Schema.String })
+export type StaticClientBinding = Schema.Schema.Type<typeof StaticClientBinding>
+
 export const Entry = Schema.Struct({
+  issuer: Schema.mutableKey(Schema.optional(Schema.Unknown)),
+  generation: Schema.mutableKey(Schema.optional(Schema.Unknown)),
+  removed: Schema.mutableKey(Schema.optional(Schema.Boolean)),
+  staticClientBinding: Schema.mutableKey(Schema.optional(Schema.Unknown)),
   tokens: Schema.mutableKey(Schema.optional(Tokens)),
   clientInfo: Schema.mutableKey(Schema.optional(ClientInfo)),
   codeVerifier: Schema.mutableKey(Schema.optional(Schema.String)),
@@ -42,19 +52,72 @@ class LockedError extends Schema.TaggedErrorClass<LockedError>()("McpAuthLockedE
 const filepath = path.join(Global.Path.data, "mcp-auth.json")
 const lockKey = `mcp-auth:${filepath}`
 
+export type Binding = { readonly name: string; readonly serverUrl: string; readonly generation: string }
+export type StampedTokens = Omit<Tokens, "issuer"> & { issuer: string }
+export type StampedClientInfo = Omit<ClientInfo, "issuer" | "source"> & {
+  issuer: string
+  source: "dynamic" | "configured"
+}
+export type BoundEntry = Omit<Entry, "issuer" | "generation" | "tokens" | "clientInfo" | "staticClientBinding"> & {
+  issuer?: string
+  generation: string
+  tokens?: StampedTokens
+  clientInfo?: StampedClientInfo
+  staticClientBinding?: StaticClientBinding
+}
+export type Patch = {
+  issuer?: string
+  tokens?: StampedTokens
+  clientInfo?: StampedClientInfo
+  codeVerifier?: string
+  oauthState?: string
+}
+
+export class ReauthRequired extends Schema.TaggedErrorClass<ReauthRequired>()("McpReauthRequired", {}) {
+  override get message() {
+    return "MCP authentication must be renewed"
+  }
+}
+
+export function issuerUrl(value: unknown) {
+  if (typeof value !== "string" || !value || !URL.canParse(value)) return undefined
+  const url = new URL(value)
+  return url.protocol === "https:" || url.protocol === "http:" ? url.href : undefined
+}
+
+export function sameIssuer(a: unknown, b: unknown) {
+  const first = issuerUrl(a)
+  const second = issuerUrl(b)
+  return (
+    first !== undefined &&
+    second !== undefined &&
+    (first === second ||
+      (first.endsWith("/") && first.slice(0, -1) === second) ||
+      (second.endsWith("/") && second.slice(0, -1) === first))
+  )
+}
+
 export interface Interface {
   readonly all: () => Effect.Effect<Record<string, Entry>>
-  readonly get: (mcpName: string) => Effect.Effect<Entry | undefined>
-  readonly getForUrl: (mcpName: string, serverUrl: string) => Effect.Effect<Entry | undefined>
-  readonly set: (mcpName: string, entry: Entry, serverUrl?: string) => Effect.Effect<void>
-  readonly remove: (mcpName: string) => Effect.Effect<void>
-  readonly updateTokens: (mcpName: string, tokens: Tokens, serverUrl?: string) => Effect.Effect<void>
-  readonly updateClientInfo: (mcpName: string, clientInfo: ClientInfo, serverUrl?: string) => Effect.Effect<void>
-  readonly updateCodeVerifier: (mcpName: string, codeVerifier: string) => Effect.Effect<void>
-  readonly clearCodeVerifier: (mcpName: string) => Effect.Effect<void>
-  readonly updateOAuthState: (mcpName: string, oauthState: string) => Effect.Effect<void>
-  readonly getOAuthState: (mcpName: string) => Effect.Effect<string | undefined>
-  readonly clearOAuthState: (mcpName: string) => Effect.Effect<void>
+  readonly get: (name: string) => Effect.Effect<Entry | undefined>
+  readonly getForUrl: (name: string, serverUrl: string) => Effect.Effect<Entry | undefined>
+  readonly checkout: (name: string, serverUrl: string) => Effect.Effect<Binding, ReauthRequired>
+  readonly begin: (
+    name: string,
+    serverUrl: string,
+  ) => Effect.Effect<
+    { binding: Binding; previousState?: string; staticClientBinding?: StaticClientBinding },
+    ReauthRequired
+  >
+  readonly readBinding: (binding: Binding) => Effect.Effect<BoundEntry, ReauthRequired>
+  readonly updateBinding: (binding: Binding, patch: Patch) => Effect.Effect<void, ReauthRequired>
+  readonly invalidateBinding: (
+    binding: Binding,
+    type: "all" | "client" | "tokens",
+  ) => Effect.Effect<void, ReauthRequired>
+  readonly consumeState: (binding: Binding, expectedState: string) => Effect.Effect<void, ReauthRequired>
+  readonly commitBinding: (binding: Binding, entry: Patch) => Effect.Effect<void, ReauthRequired>
+  readonly remove: (name: string) => Effect.Effect<{ previousState?: string }>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/McpAuth") {}
@@ -122,91 +185,199 @@ const layer = Layer.effect(
       )
     })
 
-    const mutate = Effect.fn("McpAuth.mutate")(function* (update: (data: AuthData) => AuthData | undefined) {
-      yield* Effect.gen(function* () {
-        const next = update(yield* read())
-        if (!next) return
-        yield* write(next).pipe(Effect.orDie)
-      }).pipe(flock.withLock(lockKey), Effect.orDie)
-    })
+    // Validation and publication share the same cross-instance file lock, including read-only lease checks.
+    const mutate = <A>(update: (data: AuthData) => { next?: AuthData; value: A }) =>
+      Effect.gen(function* () {
+        const data = yield* read().pipe(Effect.orDie)
+        const result = yield* Effect.try({ try: () => update(data), catch: () => new ReauthRequired() })
+        if (result.next) yield* write(result.next).pipe(Effect.orDie)
+        return result.value
+      }).pipe(
+        flock.withLock(lockKey),
+        Effect.catchTag("LockTimeoutError", Effect.die),
+        Effect.catchTag("LockCompromisedError", Effect.die),
+      )
 
-    const get = Effect.fn("McpAuth.get")(function* (mcpName: string) {
-      const data = yield* all()
-      return data[mcpName]
+    const pin = Schema.decodeUnknownOption(StaticClientBinding)
+    const staticBinding = (entry: Entry) => {
+      if (entry.staticClientBinding === undefined) return undefined
+      const decoded = pin(entry.staticClientBinding)
+      if (Option.isNone(decoded) || !issuerUrl(decoded.value.issuer) || !decoded.value.clientId)
+        throw new ReauthRequired()
+      return decoded.value
+    }
+    // Unknown is restricted to the new on-disk stamps. Authority comes only from this per-entry validation.
+    const validate = (entry: Entry, createPin = false): BoundEntry => {
+      if (typeof entry.generation !== "string" || !entry.generation) throw new ReauthRequired()
+      const issuer = issuerUrl(entry.issuer)
+      if (entry.issuer !== undefined && !issuer) throw new ReauthRequired()
+      const authority = staticBinding(entry)
+      if (entry.tokens && (!issuer || !sameIssuer(entry.tokens.issuer, issuer) || !entry.clientInfo))
+        throw new ReauthRequired()
+      if (
+        entry.clientInfo &&
+        (!issuer ||
+          !sameIssuer(entry.clientInfo.issuer, issuer) ||
+          (entry.clientInfo.source !== "dynamic" && entry.clientInfo.source !== "configured"))
+      )
+        throw new ReauthRequired()
+      if (entry.clientInfo?.source === "configured") {
+        if (
+          entry.clientInfo.clientSecret !== undefined ||
+          (!authority && !createPin) ||
+          (authority && (authority.clientId !== entry.clientInfo.clientId || !sameIssuer(authority.issuer, issuer)))
+        )
+          throw new ReauthRequired()
+      }
+      return {
+        ...entry,
+        generation: entry.generation,
+        issuer,
+        tokens: entry.tokens ? { ...entry.tokens, issuer: issuer! } : undefined,
+        clientInfo: entry.clientInfo
+          ? { ...entry.clientInfo, issuer: issuer!, source: entry.clientInfo.source as "dynamic" | "configured" }
+          : undefined,
+        staticClientBinding:
+          entry.clientInfo?.source === "configured"
+            ? { clientId: entry.clientInfo.clientId, issuer: issuer! }
+            : authority,
+      }
+    }
+    const requireBinding = (data: AuthData, binding: Binding) => {
+      const current = data[binding.name]
+      if (
+        !current ||
+        current.removed ||
+        typeof binding.generation !== "string" ||
+        !binding.generation ||
+        current.generation !== binding.generation ||
+        current.serverUrl !== binding.serverUrl
+      )
+        throw new ReauthRequired()
+      return validate(current)
+    }
+    const bindingFor = (name: string, entry: { serverUrl: string; generation: string }): Binding => ({
+      name,
+      serverUrl: entry.serverUrl,
+      generation: entry.generation,
     })
-
-    const getForUrl = Effect.fn("McpAuth.getForUrl")(function* (mcpName: string, serverUrl: string) {
-      const entry = yield* get(mcpName)
-      if (!entry) return undefined
-      if (!entry.serverUrl) return undefined
-      if (entry.serverUrl !== serverUrl) return undefined
-      return entry
-    })
-
-    const set = Effect.fn("McpAuth.set")(function* (mcpName: string, entry: Entry, serverUrl?: string) {
-      yield* mutate((data) => ({
-        ...data,
-        [mcpName]: serverUrl ? { ...entry, serverUrl } : entry,
-      }))
-    })
-
-    const remove = Effect.fn("McpAuth.remove")(function* (mcpName: string) {
-      yield* mutate((data) => {
-        const next = { ...data }
-        delete next[mcpName]
-        return next
+    const get = (name: string) => all().pipe(Effect.map((data) => (data[name]?.removed ? undefined : data[name])))
+    const getForUrl = (name: string, serverUrl: string) =>
+      get(name).pipe(Effect.map((entry) => (entry?.serverUrl === serverUrl ? entry : undefined)))
+    const checkout = (name: string, serverUrl: string) =>
+      mutate((data) => {
+        const current = data[name]
+        if (current) {
+          if (
+            current.removed ||
+            current.serverUrl !== serverUrl ||
+            typeof current.generation !== "string" ||
+            !current.generation
+          )
+            throw new ReauthRequired()
+          validate(current)
+          return { value: bindingFor(name, { serverUrl, generation: current.generation }) }
+        }
+        const next = { serverUrl, generation: crypto.randomUUID() }
+        return { next: { ...data, [name]: next }, value: bindingFor(name, next) }
       })
-    })
-
-    const updateField = <K extends keyof Entry>(field: K, spanName: string) =>
-      Effect.fn(`McpAuth.${spanName}`)(function* (mcpName: string, value: NonNullable<Entry[K]>, serverUrl?: string) {
-        yield* mutate((data) => {
-          const entry = data[mcpName] ?? {}
-          entry[field] = value
-          if (serverUrl) entry.serverUrl = serverUrl
-          return { ...data, [mcpName]: entry }
-        })
+    const begin = (name: string, serverUrl: string) =>
+      mutate((data) => {
+        const current = data[name]
+        const next = {
+          serverUrl,
+          generation: crypto.randomUUID(),
+          staticClientBinding: current ? staticBinding(current) : undefined,
+        }
+        return {
+          next: { ...data, [name]: next },
+          value: {
+            binding: bindingFor(name, next),
+            previousState: current?.oauthState,
+            staticClientBinding: next.staticClientBinding,
+          },
+        }
       })
-
-    const clearField = (field: keyof Entry, spanName: string) =>
-      Effect.fn(`McpAuth.${spanName}`)(function* (mcpName: string) {
-        yield* mutate((data) => {
-          const entry = data[mcpName]
-          if (!entry) return undefined
-          delete entry[field]
-          return { ...data, [mcpName]: entry }
-        })
+    const readBinding = (binding: Binding) => mutate((data) => ({ value: requireBinding(data, binding) }))
+    const updateBinding = (binding: Binding, patch: Patch) =>
+      mutate((data) => {
+        const current = requireBinding(data, binding)
+        if (patch.issuer !== undefined && current.issuer !== undefined && !sameIssuer(current.issuer, patch.issuer))
+          throw new ReauthRequired()
+        // Copy only this closed patch: no caller can replace a lease or resource URL.
+        const next = validate(
+          {
+            ...current,
+            ...(patch.issuer !== undefined ? { issuer: patch.issuer } : {}),
+            ...(patch.tokens !== undefined ? { tokens: patch.tokens } : {}),
+            ...(patch.clientInfo !== undefined ? { clientInfo: patch.clientInfo } : {}),
+            ...(patch.codeVerifier !== undefined ? { codeVerifier: patch.codeVerifier } : {}),
+            ...(patch.oauthState !== undefined ? { oauthState: patch.oauthState } : {}),
+          },
+          true,
+        )
+        return { next: { ...data, [binding.name]: next }, value: undefined }
       })
-
-    const updateTokens = updateField("tokens", "updateTokens")
-    const updateClientInfo = updateField("clientInfo", "updateClientInfo")
-    const updateCodeVerifier = updateField("codeVerifier", "updateCodeVerifier")
-    const updateOAuthState = updateField("oauthState", "updateOAuthState")
-    const clearCodeVerifier = clearField("codeVerifier", "clearCodeVerifier")
-    const clearOAuthState = clearField("oauthState", "clearOAuthState")
-
-    const getOAuthState = Effect.fn("McpAuth.getOAuthState")(function* (mcpName: string) {
-      const entry = yield* get(mcpName)
-      return entry?.oauthState
-    })
+    const invalidateBinding = (binding: Binding, type: "all" | "client" | "tokens") =>
+      mutate((data) => {
+        const current = requireBinding(data, binding)
+        const next = {
+          ...current,
+          tokens: undefined,
+          ...(type !== "tokens" ? { clientInfo: undefined } : {}),
+          ...(type === "all" ? { codeVerifier: undefined, oauthState: undefined } : {}),
+        }
+        return { next: { ...data, [binding.name]: next }, value: undefined }
+      })
+    const consumeState = (binding: Binding, expectedState: string) =>
+      mutate((data) => {
+        const current = requireBinding(data, binding)
+        if (!expectedState || current.oauthState !== expectedState) throw new ReauthRequired()
+        return { next: { ...data, [binding.name]: { ...current, oauthState: undefined } }, value: undefined }
+      })
+    const commitBinding = (binding: Binding, entry: Patch) =>
+      mutate((data) => {
+        const current = requireBinding(data, binding)
+        if (!entry.tokens || !entry.clientInfo || !sameIssuer(current.issuer, entry.issuer)) throw new ReauthRequired()
+        const next = validate(
+          {
+            issuer: entry.issuer,
+            tokens: entry.tokens,
+            clientInfo: entry.clientInfo,
+            serverUrl: binding.serverUrl,
+            generation: crypto.randomUUID(),
+            staticClientBinding: current.staticClientBinding,
+          },
+          true,
+        )
+        return { next: { ...data, [binding.name]: next }, value: undefined }
+      })
+    const remove = (name: string) =>
+      mutate((data) => ({
+        next: { ...data, [name]: { generation: crypto.randomUUID(), removed: true } },
+        value: { previousState: data[name]?.oauthState },
+      })).pipe(Effect.orDie)
 
     return Service.of({
       all,
       get,
       getForUrl,
-      set,
+      checkout,
+      begin,
+      readBinding,
+      updateBinding,
+      invalidateBinding,
+      consumeState,
+      commitBinding,
       remove,
-      updateTokens,
-      updateClientInfo,
-      updateCodeVerifier,
-      clearCodeVerifier,
-      updateOAuthState,
-      getOAuthState,
-      clearOAuthState,
     })
   }),
 )
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [FSUtil.node, EffectFlock.node, CredentialCipher.node] })
+export const node = LayerNode.make({
+  service: Service,
+  layer: layer,
+  deps: [FSUtil.node, EffectFlock.node, CredentialCipher.node],
+})
 
 export * as McpAuth from "./auth"

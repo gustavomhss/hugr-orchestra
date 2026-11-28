@@ -27,6 +27,21 @@ const doc = (identifier: string, summary: string, description: string) =>
 
 export const BoardGroup = HttpApiGroup.make("server.board")
   .add(
+    HttpApiEndpoint.post("board.create", "/api/board/:key/issue", {
+      params: project,
+      payload: Board.CreateIssueInput,
+      success: Board.WriteResult,
+      error: errors,
+    }).annotateMerge(doc("create", "Create an issue", "Create an owner proposal in Backlog. The host records authorship; assignment and movement remain Maestro's.")),
+  )
+  .add(
+    HttpApiEndpoint.get("board.execution", "/api/board/:key/issue/:number/execution", {
+      params: issue,
+      success: Board.ExecutionReport,
+      error: BoardNotFoundError,
+    }).annotateMerge(doc("execution", "Read issue executions", "Historical attempts, participants and provider-turn telemetry, with immutable terminal receipts. Shared ownership is excluded and marked partial.")),
+  )
+  .add(
     HttpApiEndpoint.get("board.list", "/api/board", {
       query: Schema.Struct({
         archived: Schema.Literals(["true", "false"])

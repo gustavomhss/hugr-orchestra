@@ -4,7 +4,7 @@ description: The native seats, their roles, which are staffed, how Maestro learn
 internal: true
 when: The owner asks who is on the team, what a seat does, how independent review evidence works, why a seat cannot be dispatched, how a seat is renamed, or how areas and worktrees route code work.
 not-when: The question is about adding a custom agent or a skill; open custom or skills.
-covers: [modules/maestro/coordination, modules/specialists/archie, modules/specialists/backend, modules/specialists/team, packages/jimmy-specialist]
+covers: [modules/maestro/coordination, modules/specialists/archie, modules/specialists/backend, modules/specialists/team, packages/jimmy-specialist, packages/lucy-specialist/skills]
 ---
 
 # The team of seats
@@ -116,3 +116,9 @@ language and framework tree that `backend` lists. `Seats.sharedSource()` resolve
 
 Assets and evidence for the `jimmy` seat. Its shipped skill trees are `jimmy-calibration` and `jimmy-web-research`; the
 other files are charter, benchmark and qualification records kept in the repository, not shipped.
+
+## `packages/lucy-specialist/skills`
+
+Shipped skill trees for `lucy`: `lucy-review` holds the review procedure, `lucy-lens` the defect lenses, and
+`lucy-audit` the audit techniques and scoped compliance branches. The seat also lists the shared `team-stack`.
+These trees are embedded with the other seat assets by `seat-skills-module.ts`; they do not grant additional tools.

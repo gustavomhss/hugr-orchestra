@@ -578,10 +578,10 @@ export const scenarios: Scenario[] = [
 
 export function main(args: string[]) {
   return Effect.gen(function* () {
-    const shared: { auth: ExerciseApp | undefined } = { auth: undefined }
+    const shared = new Map<boolean, ExerciseApp>()
     yield* Effect.addFinalizer(() =>
       Effect.promise(async () => {
-        await shared.auth?.dispose().catch(() => undefined)
+        await Promise.all([...shared.values()].map((app) => app.dispose().catch(() => undefined)))
         await cleanupExercisePaths()
       }),
     )

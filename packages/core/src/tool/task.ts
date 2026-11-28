@@ -198,15 +198,9 @@ const layer = Layer.effectDiscard(
             const recordedInput = yield* SessionInput.find(database.db, promptID)
             // Maestro's governance links a dispatched card to the child during admission; the thread note shares the
             // prompt's id, so an exact retry writes it once.
-            const card = yield* BoardThread.bySession(database.db, child.id)
-            if (card)
-              yield* BoardThread.write(database.db, {
-                id: `bno_${promptID}`,
-                issue: card.id,
-                kind: (yield* BoardThread.last(database.db, card.id)) === "question" ? "answer" : "brief",
-                author: "maestro",
-                body: input.prompt,
-              }).pipe(Effect.orDie)
+            const brief = yield* database.db.transaction((tx) => BoardThread.taskBrief(tx, {
+              id: `bno_${promptID}`, sessionID: child.id, body: input.prompt,
+            }), { behavior: "immediate" }).pipe(Effect.orDie)
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
@@ -271,8 +265,8 @@ const layer = Layer.effectDiscard(
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
             const settled = yield* governance.settle({ child, reply, admission, context })
-            if (card)
-              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: card.id, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text }).pipe(Effect.orDie)
+            if (brief)
+              yield* BoardThread.write(database.db, { id: `bno_${promptID}_r`, issue: brief.issue, kind: settled.blocked ? "question" : "return", author: target.id, body: settled.text, attempt: brief.attempt, sessionID: child.id }).pipe(Effect.orDie)
             return {
               sessionID: child.id,
               agent: target.id,
@@ -403,9 +397,7 @@ const resolveModel = Effect.fn("TaskTool.resolveModel")(function* (
 })
 
 function hasVariant(model: ModelV2.Info, ref: ModelV2.Ref) {
-  return (
-    ref.variant === undefined || ref.variant === "default" || model.variants.some((variant) => variant.id === ref.variant)
-  )
+  return ref.variant === undefined || model.variants.some((variant) => variant.id === ref.variant)
 }
 
 // Length-delimited JSON avoids collisions between arbitrary provider call IDs.
@@ -417,7 +409,7 @@ const identity = (domain: string, context: Tool.Context, childID?: SessionSchema
 const sameModel = (left: ModelV2.Ref | undefined, right: ModelV2.Ref | undefined) =>
   left?.providerID === right?.providerID &&
   left?.id === right?.id &&
-  (left?.variant ?? "default") === (right?.variant ?? "default")
+  left?.variant === right?.variant
 
 const samePlacement = (session: SessionSchema.Info, location: Location.Info) =>
   session.location.directory === location.directory && session.location.workspaceID === location.workspaceID

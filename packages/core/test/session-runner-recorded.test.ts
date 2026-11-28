@@ -162,7 +162,8 @@ describe("SessionRunnerLLM recorded", () => {
       const messages = yield* session.context(sessionID)
       expect(messages).toHaveLength(2)
       expect(messages[0]).toMatchObject({ id: prompt.id, type: "user", text: "Say hello in one short sentence." })
-      expect(messages[1]).toMatchObject({ type: "assistant", agent: "maestro", finish: "stop" })
+      // This recording reports input/output but no cache-write measurement. Normalized zero is not full usage.
+      expect(messages[1]).toMatchObject({ type: "assistant", agent: "maestro", finish: "stop", usageKnown: false, costSource: "catalog", tokens: { input: 22, output: 2 } })
       expect(messages[1]?.type === "assistant" ? messages[1].content : []).toMatchObject([
         { type: "text", text: "Hello!" },
       ])

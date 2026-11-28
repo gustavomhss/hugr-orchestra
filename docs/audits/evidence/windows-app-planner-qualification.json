@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "status": "planner-qualified; new matrix runtime qualification pending",
+  "run": "43466831695",
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43466831695",
+  "snapshot": "07b1141e6ac87e7013171599a442e0a307a345e9",
+  "rootIntegration": "76b067cd54bac250fbfc593bbc1fde03bac49b1a",
+  "conclusion": "success",
+  "scope": {"command": "bun run test:ci script test/test-plan.test.ts --os both", "files": ["packages/script/test/test-plan.test.ts"]},
+  "linux": {"job": "132028090074", "pass": 24, "fail": 0, "assertions": 283, "seconds": 0.109},
+  "windows": {"job": "132028089502", "pass": 24, "fail": 0, "assertions": 283, "seconds": 0.191},
+  "cleanup": {"job": "132030515989", "conclusion": "success"},
+  "receipt": {"path": "/tmp/root-windows-app-plan.log", "sha256": "bef7cedbfb26feab39ac09dff9eb39e345d01afee32f521796a3ed64e9071ebb", "exit": 0},
+  "staticPartition": {"browserFiles": 99, "plannedFilesPerBin": [33, 33, 33], "anchors": ["test-browser/lean-chapter-route.test.ts", "test-browser/lean-native-product.test.ts", "test-browser/prompt-retry.test.ts"], "fourthControl": "test-browser/model-execution-consumer.test.tsx appears once in bin3 under retained weights", "proofLevel": "Hosted planner exercises union/no duplicates/anchors/commands/filtering/LPT/deadline/cap contracts;33-per-bin split is static scheduling, not browser execution.", "historicalCases": {"run": "43445796579", "topLevel": 644, "nestedPrintedOutcomesNotSuiteCases": 700}},
+  "matrixArtifact": {"available": false, "runArtifactCount": 0, "totalJobsObserved": null, "limit": "Focused test-ci run publishes no actual test.yml plan output. Do not assert70 total jobs: dynamic Core counts may change with source discovery."},
+  "supersedes": "43463248760 had21 passing planner tests and predates the App split; it is not the final planner gate.",
+  "pending": ["Actual Windows App unit plus three direct-wrapper browser lanes.", "Other new Windows CLI/Server/client and Boundary/proof lanes, with actual manifests and controls.", "Final full cold epic on repaired source after remaining focused gates."],
+  "limits": ["No current browser case totals or whole-Root green inferred from planner green.", "Linux matrix and unit10/E2E5 ceilings remain pinned; no new deadline exception.", "No source edit, local test/type/build or CI dispatch executed while writing this evidence."]
+}

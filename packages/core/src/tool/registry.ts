@@ -1,7 +1,7 @@
 export * as ToolRegistry from "./registry"
 
 import { ToolFailure, ToolOutput, type ToolCall, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
-import { Cause, Context, DateTime, Effect, Exit, Layer, Option, Scope } from "effect"
+import { Cause, Context, DateTime, Effect, Exit, Layer, Option, Redacted, Scope } from "effect"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { AgentV2 } from "../agent"
 import { PermissionV2 } from "../permission"
@@ -12,8 +12,9 @@ import type { ModelV2 } from "../model"
 import { ToolOutputStore } from "../tool-output-store"
 import { Wildcard } from "../util/wildcard"
 import { ApplicationTools } from "./application-tools"
-import { definition, isOnDemand, permission, settle, validateName, type AnyTool, type RegistrationError } from "./tool"
+import { definition, isOnDemand, permission, settle, validateName, type AnyTool, RegistrationError } from "./tool"
 import { Tools } from "./tools"
+import { McpIdentity } from "../mcp/identity"
 import { makeLocationNode } from "../effect/app-node"
 import { ToolSafety } from "../tool-safety"
 import { Location } from "../location"
@@ -41,6 +42,7 @@ export interface Interface {
     options?: { readonly advertisedNames?: readonly string[] },
   ) => Effect.Effect<Materialization>
   /** Internal registration capability exposed publicly only through Tools.Service. */
+  readonly registerMcp: Tools.Interface["registerMcp"]
   readonly register: (tools: Readonly<Record<string, AnyTool>>) => Effect.Effect<void, RegistrationError, Scope.Scope>
   /** Installed hooks on a Session event of this Location, over the profile its tool calls load. */
   readonly session: (
@@ -89,13 +91,14 @@ const registryLayer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const applications = yield* ApplicationTools.Service
+    const identities = yield* McpIdentity.Service
     const resources = yield* ToolOutputStore.Service
     const safety = yield* ToolSafety.Service
     const native = yield* NativeBinding
     const capturedProfile = yield* ToolSafety.RuntimeProfile
     const profileLoader = yield* ToolSafety.RuntimeProfileLoader
     const sessions = yield* SessionStore.Service
-    type Registration = { readonly identity: object; readonly tool: AnyTool }
+    type Registration = { readonly identity: object; readonly tool: AnyTool; readonly origin?: Redacted.Redacted<string> }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
     const fatalToolCause = (cause: Cause.Cause<ToolFailure>) => Effect.failCause(Cause.fromReasons<never>(
       cause.reasons.flatMap((reason) => reason._tag === "Fail"
@@ -274,6 +277,32 @@ const registryLayer = Layer.effect(
           Effect.provideService(ToolSafety.RuntimeProfile, effectiveProfile),
         )
       })
+    const refusal = () => new RegistrationError({ name: "mcp_", message: "MCP tool registration refused" })
+    const install = (prepare: () => ReadonlyArray<readonly [string, Registration]>) =>
+      Effect.uninterruptible(
+        Effect.gen(function* () {
+          // Check, construct and publish in one synchronous effect; no scheduler handoff can cross the collision check.
+          const owned = yield* Effect.try({
+            try: () => {
+              const token = {}
+              const entries = prepare()
+              for (const [name, registration] of entries)
+                local.set(name, [...(local.get(name) ?? []), { token, registration }])
+              return { token, entries }
+            },
+            catch: refusal,
+          })
+          yield* Effect.addFinalizer(() =>
+            Effect.sync(() => {
+              for (const [name] of owned.entries) {
+                const remaining = local.get(name)?.filter((entry) => entry.token !== owned.token) ?? []
+                if (remaining.length) local.set(name, remaining)
+                else local.delete(name)
+              }
+            }),
+          )
+        }),
+      )
 
     return Service.of({
       session,
@@ -282,24 +311,29 @@ const registryLayer = Layer.effect(
         (local.get(name)?.at(-1)?.registration ?? applications.entries().get(name))?.identity,
       register: Effect.fn("ToolRegistry.register")(function* (tools) {
         const entries = Object.entries(tools)
-        if (entries.length === 0) return
-        yield* Effect.forEach(entries, ([name]) => validateName(name), { discard: true })
-        yield* Effect.uninterruptible(
-          Effect.gen(function* () {
-            const token = {}
-            for (const [name, tool] of entries)
-              local.set(name, [...(local.get(name) ?? []), { token, registration: { identity: {}, tool } }])
-            yield* Effect.addFinalizer(() =>
-              Effect.sync(() => {
-                for (const [name] of entries) {
-                  const registrations = local.get(name)?.filter((registration) => registration.token !== token) ?? []
-                  if (registrations.length > 0) local.set(name, registrations)
-                  else local.delete(name)
-                }
-              }),
-            )
-          }),
-        )
+        yield* Effect.forEach(entries, ([name]) => Tools.validateOrdinaryName(name), { discard: true })
+        if (!entries.length) return
+        yield* install(() => entries.map(([name, tool]) => [name, { identity: {}, tool }] as const))
+      }),
+      registerMcp: Effect.fn("ToolRegistry.registerMcp")(function* (authority, rawToolName, make) {
+        const derived = yield* identities.identify(authority, rawToolName).pipe(Effect.mapError(refusal))
+        const checked: Effect.Effect<void, RegistrationError> = validateName(derived.id)
+        yield* checked.pipe(Effect.mapError(refusal))
+        yield* install(() => {
+          if (
+            applications.entries().has(derived.id) ||
+            local
+              .get(derived.id)
+              ?.some(
+                (entry) =>
+                  !entry.registration.origin ||
+                  Redacted.value(entry.registration.origin) !== Redacted.value(derived.origin),
+              )
+          )
+            throw refusal()
+          return [[derived.id, { identity: {}, tool: make(derived.id), origin: derived.origin }]]
+        })
+        return derived.id
       }),
       materialize: Effect.fn("ToolRegistry.materialize")(function* (permissions = [], options) {
         const registrations = new Map(applications.entries())
@@ -341,7 +375,7 @@ const registryLayer = Layer.effect(
 
 const layer = Layer.effect(
   Tools.Service,
-  Service.use((registry) => Effect.succeed(Tools.Service.of({ register: registry.register }))),
+  Service.use((registry) => Effect.succeed(Tools.Service.of({ register: registry.register, registerMcp: registry.registerMcp }))),
 ).pipe(Layer.provideMerge(registryLayer))
 
 const nativeLayer = Layer.unwrap(Effect.gen(function* () {
@@ -361,21 +395,21 @@ export function whollyDisabled(actions: string | ReadonlyArray<string>, rules: P
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
+  deps: [ApplicationTools.node, McpIdentity.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
 })
 
 /** Native host composition replacements: captures real Location/Event services while constructing the registry. */
 export const nativeNode = makeLocationNode({
   service: Service, layer: nativeLayer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
+  deps: [ApplicationTools.node, McpIdentity.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
 })
 export const nativeToolsNode = makeLocationNode({
   service: Tools.Service, layer: nativeLayer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
+  deps: [ApplicationTools.node, McpIdentity.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
 })
 
 export const toolsNode = makeLocationNode({
   service: Tools.Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
+  deps: [ApplicationTools.node, McpIdentity.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
 })

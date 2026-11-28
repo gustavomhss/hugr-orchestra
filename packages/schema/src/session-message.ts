@@ -168,6 +168,8 @@ export const AssistantContent = Schema.Union([AssistantText, AssistantReasoning,
 export type AssistantContent = AssistantText | AssistantReasoning | AssistantTool
 
 export interface Assistant extends Schema.Schema.Type<typeof Assistant> {}
+/** Where the stored USD value came from, not an attestation of an invoiced charge. */
+export const CostSource = Schema.Literals(["provider", "catalog", "unavailable"]).annotate({ identifier: "Session.Message.CostSource" })
 export const Assistant = Schema.Struct({
   ...Base,
   type: Schema.Literal("assistant"),
@@ -181,6 +183,8 @@ export const Assistant = Schema.Struct({
   }).pipe(optional),
   finish: Schema.String.pipe(optional),
   cost: Schema.Finite.pipe(optional),
+  costSource: CostSource.pipe(optional),
+  usageKnown: Schema.Boolean.pipe(optional),
   tokens: Schema.Struct({
     input: Schema.Finite,
     output: Schema.Finite,

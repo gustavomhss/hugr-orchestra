@@ -1,0 +1,213 @@
+{
+  "version": 1,
+  "run": 43453802489,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43453802489",
+  "source": "9ab7680cc512bfc6f4e44a77f7056eb723e2b74e",
+  "status": "completed",
+  "inputs": {
+    "packages": "",
+    "cold": true,
+    "windows_e2e": false
+  },
+  "priorFailedEpic": 43427741510,
+  "scope": "Complete repository test workflow; normal package selections and existing dedicated native-lane exclusions preserved. No full green or ledger closure yet.",
+  "focusedPrerequisites": {
+    "codeModeBoth": 43450026982,
+    "coreE10Both": 43450029623,
+    "plannerBoth": 43449907397,
+    "boundaryBoth": 43446942835,
+    "memoryPhysicalBoth": 43451586669,
+    "browserConsumerBoth": 43452732952,
+    "browserE2E2SpecsLinux": 43452475375,
+    "cliSchemaBoth": 43452472712
+  },
+  "ledger": {
+    "closed": 63,
+    "total": 65,
+    "stillOpen": [
+      "E10",
+      "M13"
+    ]
+  },
+  "rootCoreFinalTypecheck": {
+    "command": "GOMAXPROCS=2 bun typecheck",
+    "directory": "packages/core",
+    "exit": 0
+  },
+  "conclusion": "failure",
+  "job_conclusions": {
+    "success": 49,
+    "failure": 11,
+    "cancelled": 3
+  },
+  "non_success_jobs": [
+    {
+      "name": "e2e (linux 6/8)",
+      "id": 131982693795,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 4/8)",
+      "id": 131982693839,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 8/8)",
+      "id": 131982693931,
+      "conclusion": "failure"
+    },
+    {
+      "name": "e2e (linux 2/8)",
+      "id": 131982693935,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 8/15)",
+      "id": 131983346542,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 11/15)",
+      "id": 131983346559,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux core 6/15)",
+      "id": 131983346682,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (windows core 9/12)",
+      "id": 131983349805,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux app)",
+      "id": 131983349841,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (linux desktop Bun 3/3)",
+      "id": 131983352472,
+      "conclusion": "failure"
+    },
+    {
+      "name": "unit (windows atlas boundary, process query, rollback)",
+      "id": 131983355190,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows cli, server, clients)",
+      "id": 131983355266,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows app)",
+      "id": 131983355517,
+      "conclusion": "cancelled"
+    },
+    {
+      "name": "unit (windows desktop Bun 3/3)",
+      "id": 131983355565,
+      "conclusion": "failure"
+    }
+  ],
+  "followup": "Corrections and hosted qualification continue; next complete run not dispatched. No aggregate green or ledger closure.",
+  "thirdCold": {
+    "run": 43479893813,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479893813",
+    "source": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+    "integratedDev": "5804b4f794ba31f49890b79565cff62b65e37725",
+    "status": "completed",
+    "inputs": {
+      "packages": "",
+      "cold": true,
+      "windows_e2e": false
+    },
+    "observedJobs": 70,
+    "codeFrozen": true,
+    "postDispatchDelta": "Root subsequently added test-fixture and wiring repairs for observed failures. This run qualifies only its immutable c9ffb56c source; later test source needs requalification.",
+    "ledgerUnchanged": "63/65, E10 and M13 remain open until aggregate qualification.",
+    "conclusion": "failure",
+    "job_conclusions": {
+      "success": 63,
+      "failure": 7,
+      "cancelled": 0
+    },
+    "non_success_jobs": [
+      {
+        "name": "e2e (linux 4/8)",
+        "id": 132073531030,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows core 3/12)",
+        "id": 132074159169,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux core 12/15)",
+        "id": 132074159190,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux core 4/15)",
+        "id": 132074159427,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows core 4/12)",
+        "id": 132074159435,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (linux app)",
+        "id": 132074162214,
+        "conclusion": "failure"
+      },
+      {
+        "name": "unit (windows app unit)",
+        "id": 132074166934,
+        "conclusion": "failure"
+      }
+    ],
+    "subsequentFocusedGates": {
+      "wiringAndBrowserCLI": {
+        "run": 43484346251,
+        "both": "31P/94 assertions/5 own Omni spawns/0 delegated"
+      },
+      "appWiring": {
+        "run": 43485311529,
+        "both": "1P/9 assertions"
+      },
+      "thinkingStableTransport": {
+        "run": 43486973940,
+        "linux": "1P, retries0"
+      },
+      "writerAndLedger": {
+        "run": 43488702717,
+        "source": "2bb0f515b635aa3c37813021f83568f8f1fc6fae",
+        "both": "14P/125 assertions/122 own Omni spawns/0 delegated",
+        "linuxWriterMs": 198.76,
+        "windowsWriterMs": 1849.93,
+        "linux100kLedgerMs": 4464.26,
+        "windows100kLedgerMs": 8454.33,
+        "testBudgetMs": 30000,
+        "limit": "Actual full selected cohort now passes with bounded startup diagnostics; this does not establish the cause of the original silent READY timeout or qualify the complete Core suite."
+      }
+    }
+  },
+  "fourthCold": {
+    "run": 43492035272,
+    "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+    "attempt1": "68 success, 2 failure, 0 cancelled; 70 jobs",
+    "attempt2": "success; failed jobs only, identical source",
+    "evidence": "fourth-cold-requalification.json",
+    "conclusion": "success",
+    "finalLedger": {
+      "closed": 65,
+      "total": 65
+    },
+    "laterFixtureQualification": 43496472513
+  }
+}

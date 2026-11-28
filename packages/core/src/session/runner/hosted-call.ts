@@ -55,6 +55,7 @@ export function hostedHooks(
     readonly callID: string
     readonly action: string
     readonly resources: ReadonlyArray<string>
+    readonly fileResource?: string
   },
 ): ToolSafety.HostedCallHooks {
   return {
@@ -71,7 +72,7 @@ export function hostedHooks(
         return yield* new ToolSafety.Denied({ reason: "approval-v2-invocation-identity-missing" })
       const args = invocation.args
       const filePath = args && typeof args === "object" && "filePath" in args ? args.filePath : undefined
-      const resolved = typeof filePath === "string" && ["read", "write", "edit", "multiedit"].includes(invocation.tool)
+      const resolved = binding.fileResource === undefined && typeof filePath === "string" && ["read", "write", "edit", "multiedit"].includes(invocation.tool)
         ? yield* LocationMutation.Service.use((mutations) =>
             mutations.resolve({ path: filePath, kind: invocation.tool === "read" ? "directory" : "file" }),
           ).pipe(
@@ -82,11 +83,12 @@ export function hostedHooks(
           )
         : undefined
       const hook = request.action === "relay_hook"
+      const fileResource = binding.fileResource ?? resolved?.resource
       yield* permissions.askExplicit({
         sessionID: binding.sessionID,
         agent: binding.agent,
         action: hook ? "relay_hook" : binding.action,
-        resources: resolved ? [resolved.resource] : [...(hook ? request.resources : binding.resources)],
+        resources: fileResource === undefined ? [...(hook ? request.resources : binding.resources)] : [fileResource],
         metadata: {
           nativeSafety: true, action: request.action, callID: invocation.callID, tool: invocation.tool, projectID: invocation.projectID,
           ...(request.message === undefined ? {} : { message: request.message }),

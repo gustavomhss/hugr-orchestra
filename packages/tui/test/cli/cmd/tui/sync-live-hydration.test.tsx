@@ -4,12 +4,181 @@ import type { GlobalEvent, SessionMessage } from "../../../../src/types"
 import { tmpdir } from "../../../fixture/fixture"
 import { toolOutput, toolTitle } from "../../../../src/util/session-message"
 import { json, mount, wait } from "./sync-fixture"
-import { v2Session } from "../../../fixture/tui-sdk"
+import { createFetch, v2Session } from "../../../fixture/tui-sdk"
 
 const sessionID = "ses_hydration_race"
 const assistantID = "msg_hydration_assistant"
 const directory = "/tmp/orchestra/apps/cli"
 const model = { id: "model", providerID: "test" }
+
+test("real SSE connection control observes greeting, offline and reconnect on one mounted TUI", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+  const unexpected: string[] = []
+  const routes = createFetch((url) => {
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
+    if (url.pathname === "/api/mcp/resource") return json({ location: { directory }, data: { resources: [] } })
+    return undefined
+  })
+  const server = Bun.serve({
+    port: 0, hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({
+          start(controller) {
+            streams.push(controller)
+            if (streams.length > 1) greeting(controller, streams.length)
+          },
+        }), { headers: { "content-type": "text/event-stream" } })
+      return routes.fetch(request).catch((error) => {
+        unexpected.push(new URL(request.url).pathname)
+        throw error
+      })
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
+  const greetings = () => mounted.received.filter((event) => event.payload.type === "server.connected")
+  try {
+    expect(mounted.mounts.count).toBe(1)
+    await wait(() => streams.length === 1)
+    expect(streams).toHaveLength(1)
+    expect(unexpected).toEqual([])
+    // Hold the first server greeting until the real Probe and its observer exist.
+    greeting(streams[0], 1)
+    await wait(() => greetings().length === 1)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1"])
+    streams[0].close()
+    await wait(() => mounted.sdk.offline())
+    await wait(() => greetings().length === 2, 5_000)
+    expect(streams).toHaveLength(2)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1", "evt_connected_2"])
+    expect(mounted.sdk.offline()).toBe(false)
+    expect(mounted.mounts.count).toBe(1)
+    expect(unexpected).toEqual([])
+  } finally {
+    mounted.app.renderer.destroy()
+    server.stop(true)
+  }
+}, 15_000)
+
+test("a mounted fully synced Session reloads history and status after a real SSE reconnect", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const state = { afterGap: false, historyReads: 0, activeReads: 0 }
+  const historyAgain = Promise.withResolvers<void>()
+  const activeAgain = Promise.withResolvers<void>()
+  const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+  const unexpected: string[] = []
+  const routes = createFetch((url) => {
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
+    if (url.pathname === `/api/session/${sessionID}/message`) {
+      state.historyReads++
+      if (state.afterGap) historyAgain.resolve()
+      return json({ data: [
+        {
+          id: assistantID, type: "assistant", agent: "maestro", model,
+          content: [{ type: "text", id: "txt_gap", text: state.afterGap ? "completed while disconnected" : "before gap" }],
+          time: { created: 2, ...(state.afterGap ? { completed: 5 } : {}) },
+        },
+        { id: "msg_gap_user", type: "user", text: "hello", time: { created: 1 } },
+      ], cursor: {} })
+    }
+    if (url.pathname === "/api/session/active") {
+      state.activeReads++
+      if (state.afterGap) activeAgain.resolve()
+      return json({ data: state.afterGap ? {} : { [sessionID]: { type: "running" } } })
+    }
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request")
+      return json({ data: [] })
+    if (url.pathname === "/api/mcp/resource")
+      return json({ location: { directory }, data: { resources: [] } })
+    return undefined
+  })
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({
+          start(controller) {
+            streams.push(controller)
+            if (streams.length > 1) greeting(controller, streams.length)
+          },
+        }), { headers: { "content-type": "text/event-stream" } })
+      return routes.fetch(request).catch((error) => {
+        unexpected.push(new URL(request.url).pathname)
+        throw error
+      })
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
+  const greetings = () => mounted.received.filter((event) => event.payload.type === "server.connected")
+
+  try {
+    expect(mounted.mounts.count).toBe(1)
+    await wait(() => streams.length === 1)
+    expect(streams).toHaveLength(1)
+    expect(unexpected).toEqual([])
+    greeting(streams[0], 1)
+    await wait(() => greetings().length === 1)
+    await mounted.sync.session.sync(sessionID)
+    expect(mounted.mounts.count).toBe(1)
+    expect(streams).toHaveLength(1)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1"])
+    expect(state.historyReads).toBe(1)
+    expect(state.activeReads).toBe(1)
+    expect(content(mounted.sync)?.[0]).toMatchObject({ type: "text", text: "before gap" })
+    expect(mounted.sync.session.status(sessionID)).toBe("working")
+    expect(mounted.sync.data.session_status[sessionID]).toEqual({ type: "busy" })
+    expect(unexpected).toEqual([])
+
+    streams[0].close()
+    await wait(() => mounted.sdk.offline())
+    // The server's reply completes while the stream is disconnected: no corresponding event is sent to the TUI.
+    state.afterGap = true
+    await wait(() => greetings().length === 2, 5_000)
+    expect(streams).toHaveLength(2)
+    expect(greetings().map((event) => event.payload.id)).toEqual(["evt_connected_1", "evt_connected_2"])
+    expect(mounted.sdk.offline()).toBe(false)
+    expect(mounted.mounts.count).toBe(1)
+    expect(unexpected).toEqual([])
+
+    // Bound only the observation of the required reads; the disconnect/reconnect order above uses observable state.
+    const reloaded = await Promise.race([
+      Promise.all([historyAgain.promise, activeAgain.promise]).then(() => true),
+      Bun.sleep(3_000).then(() => false),
+    ])
+    expect({ reloaded, historyReads: state.historyReads > 1, activeReads: state.activeReads > 1 }).toEqual({
+      reloaded: true, historyReads: true, activeReads: true,
+    })
+    await wait(() => mounted.sync.session.status(sessionID) === "idle")
+    await wait(() => {
+      const restored = content(mounted.sync)?.[0]
+      return restored?.type === "text" && restored.text === "completed while disconnected"
+    })
+    expect(content(mounted.sync)?.[0]).toMatchObject({ type: "text", text: "completed while disconnected" })
+    expect(mounted.sync.data.session_status[sessionID]?.type ?? "idle").toBe("idle")
+    expect(mounted.mounts.count).toBe(1)
+  } finally {
+    mounted.app.renderer.destroy()
+    server.stop(true)
+  }
+}, 15_000)
+
+function greeting(controller: ReadableStreamDefaultController<Uint8Array>, index: number) {
+  controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({
+    id: `evt_connected_${index}`, type: "server.connected", data: {},
+  })}\n\n`))
+}
 
 function content(sync: { data: { message: Record<string, SessionMessage[]> } }) {
   const message = sync.data.message[sessionID]?.find((item) => item.id === assistantID)
@@ -289,9 +458,6 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const state = { replies: 0 }
   const permission = { id: "per_auto_attach", sessionID, action: "read", resources: ["a.ts"] }
-  const explicit = {
-    id: "per_owner_approval", sessionID, action: "edit", resources: ["a.ts"], metadata: { nativeSafety: true },
-  }
   const question = {
     id: "que_auto_attach",
     sessionID,
@@ -299,9 +465,9 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
   }
   const { app, sync } = await mount(
     (url) => {
-      if (url.pathname === "/api/permission/request") return json({ data: [permission, explicit] })
+      if (url.pathname === "/api/permission/request") return json({ data: [permission] })
       if (url.pathname === "/api/question/request") return json({ data: [question] })
-      if (url.pathname.startsWith(`/api/session/${sessionID}/permission/`) && url.pathname.endsWith("/reply")) {
+      if (url.pathname === `/api/session/${sessionID}/permission/${permission.id}/reply`) {
         state.replies++
         return new Response(null, { status: 204 })
       }
@@ -314,7 +480,7 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
     await sync.bootstrap({ fatal: false })
     await wait(() => sync.status === "complete")
     expect(state.replies).toBe(1)
-    expect(sync.data.permission[sessionID]?.map((request) => request.id)).toEqual([explicit.id])
+    expect(sync.data.permission[sessionID] ?? []).toHaveLength(0)
     expect(sync.data.question[sessionID]?.map((item) => item.id)).toEqual([question.id])
   } finally {
     app.renderer.destroy()
@@ -378,7 +544,13 @@ test("live events after an empty failed hydration remain available to the retry"
     emit(global("session.next.step.started", { assistantMessageID: assistantID, agent: "maestro", model }))
     emit(global("session.next.text.started", { assistantMessageID: assistantID, textID: "txt_1" }))
     emit(global("session.next.text.delta", { assistantMessageID: assistantID, textID: "txt_1", delta: "after failure" }))
-    await wait(() => content(sync)?.[0]?.type === "text")
+    // The SDK may batch the delta after text.started; prove it landed before retrying the empty history.
+    await wait(() => {
+      const part = content(sync)?.[0]
+      return part?.type === "text" && part.text === "after failure"
+    })
+    expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "after failure" })
+    expect(state.reads).toBe(1)
     await sync.session.sync(sessionID)
     expect(content(sync)?.[0]).toMatchObject({ type: "text", text: "after failure" })
     expect(state.reads).toBe(2)

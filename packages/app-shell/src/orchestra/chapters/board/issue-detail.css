@@ -1,0 +1,646 @@
+/* A shared reading surface for the drawer and full issue. Spacing follows a 4 px scale:
+   4 between a subheading and its text, 8 within a group, 12 after a divider and 24 between groups. */
+.board-detail {
+  --issue-2xs: 4px;
+  --issue-xs: 8px;
+  --issue-sm: 12px;
+  --issue-md: 16px;
+  --issue-lg: 24px;
+  --issue-xl: 32px;
+  --issue-edge: var(--issue-lg);
+  --issue-title-size: var(--orchestra-font-size-2xl);
+  --issue-section-size: var(--orchestra-font-size-lg);
+  --issue-body-size: var(--orchestra-font-size-md);
+  --issue-label-size: var(--orchestra-font-size-sm);
+  --issue-code-size: var(--orchestra-font-size-xs);
+  --issue-reading-width: 64ch;
+  --issue-sheet: var(--orchestra-surface-float);
+  --issue-inset: color-mix(in srgb, var(--orchestra-accent) 4%, var(--issue-sheet));
+  --issue-rule: color-mix(in srgb, var(--orchestra-text) 13%, transparent);
+
+  gap: var(--issue-lg);
+  font-family: var(--mx-sans);
+  font-size: var(--issue-body-size);
+  font-optical-sizing: none;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.board-peek {
+  inline-size: min(600px, calc(100% - 24px));
+  padding: 0;
+  background: var(--orchestra-surface-float);
+}
+
+.board-peek .board-detail {
+  padding-block-end: var(--issue-lg);
+}
+
+.board-detail[data-full="true"] {
+  --issue-edge: var(--issue-xl);
+  --issue-title-size: var(--orchestra-font-size-3xl);
+  grid-template-columns: minmax(0, 1fr) minmax(236px, 27%);
+}
+
+.board-detail[data-full="true"] > .board-detail-main {
+  padding: 0;
+  background: var(--issue-sheet);
+  border-color: var(--issue-rule);
+}
+
+.board-detail .board-detail-main {
+  display: block;
+}
+
+.board-issue-header {
+  display: grid;
+  gap: var(--issue-sm);
+  padding: var(--issue-md) var(--issue-edge);
+  border-radius: var(--orchestra-radius-lg) var(--orchestra-radius-lg) 0 0;
+  background: var(--issue-inset);
+}
+
+.board-issue-header .board-detail-top {
+  position: relative;
+  gap: var(--issue-xs);
+  flex-wrap: wrap;
+}
+
+.board-issue-header .board-id {
+  color: var(--orchestra-muted);
+  font-size: var(--issue-code-size);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.board-issue-header .board-chip {
+  block-size: auto;
+  min-block-size: 24px;
+  font-size: var(--issue-code-size);
+  font-weight: 500;
+  background: var(--issue-sheet);
+}
+
+.board-issue-header .board-issue-paused {
+  color: var(--orchestra-warm);
+}
+
+.board-issue-header .board-icon-button {
+  inline-size: 32px;
+  block-size: 32px;
+}
+
+.board-detail .board-issue-header h2 {
+  color: var(--orchestra-text);
+  font-family: var(--mx-emphasis);
+  font-size: var(--issue-title-size);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.board-issue-header .board-open-full {
+  background: var(--issue-sheet);
+  color: var(--orchestra-accent);
+  min-block-size: 32px;
+  padding-inline: var(--issue-sm);
+  font-size: var(--issue-label-size);
+  font-weight: 500;
+}
+
+.board-issue-actions > summary {
+  list-style: none;
+}
+
+.board-issue-actions > summary::-webkit-details-marker {
+  display: none;
+}
+
+.board-issue-actions[open] > summary {
+  background: var(--orchestra-overlay-hover);
+  color: var(--orchestra-text);
+}
+
+.board-issue-actions > summary:focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: -2px;
+}
+
+.board-issue-actions .board-controls {
+  position: absolute;
+  inset-block-start: calc(100% + var(--issue-xs));
+  inset-inline-end: 0;
+  z-index: 2;
+  display: grid;
+  justify-items: start;
+  gap: var(--issue-sm);
+  inline-size: max-content;
+  max-inline-size: 100%;
+  padding: var(--issue-sm);
+  border: 1px solid var(--issue-rule);
+  border-radius: var(--orchestra-radius-md);
+  background: var(--issue-sheet);
+  box-shadow: var(--mx-shadow);
+}
+
+.board-issue-header .board-claim {
+  margin: 0;
+}
+
+.board-detail .board-issue-tabs {
+  gap: 0 var(--issue-xs);
+  padding-inline: var(--issue-edge);
+  border-block: 1px solid var(--issue-rule);
+  background: var(--issue-sheet);
+}
+
+.board-detail .board-issue-tabs button {
+  min-block-size: 40px;
+  padding: var(--issue-xs);
+  font-size: var(--issue-label-size);
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.board-detail .board-issue-tabs button[aria-selected="true"] {
+  color: var(--orchestra-accent);
+  font-weight: 600;
+}
+
+.board-detail .board-issue-panel:not([hidden]) {
+  margin: 0;
+  padding: var(--issue-md) var(--issue-edge) var(--issue-xl);
+  border: 0;
+}
+
+.board-detail-main > .mx-error {
+  margin: var(--issue-md) var(--issue-edge);
+}
+
+.board-detail .board-issue-overview {
+  gap: var(--issue-lg);
+}
+
+.board-detail .board-sec {
+  min-inline-size: 0;
+  gap: var(--issue-xs);
+  padding-block-start: var(--issue-sm);
+  border-color: var(--issue-rule);
+}
+
+.board-detail .board-issue-description {
+  padding-block-start: 0;
+  border: 0;
+}
+
+.board-detail .board-sec h3,
+.board-detail .board-issue-properties h3 {
+  color: var(--orchestra-text);
+  font-family: var(--mx-emphasis);
+  font-size: var(--issue-section-size);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+  text-transform: none;
+}
+
+.board-detail .board-count {
+  color: var(--orchestra-muted);
+  font-family: inherit;
+  font-size: var(--issue-code-size);
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+}
+
+.board-issue-description .board-document-markdown,
+.board-issue-description .board-body {
+  min-inline-size: 0;
+  max-inline-size: var(--issue-reading-width);
+  color: var(--orchestra-body);
+  font-size: var(--issue-body-size);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.board-issue-description .board-document-markdown :is(h1, h2, h3, h4, h5, h6) {
+  display: block;
+  margin: 0;
+  color: var(--orchestra-text);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+.board-issue-description .board-document-markdown :where(p) {
+  margin: 0;
+  text-wrap: pretty;
+  white-space: pre-line;
+}
+
+.board-issue-description .board-document-markdown :where(ul, ol) {
+  margin: 0;
+  padding-inline-start: var(--issue-md);
+}
+
+.board-issue-description .board-document-markdown ul {
+  list-style: disc;
+}
+
+.board-issue-description .board-document-markdown ol {
+  list-style: decimal;
+}
+
+.board-issue-description .board-document-markdown > * + * {
+  margin-block-start: var(--issue-xs);
+}
+
+.board-issue-description .board-document-markdown > :is(h1, h2, h3, h4, h5, h6) + * {
+  margin-block-start: var(--issue-2xs);
+}
+
+.board-issue-description .board-document-markdown > * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-block-start: var(--issue-md);
+}
+
+.board-issue-description .board-document-markdown a:not([href]) {
+  color: inherit;
+  text-decoration: none;
+}
+
+.board-issue-description .board-document-markdown pre {
+  overflow-x: auto;
+}
+
+.board-detail .board-issue-questions {
+  gap: 0;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--orchestra-warm) 28%, var(--issue-rule));
+  border-radius: var(--orchestra-radius-lg);
+  background: var(--issue-sheet);
+}
+
+.board-issue-questions > h3 {
+  padding: var(--issue-xs) var(--issue-md);
+  border-block-end: 1px solid var(--issue-rule);
+  border-radius: calc(var(--orchestra-radius-lg) - 1px) calc(var(--orchestra-radius-lg) - 1px) 0 0;
+  background: color-mix(in srgb, var(--orchestra-warm) 10%, var(--issue-sheet));
+}
+
+.board-issue-questions .board-count {
+  min-inline-size: 20px;
+  padding: 2px 6px;
+  border-radius: var(--orchestra-radius-full);
+  text-align: center;
+  background: var(--issue-sheet);
+  color: var(--orchestra-warm);
+}
+
+.board-detail .board-question {
+  display: block;
+}
+
+.board-question + .board-question {
+  border-block-start: 1px solid var(--issue-rule);
+}
+
+.board-question > summary:hover {
+  background: var(--issue-inset);
+}
+
+.board-detail :is(.board-question, .board-issue-property-group, .money-proof) > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--issue-sm);
+  min-block-size: 40px;
+  padding: var(--issue-xs) var(--issue-sm);
+  color: var(--orchestra-text);
+  font-size: var(--issue-label-size);
+  font-weight: 500;
+  line-height: 1.45;
+  list-style: none;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.board-issue-questions .board-question > summary {
+  min-block-size: 44px;
+  padding-inline: var(--issue-md);
+  font-size: var(--issue-body-size);
+}
+
+.board-detail :is(.board-question, .board-issue-property-group, .money-proof) > summary::-webkit-details-marker {
+  display: none;
+}
+
+.board-detail :is(.board-question, .board-issue-property-group, .money-proof) > summary::after {
+  content: "";
+  inline-size: 6px;
+  block-size: 6px;
+  margin-inline-end: 2px;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.board-detail :is(.board-question, .board-issue-property-group, .money-proof)[open] > summary::after {
+  transform: rotate(225deg) translateY(-2px);
+}
+
+.board-detail :is(.board-question, .board-issue-property-group, .money-proof) > summary:focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: -2px;
+  border-radius: var(--orchestra-radius-md);
+}
+
+.board-question-body {
+  display: grid;
+  gap: var(--issue-sm);
+  padding: var(--issue-sm) var(--issue-md) var(--issue-md);
+  border-block-start: 1px solid var(--issue-rule);
+  background: var(--issue-inset);
+}
+
+.board-detail .board-question .board-option {
+  padding: var(--issue-xs) var(--issue-sm);
+  border-color: var(--issue-rule);
+  font-size: var(--issue-label-size);
+  line-height: 1.35;
+}
+
+.board-detail .board-question .board-option :is(b, strong) {
+  font-weight: 600;
+}
+
+.board-detail .board-question .board-option small {
+  font-size: var(--issue-code-size);
+}
+
+.board-detail .board-question .board-option[data-recommended="true"] {
+  border-color: color-mix(in srgb, var(--orchestra-accent) 35%, var(--issue-rule));
+}
+
+.board-issue-recommendation {
+  padding: 2px 6px;
+  border-radius: var(--orchestra-radius-full);
+  background: color-mix(in srgb, var(--orchestra-accent) 10%, var(--issue-sheet));
+  color: var(--orchestra-accent);
+  font-size: var(--issue-code-size);
+  font-weight: 500;
+}
+
+.board-detail .board-input {
+  font-size: var(--issue-label-size);
+  line-height: 1.5;
+}
+
+.board-detail .board-plan li,
+.board-detail .board-discussion-comment p,
+.board-detail .board-discussion-document,
+.board-detail .board-discussion-source,
+.board-detail .board-execution-empty {
+  color: var(--orchestra-body);
+  font-size: var(--issue-body-size);
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.board-detail .board-discussion-comment b {
+  font-size: var(--issue-label-size);
+  font-weight: 600;
+}
+
+.board-detail .board-plan li {
+  padding-block-end: var(--issue-sm);
+}
+
+.board-detail .board-plan li:last-child {
+  padding-block-end: 0;
+}
+
+.board-issue-branch {
+  display: block;
+  min-inline-size: 0;
+  padding: var(--issue-xs);
+  border: 1px solid var(--issue-rule);
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--issue-inset);
+  color: var(--orchestra-text);
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.board-detail .board-issue-properties {
+  --issue-property-label: min(43%, 108px);
+
+  min-inline-size: 0;
+  gap: 0;
+  padding: 0;
+  background: var(--issue-sheet);
+  border-color: var(--issue-rule);
+}
+
+.board-peek .board-issue-properties {
+  margin-inline: var(--issue-edge);
+}
+
+.board-detail[data-full="true"] .board-issue-properties {
+  position: sticky;
+  inset-block-start: var(--issue-md);
+}
+
+.board-properties-header {
+  padding: var(--issue-sm) var(--issue-md);
+  border-block-end: 1px solid var(--issue-rule);
+  border-radius: calc(var(--orchestra-radius-lg) - 1px) calc(var(--orchestra-radius-lg) - 1px) 0 0;
+  background: var(--issue-inset);
+}
+
+.board-detail .board-issue-properties > .board-execution-status {
+  margin: var(--issue-xs) var(--issue-md);
+}
+
+.board-detail .board-issue-properties .board-props {
+  display: block;
+  margin: 0;
+  font-size: var(--issue-label-size);
+  line-height: 1.45;
+}
+
+.board-detail .board-issue-properties > .board-props {
+  padding: var(--issue-2xs) var(--issue-md);
+}
+
+.board-property-row {
+  display: grid;
+  grid-template-columns: var(--issue-property-label) minmax(0, 1fr);
+  align-items: baseline;
+  gap: var(--issue-xs);
+  padding-block: var(--issue-xs);
+}
+
+.board-property-row + .board-property-row,
+.board-issue-property-group .board-props + .board-props {
+  border-block-start: 1px solid var(--issue-rule);
+}
+
+.board-property-row > :is(dt, dd) {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.board-property-row > dd {
+  font-weight: 500;
+  text-align: start;
+}
+
+.board-issue-property-group {
+  border-block-start: 1px solid var(--issue-rule);
+}
+
+.board-issue-property-group > h4 {
+  margin: 0;
+  color: var(--orchestra-text);
+  font-size: var(--issue-label-size);
+  font-weight: 600;
+  padding: var(--issue-sm) var(--issue-md) 0;
+}
+
+.board-detail .board-issue-property-group > .board-props {
+  padding-inline: var(--issue-md);
+}
+
+.board-detail .board-issue-property-group > .board-props:last-child {
+  padding-block-end: var(--issue-2xs);
+}
+
+.board-detail .board-issue-property-group > summary {
+  min-block-size: 40px;
+  gap: var(--issue-xs);
+  padding-inline: var(--issue-md);
+}
+
+.board-detail .board-issue-property-group > summary:hover {
+  background: var(--issue-inset);
+}
+
+.board-detail .board-issue-branch-details > summary {
+  grid-template-columns: var(--issue-property-label) minmax(0, 1fr) 10px;
+}
+
+.board-issue-branch-preview {
+  min-inline-size: 0;
+  color: var(--orchestra-muted);
+  font-size: var(--issue-code-size);
+  font-weight: 400;
+  text-align: start;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.board-issue-branch-details[open] > summary .board-issue-branch-preview {
+  visibility: hidden;
+}
+
+.board-issue-branch-details[open] > .board-issue-branch {
+  margin: 0 var(--issue-md) var(--issue-sm);
+}
+
+.board-property-refs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--issue-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.board-property-refs li {
+  max-inline-size: 100%;
+  padding-inline: var(--issue-2xs);
+  border-radius: var(--orchestra-radius-xs);
+  background: var(--issue-inset);
+  box-shadow: inset 0 0 0 1px var(--issue-rule);
+  font-size: var(--issue-code-size);
+}
+
+.board-detail .money-proof > summary {
+  min-block-size: 32px;
+  padding-inline: 0;
+}
+
+.board-detail .money-proof {
+  display: block;
+  padding-block-start: var(--issue-xs);
+}
+
+.board-detail .money-proof[open] > :not(summary) {
+  margin-block-start: var(--issue-sm);
+}
+
+.board-detail :is(.board-execution-empty, .board-execution-total, .board-receipt) {
+  margin: 0;
+  padding: var(--issue-md);
+  border: 1px solid var(--issue-rule);
+  border-radius: var(--orchestra-radius-md);
+  color: var(--orchestra-body);
+  background: var(--issue-inset);
+}
+
+.board-detail .board-issue-panel > .board-discussion {
+  padding-block-start: 0;
+  border: 0;
+}
+
+.board-detail .board-activity li {
+  padding-block: var(--issue-xs);
+  border-block-end: 1px solid var(--issue-rule);
+  overflow-wrap: anywhere;
+}
+
+.board-detail .board-activity .board-why {
+  display: block;
+  margin-block-start: 4px;
+}
+
+@container (inline-size <= 1000px) {
+  .board-detail[data-full="true"] .board-issue-properties {
+    position: static;
+  }
+
+  .board-detail[data-full="true"] {
+    --issue-edge: var(--issue-lg);
+    --issue-title-size: var(--orchestra-font-size-2xl);
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (inline-size <= 840px) {
+  .board-peek {
+    inset-inline: 12px;
+    inline-size: auto;
+  }
+}
+
+@container (inline-size <= 520px) {
+  .board-detail,
+  .board-detail[data-full="true"] {
+    --issue-edge: var(--issue-md);
+    --issue-title-size: var(--orchestra-font-size-xl);
+  }
+
+  .board-detail .board-issue-tabs {
+    gap: 0;
+    padding-inline: var(--issue-xs);
+  }
+
+  .board-detail .board-issue-tabs button {
+    font-size: var(--orchestra-font-size-sm);
+  }
+}

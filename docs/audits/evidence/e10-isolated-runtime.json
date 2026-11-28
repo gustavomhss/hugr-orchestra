@@ -1,0 +1,804 @@
+{
+  "schemaVersion": 1,
+  "scope": "E10 isolated native runtime qualification; not final ledger closure",
+  "repository": "gustavomhss/hugr-orchestra",
+  "referenceCommit": "9add986fc1c335c3c74f1ece295a32c2adcf9b53",
+  "method": "Independent GitHub REST metadata, job raw logs, snapshot recursive trees (not truncated), .ci-run.json blobs and explicit Git blob/source comparisons. Read-only qualification; no new dispatch, local tests/types/builds or generation.",
+  "runs": [
+    {
+      "label": "preimplementation_baseline",
+      "id": 43408660433,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43408660433",
+      "conclusion": "failure",
+      "snapshotCommit": "11212a67128a8231298ad705aaa74fd8634c318e",
+      "snapshotBranch": "ci-run-both-mwetw7cy-11212a6",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-deadline.test.ts",
+          "./test/codemode-native-interpreter.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "0c3294d6a33c6365347c3078b120d9ff01d13a7e",
+      "requestSha256": "814b6958e72e3a7a8b90882aca0132f05eed48b2213eb067429ff7bde3280738",
+      "cleanupJobs": [
+        {
+          "id": 131832038310,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131829247817,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43408660433/job/131829247817",
+          "name": "test (windows-latest)",
+          "conclusion": "failure",
+          "startedAt": "2026-11-13T10:23:08Z",
+          "completedAt": "2026-11-13T10:29:50Z",
+          "rawLogSha256": "6324e30ce111b6cecfdf5020dc6a10a09b71f405d3077e735f1b1e7e51f95985",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 8,
+            "fail": 18,
+            "assertions": 141
+          },
+          "omni": [
+            "error: omni positive control [b1cdd8a9b6f8a1b6882149d14110eea9]: FAIL (declared: 23 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts). test/codemode-native-interpreter.test.ts: 11 of 11 declaring test(s) made no omni spawn of their own."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 67.33619999999996
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 63.168699999999944
+            },
+            "index.ts:string-match": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 68.46640000000002
+            },
+            "index.ts:replace-callback": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 82.22450000000003
+            },
+            "index.ts:match-all": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 86.29790000000003
+            },
+            "index.js:literal-test": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": 1,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 92.4061999999999
+            }
+          },
+          "compiledSetupErrors": []
+        },
+        {
+          "id": 131829248062,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43408660433/job/131829248062",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "failure",
+          "startedAt": "2026-11-13T10:23:08Z",
+          "completedAt": "2026-11-13T10:25:35Z",
+          "rawLogSha256": "8a82319fdffe0949207fe23a11fe8f5ce55913ea255ab18792736e5a5659d0b9",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 8,
+            "fail": 18,
+            "assertions": 130
+          },
+          "omni": [
+            "error: omni positive control [ab56fc96718cdcc32bbfda391059f694]: FAIL (declared: 23 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts). test/codemode-deadline.test.ts: 1 of 12 declaring test(s) made no omni spawn of their own; test/codemode-native-interpreter.test.ts: 11 of 11 declaring test(s) made no omni spawn of their own."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": null,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 66.06555400000002
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": null,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 81.19958800000018
+            },
+            "index.ts:string-match": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": null,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 50.49218100000007
+            },
+            "index.ts:replace-callback": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": null,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 61.06238300000018
+            },
+            "index.ts:match-all": {
+              "resultKind": null,
+              "resultPresent": false,
+              "containmentKill": true,
+              "exitCode": null,
+              "heartbeats": 0,
+              "elapsedToMarkMs": 55.22881600000005
+            }
+          },
+          "compiledSetupErrors": [
+            "error: Unexpected reading file: \"/home/runner/work/hugr-orchestra/hugr-orchestra/node_modules/.bun/fast-check@4.8.0/node_modules/fast-check/lib/fast-check.js\""
+          ]
+        }
+      ]
+    },
+    {
+      "label": "intermediate_before_compile_cache",
+      "id": 43410822249,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822249",
+      "conclusion": "failure",
+      "snapshotCommit": "2c969643077e482b8392335f3fb118bf52fc2ce5",
+      "snapshotBranch": "ci-run-both-mweuhy81-2c96964",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-deadline.test.ts",
+          "./test/codemode-native-interpreter.test.ts",
+          "./test/codemode-native-driver.test.ts",
+          "./test/codemode-native-regex.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "772cdd9d7936d43643eef3c817482bd85cf93dcd",
+      "requestSha256": "3cf0c26e06efbe18ce3c1e7c785e68dfa70398e5468b2228c74d062c2c07a443",
+      "cleanupJobs": [
+        {
+          "id": 131839218613,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131836509689,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822249/job/131836509689",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:40:03Z",
+          "completedAt": "2026-11-13T10:46:09Z",
+          "rawLogSha256": "7e3c1dccf04f2f43cc0636eb6cc9e728b4ab3bf759895437dce7e80131938f4b",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 47,
+            "fail": 0,
+            "assertions": 270
+          },
+          "omni": [
+            "omni positive control [5c5c359346fbcce5bfd742129c768d01]: pass (declared: 44 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts, test/codemode-native-driver.test.ts, test/codemode-native-regex.test.ts); 98 omni spawn(s), 0 delegated."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 113.23230000000012
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 25,
+              "elapsedToMarkMs": 83.23340000000007
+            },
+            "index.ts:string-match": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 25,
+              "elapsedToMarkMs": 125.42999999999984
+            },
+            "index.ts:replace-callback": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 114.89829999999984
+            },
+            "index.ts:match-all": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 23,
+              "elapsedToMarkMs": 106.63729999999987
+            },
+            "index.js:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 101.97029999999995
+            }
+          },
+          "compiledSetupErrors": []
+        },
+        {
+          "id": 131836510023,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43410822249/job/131836510023",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "failure",
+          "startedAt": "2026-11-13T10:40:03Z",
+          "completedAt": "2026-11-13T10:41:47Z",
+          "rawLogSha256": "e44e55a0963029dce50c39e2c9bce1b09279ffb0eaae3deae690c7aeda416842",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 46,
+            "fail": 2,
+            "assertions": 248
+          },
+          "omni": [
+            "error: omni positive control [39573eeaf5c756f2f2a49f30b0ea4108]: FAIL (declared: 44 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts, test/codemode-native-driver.test.ts, test/codemode-native-regex.test.ts). test/codemode-deadline.test.ts: 1 of 12 declaring test(s) made no omni spawn of their own."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 44.17499099999998
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 45.004117000000065
+            },
+            "index.ts:string-match": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 34.71128299999998
+            },
+            "index.ts:replace-callback": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 28,
+              "elapsedToMarkMs": 77.77958000000001
+            },
+            "index.ts:match-all": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 28,
+              "elapsedToMarkMs": 74.28396799999996
+            }
+          },
+          "compiledSetupErrors": [
+            "error: Unexpected reading file: \"/home/runner/work/hugr-orchestra/hugr-orchestra/node_modules/.bun/fast-check@4.8.0/node_modules/fast-check/lib/fast-check.js\""
+          ]
+        }
+      ]
+    },
+    {
+      "label": "final_linux_windows",
+      "id": 43412871502,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43412871502",
+      "conclusion": "success",
+      "snapshotCommit": "2673830c8f46f27a695dc4e56cfe6b045a314d7a",
+      "snapshotBranch": "ci-run-both-mwev1szr-2673830",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-deadline.test.ts",
+          "./test/codemode-native-interpreter.test.ts",
+          "./test/codemode-native-driver.test.ts",
+          "./test/codemode-native-regex.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "772cdd9d7936d43643eef3c817482bd85cf93dcd",
+      "requestSha256": "3cf0c26e06efbe18ce3c1e7c785e68dfa70398e5468b2228c74d062c2c07a443",
+      "cleanupJobs": [
+        {
+          "id": 131846061004,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131843366298,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43412871502/job/131843366298",
+          "name": "test (windows-latest)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:55:29Z",
+          "completedAt": "2026-11-13T11:01:22Z",
+          "rawLogSha256": "938cdb6d284bd67e9c2b154cdbf2600c45c0984ff97ef5348edf0e8c911fd48d",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 47,
+            "fail": 0,
+            "assertions": 267
+          },
+          "omni": [
+            "omni positive control [2c945cb1784bac077981d1f276cb49c9]: pass (declared: 44 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts, test/codemode-native-driver.test.ts, test/codemode-native-regex.test.ts); 98 omni spawn(s), 0 delegated."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 95.02010000000018
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 77.4248
+            },
+            "index.ts:string-match": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 86.5906
+            },
+            "index.ts:replace-callback": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 23,
+              "elapsedToMarkMs": 91.19290000000001
+            },
+            "index.ts:match-all": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 106.41600000000017
+            },
+            "index.js:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 24,
+              "elapsedToMarkMs": 95.91519999999991
+            }
+          },
+          "compiledSetupErrors": []
+        },
+        {
+          "id": 131843366648,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43412871502/job/131843366648",
+          "name": "test (ubuntu-24.04)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:55:29Z",
+          "completedAt": "2026-11-13T11:00:01Z",
+          "rawLogSha256": "f2ba7a49a4190c3a555814d2ead33e4e40cefbd8086add7838adb2083e9938d3",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 47,
+            "fail": 0,
+            "assertions": 267
+          },
+          "omni": [
+            "omni positive control [445be0bda05fb0624dbcb03299e68b63]: pass (declared: 44 test(s) in test/codemode-deadline.test.ts, test/codemode-native-interpreter.test.ts, test/codemode-native-driver.test.ts, test/codemode-native-regex.test.ts); 98 omni spawn(s), 0 delegated."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": true,
+          "cpuWitnesses": {
+            "index.ts:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 37.661699999999996
+            },
+            "index.ts:dynamic-exec": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 28,
+              "elapsedToMarkMs": 62.31492000000003
+            },
+            "index.ts:string-match": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 34.918640000000096
+            },
+            "index.ts:replace-callback": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 29,
+              "elapsedToMarkMs": 45.216519999999946
+            },
+            "index.ts:match-all": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 28,
+              "elapsedToMarkMs": 75.91128000000003
+            },
+            "index.js:literal-test": {
+              "resultKind": "TimeoutExceeded",
+              "resultPresent": true,
+              "containmentKill": false,
+              "exitCode": 0,
+              "heartbeats": 28,
+              "elapsedToMarkMs": 55.83194500000013
+            }
+          },
+          "compiledSetupErrors": []
+        }
+      ]
+    },
+    {
+      "label": "mac_arm_provider_only",
+      "id": 43412873472,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43412873472",
+      "conclusion": "success",
+      "snapshotCommit": "f49172eb860ed3a3faf7e0956ea6310e05eab827",
+      "snapshotBranch": "ci-run-macos-mwev1tq6-f49172e",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-native-regex.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "2f94081960956812e034cdc6c4f91ae601f089d1",
+      "requestSha256": "2dc6b37e68a12f36a1fd8e48965a4949ceac3c91495ff48978d16030acdc2193",
+      "cleanupJobs": [
+        {
+          "id": 131844451181,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131843372898,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43412873472/job/131843372898",
+          "name": "test (macos-15)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T10:55:30Z",
+          "completedAt": "2026-11-13T10:57:48Z",
+          "rawLogSha256": "75b1d852634a4f432fe716d235f995882b70897e728afe30772140ceba02bbde",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 18,
+            "fail": 0,
+            "assertions": 38
+          },
+          "omni": [
+            "omni positive control [0244624460d4562d36fd0d71148ac785]: pass (declared: 17 test(s) in test/codemode-native-regex.test.ts); 17 omni spawn(s), 0 delegated."
+          ],
+          "allCpuWitnessesReadyWarmupAndNoFixtureErrors": null,
+          "cpuWitnesses": {},
+          "compiledSetupErrors": []
+        }
+      ]
+    },
+    {
+      "label": "mac_intel_provider_only",
+      "id": 43415059223,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43415059223",
+      "conclusion": "success",
+      "snapshotCommit": "27fcc1c8ed9421a74d1a41a0423e32a7b9d77ff8",
+      "snapshotBranch": "ci-run-macos-intel-mwevmhxz-27fcc1c",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/codemode-native-regex.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "requestGitBlob": "2f94081960956812e034cdc6c4f91ae601f089d1",
+      "requestSha256": "2dc6b37e68a12f36a1fd8e48965a4949ceac3c91495ff48978d16030acdc2193",
+      "cleanupJobs": [
+        {
+          "id": 131853659000,
+          "conclusion": "success"
+        }
+      ],
+      "jobs": [
+        {
+          "id": 131850749208,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43415059223/job/131850749208",
+          "name": "test (macos-15-intel)",
+          "conclusion": "success",
+          "startedAt": "2026-11-13T11:11:37Z",
+          "completedAt": "2026-11-13T11:17:51Z",
+          "rawLogSha256": "68b3018072c2bb50edb46d5f7d54a584dc632aa7b10d2964b8a155f20e00dfc6",
+          "snapshotShaObservedInRawLog": true,
+          "counts": {
+            "pass": 18,
+            "fail": 0,
+            "assertions": 38
+          },
+          "omni": [
+            "omni positive control [ef41df96df6a7822cd2f252e1dcdc8d3]: pass (declared: 17 test(s) in test/codemode-native-regex.test.ts); 17 omni spawn(s), 0 delegated."
+          ]
+        }
+      ]
+    }
+  ],
+  "finalSourceBindings": {
+    "selection": "All CodeMode src files plus explicit Core provider/process support, four Core acceptance parents and actor, test helper and manifests. Not a complete repository or dependency-runtime equality claim.",
+    "matchingCount": 44,
+    "matchingGitBlobs": {
+      "packages/codemode/src/codemode.ts": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+      "packages/codemode/src/index.ts": "408c5e4a4ad0d463cc9a78ae363bc230f438b067",
+      "packages/codemode/src/interpreter/model.ts": "d95351451035ead43c7ad9876bd49654aa163626",
+      "packages/codemode/src/interpreter/runtime.ts": "963464ae84933366c398b2fe5b59dd0f34608fa1",
+      "packages/codemode/src/native-regex-driver.ts": "faa3765ba52892b8d9b59eb8babfcab4102485d7",
+      "packages/codemode/src/native-regex-values.ts": "43b1c13c9dadf73412d6d235439fea7e1ca445b6",
+      "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+      "packages/codemode/src/native-regexp-parser.ts": "2ba3bdb61c8baa1480065a6b1f5d1382329af77e",
+      "packages/codemode/src/openapi/TODO.md": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+      "packages/codemode/src/openapi/index.ts": "7f1770ef362792996f6026dced24ab4b570added",
+      "packages/codemode/src/openapi/runtime.ts": "2515621792b22f23fa52967362ecf69828e21ee4",
+      "packages/codemode/src/openapi/spec.ts": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+      "packages/codemode/src/openapi/types.ts": "cab772e701486b9a1af29dfe0798ce8bf77124ef",
+      "packages/codemode/src/stdlib/collections.ts": "f4760ff7061a7b93f495323abbf9b14027431b60",
+      "packages/codemode/src/stdlib/console.ts": "798563128e560a501f44494c53a99f7e47b72696",
+      "packages/codemode/src/stdlib/date.ts": "c492f58f94b1e7246b8d098b309c047024861dc2",
+      "packages/codemode/src/stdlib/json.ts": "8a479d2c8c72b86298b402e9defee31659d1a93c",
+      "packages/codemode/src/stdlib/math.ts": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+      "packages/codemode/src/stdlib/number.ts": "79710e1ad226672554233d09478cb84c9e706e6a",
+      "packages/codemode/src/stdlib/object.ts": "2beda0bf5cae137b0715b61c603de05c6320f287",
+      "packages/codemode/src/stdlib/promise.ts": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+      "packages/codemode/src/stdlib/regexp.ts": "65a65a78ba17a2bbca77e1eefae7c927d6426542",
+      "packages/codemode/src/stdlib/string.ts": "3ac4372e363fe60ee9b68ad01780171f13d75fd5",
+      "packages/codemode/src/stdlib/url.ts": "583d776d22ad434d7f41fe26c7f54461e0389425",
+      "packages/codemode/src/stdlib/value.ts": "512f279c82785384a26450016528d5ff3b5b50e5",
+      "packages/codemode/src/tool-error.ts": "16460a019ae1e901a29ac4a3dda872d75acfcf0a",
+      "packages/codemode/src/tool-runtime.ts": "5c721d39586c8baf2ff8aab56b22dba0024540ea",
+      "packages/codemode/src/tool-schema.ts": "16213fa8eeb2d146350a368aeab13e7bf923a16a",
+      "packages/codemode/src/tool.ts": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+      "packages/codemode/src/values.ts": "f3c309caf50152bfb6cd81c69474b41ad8954c3d",
+      "packages/core/src/codemode-native-regex.ts": "18da2976af133ce809560cd2997af0043ab1106c",
+      "packages/core/src/codemode-native-regex-script.ts": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+      "packages/core/src/process.ts": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "packages/core/src/omni.ts": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "packages/core/src/omni-spawner.ts": "ff176729415c15d4644c69cac19e23ad5559f196",
+      "packages/core/src/cross-spawn-spawner.ts": "fc402c69792bd6b4a55bb04c0be6e72800ce871b",
+      "packages/core/src/flag/flag.ts": "98dc57a53f2fec5baa7afdd316758d9aa744f0c7",
+      "packages/core/test/codemode-deadline.test.ts": "14ccff7714da355e43a2bd3b7743f68169278b2f",
+      "packages/core/test/codemode-native-regex.test.ts": "48716e713672c63b0a789d15e09b43dd2c053ba6",
+      "packages/core/test/codemode-native-interpreter.test.ts": "b9f507f7cf6ec736107149c4186756e155675d5f",
+      "packages/core/test/codemode-native-driver.test.ts": "72fb064ee2ca3f3f207a38b35d98c0fe2728a6fa",
+      "packages/core/test/fixture/codemode-deadline.mjs": "b997f93de2235307002a449fba2780d700d616e9",
+      "package.json": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+      "packages/codemode/package.json": "1e1facca4d10cd39a12772af5c454236774c9c52"
+    },
+    "postSnapshotDifferences": [
+      {
+        "path": "packages/core/test/lib/effect.ts",
+        "snapshotBlob": "4e9a5c195d29d621f96f326041fa1d8a52be7147",
+        "referenceBlob": "26effa581ccb9940dfeacaa6a35693ff95529584",
+        "equal": false
+      },
+      {
+        "path": "bun.lock",
+        "snapshotBlob": "6ed5e6131f2ab739ed7a230cb098cdd4600605e1",
+        "referenceBlob": "542ec98f67b758c3c5e998a0de1e60139bb17f9a",
+        "equal": false
+      },
+      {
+        "path": "packages/core/package.json",
+        "snapshotBlob": "dbc5f5ecf7a5a368c480bbe50ebc646ef4ecaa5c",
+        "referenceBlob": "f5b4fde722737ade2f227d79b71c54c148ed938e",
+        "equal": false
+      }
+    ],
+    "differenceMeaning": {
+      "packages/core/test/lib/effect.ts": "dev-sync adds optional onFailure callback and routes promise rejection through noted(); final47 did not run this new helper. No byte-equality or behavioral qualification waiver.",
+      "bun.lock": "dev-sync adds Core direct toml4.1.1 entry; final47 snapshot predates this lock delta.",
+      "packages/core/package.json": "dev-sync adds Core direct toml4.1.1 and review-toolkit/local-tools export. No product-native source changed in selected bindings."
+    }
+  },
+  "oraclePreservation": {
+    "actorPath": "packages/core/test/fixture/codemode-deadline.mjs",
+    "actorGitBlob": "b997f93de2235307002a449fba2780d700d616e9",
+    "actorSha256": "9c27abacef063b6fa7ca3d24a91aa2e94f279ee6ada1da5191a030513db8de45",
+    "actorByteEqualBaselineIntermediateFinal": true,
+    "parentBaselineAndIntermediateByteEqual": true,
+    "unchangedParentPrefixExcludingFirstImportSha256": "f2abe140ca0759447c4c891ae571019ff6734f951002cfa2270dfd182dab7db3",
+    "unchangedParentSuffixFromConstOrdinarySha256": "a27a4e6fe0500f54c78607bafe62a6bd92b9322551a06524a62a0828540639ab",
+    "suffixMeaning": "Every original twelve case body/expected ordinary result and assertDeadline oracle remains byte-identical. Prefix contains runChild/6500ms containment and assertSetup. The sole other prefix difference is adding afterAll to the first import.",
+    "setupOnlyChange": "Compiled acquisition changed to one memoized build Promise and afterAll cleanup. CONTROL and CPU reuse the same bundle index path while every runChild spawns a fresh actor process. No logged emitted-bundle hash is claimed.",
+    "unchangedCpuBudgetMs": 1500,
+    "outerContainmentMs": 6500,
+    "assertedFinalThresholds": {
+      "elapsedToCpuMarkMs": "0 <= x <750",
+      "heartbeats": ">=3",
+      "elapsedAfterMarkMs": "250 <= x <3000",
+      "maxHeartbeatGapMs": "<750",
+      "slowCompleted": 0,
+      "slowInterrupted": 1,
+      "afterCalls": 0,
+      "naturalActorExitCode": 0,
+      "containmentKill": false,
+      "productResultKind": "TimeoutExceeded"
+    },
+    "thresholdEvidence": "Thresholds are in unchanged passing source oracles; raw CPU summaries log beats/mark/exit/result/containment, not the actual max-gap/elapsed-after-mark measurements."
+  },
+  "interpretation": {
+    "baseline": "Both OSes actual five SOURCE CPU product RED: marked/warmed, zero heartbeats, no product result, 6500ms containment. Windows additionally reached compiled CPU and showed the same product RED; Linux compiled case failed setup reading fast-check and is not compiled product RED.",
+    "intermediate": "Whole run failed due Linux46pass2fail (compiled setup plus aggregate Omni control). Linux source five CPU cases passed; Windows independently passed47/270assert/98Omni with all six CPU cases including compiled. Preserve per-OS distinction.",
+    "final": "Both jobs pass47/267assert,44declared tests,98Omni spawns0delegations. Five source CPU plus one bundled public-index CPU return actual TimeoutExceeded and naturally exit0 while heartbeats continue. No outer kill counted as success.",
+    "macArm": "18-provider-only test gate on macos15;17actualOmni spawns0delegations. This is not Mac CPU/interpreter or bundled/native executable qualification.",
+    "macIntel": "18-provider-only gate success,38assertions,17actualOmni spawns0delegations; notMacCPU/interpreter/bundle qualification."
+  },
+  "openLimits": {
+    "postDevSyncTypeGate": {
+      "rootOwnedReceiptExitCode": 0,
+      "logSha256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "commandReceipt": "$ tsgo --noEmit (Root-owned package bun typecheck receipt)",
+      "qualification": "Receipt read only; author did not execute compiler. Root confirms current post-devCoretype pass; this does not rerun final47 on changed testlib/manifest bytes."
+    },
+    "qualificationBoundary": "The compiled deadline artifact is a Bun-built JS bundle of public CodeMode index, not a packaged native Orchestra CLI build. Provider uses the qualified runtime process.execPath fixed-e launch. No unselected production caller is claimed to install its Layer.",
+    "closure": "No E10 ledger closure or final epic/full repository verdict. Both Mac provider gates and Root post-devCoretype have passed; final epic integration remains pending Root-owned qualification."
+  },
+  "additionalSourceBindings": {
+    "preimplementationBaseline": {
+      "snapshotProductGitBlobs": {
+        "packages/codemode/src/codemode.ts": "14782d7c8aaed7b4647e64f6631459bdd4684a64",
+        "packages/codemode/src/index.ts": "408c5e4a4ad0d463cc9a78ae363bc230f438b067",
+        "packages/codemode/src/interpreter/model.ts": "d95351451035ead43c7ad9876bd49654aa163626",
+        "packages/codemode/src/interpreter/runtime.ts": "04d12c6c5a00d53314058a3d530e2cd7cec1a935",
+        "packages/codemode/src/native-regex-driver.ts": "faa3765ba52892b8d9b59eb8babfcab4102485d7",
+        "packages/codemode/src/native-regex-values.ts": "43b1c13c9dadf73412d6d235439fea7e1ca445b6",
+        "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+        "packages/codemode/src/native-regexp-parser.ts": "2ba3bdb61c8baa1480065a6b1f5d1382329af77e",
+        "packages/codemode/src/openapi/TODO.md": "cbcfe81a68c8df2fa7aae622ddf2997e3ab29433",
+        "packages/codemode/src/openapi/index.ts": "7f1770ef362792996f6026dced24ab4b570added",
+        "packages/codemode/src/openapi/runtime.ts": "2515621792b22f23fa52967362ecf69828e21ee4",
+        "packages/codemode/src/openapi/spec.ts": "bd4dc5aed63e44d81e4976a7e2e374cc44c53d6d",
+        "packages/codemode/src/openapi/types.ts": "cab772e701486b9a1af29dfe0798ce8bf77124ef",
+        "packages/codemode/src/stdlib/collections.ts": "f4760ff7061a7b93f495323abbf9b14027431b60",
+        "packages/codemode/src/stdlib/console.ts": "798563128e560a501f44494c53a99f7e47b72696",
+        "packages/codemode/src/stdlib/date.ts": "c492f58f94b1e7246b8d098b309c047024861dc2",
+        "packages/codemode/src/stdlib/json.ts": "8a479d2c8c72b86298b402e9defee31659d1a93c",
+        "packages/codemode/src/stdlib/math.ts": "cc8dd0670e969929366e3fe8f07b700cc5f219f7",
+        "packages/codemode/src/stdlib/number.ts": "79710e1ad226672554233d09478cb84c9e706e6a",
+        "packages/codemode/src/stdlib/object.ts": "2beda0bf5cae137b0715b61c603de05c6320f287",
+        "packages/codemode/src/stdlib/promise.ts": "d0b442ccf74f2230e0e8cbe060b0be86a120ce6a",
+        "packages/codemode/src/stdlib/regexp.ts": "65a65a78ba17a2bbca77e1eefae7c927d6426542",
+        "packages/codemode/src/stdlib/string.ts": "3ac4372e363fe60ee9b68ad01780171f13d75fd5",
+        "packages/codemode/src/stdlib/url.ts": "583d776d22ad434d7f41fe26c7f54461e0389425",
+        "packages/codemode/src/stdlib/value.ts": "512f279c82785384a26450016528d5ff3b5b50e5",
+        "packages/codemode/src/tool-error.ts": "16460a019ae1e901a29ac4a3dda872d75acfcf0a",
+        "packages/codemode/src/tool-runtime.ts": "5c721d39586c8baf2ff8aab56b22dba0024540ea",
+        "packages/codemode/src/tool-schema.ts": "16213fa8eeb2d146350a368aeab13e7bf923a16a",
+        "packages/codemode/src/tool.ts": "6c6863f99dcf7e659a4e1a2b582095694404e39c",
+        "packages/codemode/src/values.ts": "f3c309caf50152bfb6cd81c69474b41ad8954c3d",
+        "packages/core/src/codemode-native-regex.ts": "18da2976af133ce809560cd2997af0043ab1106c",
+        "packages/core/src/codemode-native-regex-script.ts": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+        "packages/core/src/process.ts": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+        "packages/core/src/omni.ts": "94a19789cef782806a80432c9a86f28bccbdecac",
+        "packages/core/src/omni-spawner.ts": "ff176729415c15d4644c69cac19e23ad5559f196",
+        "packages/core/src/cross-spawn-spawner.ts": "fc402c69792bd6b4a55bb04c0be6e72800ce871b",
+        "packages/core/src/flag/flag.ts": "98dc57a53f2fec5baa7afdd316758d9aa744f0c7"
+      }
+    },
+    "finalMacArmProvider": {
+      "snapshotProductGitBlobs": {
+        "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+        "packages/core/src/codemode-native-regex.ts": "18da2976af133ce809560cd2997af0043ab1106c",
+        "packages/core/src/codemode-native-regex-script.ts": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+        "packages/core/src/process.ts": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+        "packages/core/src/omni.ts": "94a19789cef782806a80432c9a86f28bccbdecac",
+        "packages/core/src/omni-spawner.ts": "ff176729415c15d4644c69cac19e23ad5559f196",
+        "packages/core/src/cross-spawn-spawner.ts": "fc402c69792bd6b4a55bb04c0be6e72800ce871b",
+        "packages/core/src/flag/flag.ts": "98dc57a53f2fec5baa7afdd316758d9aa744f0c7",
+        "packages/core/test/codemode-native-regex.test.ts": "48716e713672c63b0a789d15e09b43dd2c053ba6"
+      },
+      "allSelectedFilesByteEqualReference": true,
+      "architectureObservation": "Raw job uses installed1.98.0-aarch64-apple-darwin toolchain and aarch64-apple-darwin ripgrep artifact; runner macos-15."
+    },
+    "finalMacIntelProvider": {
+      "snapshotProductGitBlobs": {
+        "packages/codemode/src/native-regex.ts": "bcb9639e9c667c8351769512700963ebd3925654",
+        "packages/core/src/codemode-native-regex.ts": "18da2976af133ce809560cd2997af0043ab1106c",
+        "packages/core/src/codemode-native-regex-script.ts": "75479c1493d1fdbb91aa209abf589cb50b3ffece",
+        "packages/core/src/process.ts": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+        "packages/core/src/omni.ts": "94a19789cef782806a80432c9a86f28bccbdecac",
+        "packages/core/src/omni-spawner.ts": "ff176729415c15d4644c69cac19e23ad5559f196",
+        "packages/core/src/cross-spawn-spawner.ts": "fc402c69792bd6b4a55bb04c0be6e72800ce871b",
+        "packages/core/src/flag/flag.ts": "98dc57a53f2fec5baa7afdd316758d9aa744f0c7",
+        "packages/core/test/codemode-native-regex.test.ts": "48716e713672c63b0a789d15e09b43dd2c053ba6"
+      },
+      "allSelectedFilesByteEqualReference": true,
+      "architectureObservation": "Raw job usesx86_64-apple-darwin toolchain/artifacts; macos-15-intel runner."
+    }
+  }
+}

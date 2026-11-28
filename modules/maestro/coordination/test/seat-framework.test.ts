@@ -54,7 +54,7 @@ describe("native seat framework", () => {
       profile: "review",
       returnCard: "review-result",
       workResult: "review-work-result-v1",
-      skills: ["lucy-review", "lucy-lens", "team-stack"],
+      skills: ["lucy-review", "lucy-lens", "lucy-audit", "team-stack"],
       writeRoots: false,
       strictResume: true,
       atlasMemory: false,

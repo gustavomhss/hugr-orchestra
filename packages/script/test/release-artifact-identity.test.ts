@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { mkdir, mkdtemp, rename, rm, symlink, writeFile } from "node:fs/promises"
+import { mkdir, mkdtemp, readFile, rename, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { verifyReleaseArtifacts } from "../src/release-artifact-identity"
@@ -47,14 +47,29 @@ async function fixture(releaseVersion = version) {
     "feed/latest-linux.yml",
     "feed/SHA256SUMS",
   ]
+  const content = (path: string) => {
+    if (!path.endsWith(".yml")) return "verified bytes"
+    const payload = path.endsWith("latest-mac.yml")
+      ? "orchestra-desktop-mac-x64.zip"
+      : path.endsWith("latest-linux.yml")
+        ? "orchestra-desktop-linux-x86_64.AppImage"
+        : "orchestra-desktop-win-x64.exe"
+    return `version: ${releaseVersion}\nfiles: ${JSON.stringify([
+      {
+        url: `https://github.com/gustavomhss/hugr-orchestra/releases/download/desktop-v${releaseVersion}/${payload}`,
+        size: Buffer.byteLength("verified bytes"),
+        sha512: createHash("sha512").update("verified bytes").digest("base64"),
+      },
+    ])}\n`
+  }
   for (const name of names) {
     await mkdir(dirname(join(root, name)), { recursive: true })
-    await writeFile(join(root, name), name.endsWith(".yml") ? `version: ${releaseVersion}\n` : "verified bytes")
+    await writeFile(join(root, name), content(name))
   }
   const files = names.map((path) => ({
     path,
-    size: Buffer.byteLength(path.endsWith(".yml") ? `version: ${releaseVersion}\n` : "verified bytes"),
-    sha256: createHash("sha256").update(path.endsWith(".yml") ? `version: ${releaseVersion}\n` : "verified bytes").digest("hex"),
+    size: Buffer.byteLength(content(path)),
+    sha256: createHash("sha256").update(content(path)).digest("hex"),
   }))
   if (releaseVersion !== version) {
     for (const file of files) {
@@ -63,7 +78,13 @@ async function fixture(releaseVersion = version) {
       file.path = name
     }
   }
-  const receipt = { schemaVersion: 1, ...expected, version: releaseVersion, validation: { result: "pass", appVersion: releaseVersion, cliVersion: releaseVersion }, files }
+  const receipt = {
+    schemaVersion: 1,
+    ...expected,
+    version: releaseVersion,
+    validation: { result: "pass", appVersion: releaseVersion, cliVersion: releaseVersion },
+    files,
+  }
   return { root, receipt }
 }
 
@@ -115,7 +136,12 @@ test("rejects malformed receipt schemas and expected identities", async () => {
 
 test("rejects missing or failed runtime validation", async () => {
   const { root, receipt } = await fixture()
-  for (const validation of [undefined, { result: "fail" }, { ...receipt.validation, appVersion: "0.3.5" }, { ...receipt.validation, cliVersion: "0.3.5" }])
+  for (const validation of [
+    undefined,
+    { result: "fail" },
+    { ...receipt.validation, appVersion: "0.3.5" },
+    { ...receipt.validation, cliVersion: "0.3.5" },
+  ])
     await expect(verifyReleaseArtifacts(root, { ...receipt, validation }, expected)).rejects.toThrow()
 })
 
@@ -124,7 +150,11 @@ test("rejects another update-feed version even when receipt bytes match", async 
   const bytes = "version: 0.3.5\n"
   const path = "feed/latest.yml"
   await writeFile(join(root, path), bytes)
-  const files = receipt.files.map((file) => file.path === path ? { ...file, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") } : file)
+  const files = receipt.files.map((file) =>
+    file.path === path
+      ? { ...file, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") }
+      : file,
+  )
   await expect(verifyReleaseArtifacts(root, { ...receipt, files }, expected)).rejects.toThrow()
 })
 
@@ -215,3 +245,92 @@ test("rejects symlinked publication directories", async () => {
   await symlink(join(outside, "packs"), join(root, "cli/npm-packs"), "dir")
   await expect(verifyReleaseArtifacts(root, receipt, expected)).rejects.toThrow()
 })
+
+for (const change of [
+  "relative",
+  "foreign-repo",
+  "foreign-host",
+  "wrong-version",
+  "query",
+  "fragment",
+  "credentials",
+  "encoded-separator",
+  "size",
+  "sha512",
+  "legacy-override",
+  "package-override",
+]) {
+  test(`real artifact verifier refuses accurately hashed candidate feed ${change}`, async () => {
+    const { root, receipt } = await fixture()
+    const path = "feed/latest.yml"
+    const feed = Bun.YAML.parse(await readFile(join(root, path), "utf8")) as {
+      version: string
+      files: { url: string; size: number; sha512: string }[]
+      path?: string
+      sha512?: string
+      packages?: unknown
+    }
+    const entry = feed.files[0]!
+    if (change === "relative") entry.url = "orchestra-desktop-win-x64.exe"
+    if (change === "foreign-repo") entry.url = entry.url.replace("gustavomhss/hugr-orchestra", "foreign/repo")
+    if (change === "foreign-host") entry.url = entry.url.replace("github.com", "unapproved.invalid")
+    if (change === "wrong-version") entry.url = entry.url.replace("desktop-v0.3.6", "desktop-v0.3.5")
+    if (change === "query") entry.url += "?token=fixture"
+    if (change === "fragment") entry.url += "#override"
+    if (change === "credentials") entry.url = entry.url.replace("https://", "https://user:fixture@")
+    if (change === "encoded-separator")
+      entry.url = entry.url.replace("orchestra-desktop-win", "%2forchestra-desktop-win")
+    if (change === "size") entry.size += 1
+    if (change === "sha512") entry.sha512 = createHash("sha512").update("different actual payload").digest("base64")
+    if (change === "legacy-override") {
+      feed.path = "unapproved.exe"
+      feed.sha512 = entry.sha512
+    }
+    if (change === "package-override")
+      feed.packages = { x64: { path: "https://unapproved.invalid/payload.7z", sha512: entry.sha512 } }
+    const bytes =
+      [
+        `version: ${feed.version}`,
+        ...Object.entries(feed)
+          .filter(([key]) => key !== "version")
+          .map(([key, value]) => `${key}: ${JSON.stringify(value)}`),
+      ].join("\n") + "\n"
+    await writeFile(join(root, path), bytes)
+    const files = receipt.files.map((file) =>
+      file.path === path
+        ? { ...file, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") }
+        : file,
+    )
+    await expect(verifyReleaseArtifacts(root, { ...receipt, files }, expected)).rejects.toThrow()
+  })
+}
+
+for (const approved of [false, true]) {
+  test(`real artifact verifier accepts embedded blockMapSize with an optional approved sidecar, sidecar=${approved}`, async () => {
+    const { root, receipt } = await fixture()
+    const path = "feed/latest.yml"
+    const feed = Bun.YAML.parse(await readFile(join(root, path), "utf8")) as {
+      version: string
+      files: { url: string; size: number; sha512: string; blockMapSize?: number }[]
+    }
+    const blockmap = "approved adjacent blockmap"
+    feed.files[0]!.blockMapSize = Buffer.byteLength(blockmap)
+    const bytes = [`version: ${feed.version}`, `files: ${JSON.stringify(feed.files)}`].join("\n") + "\n"
+    await writeFile(join(root, path), bytes)
+    const files = receipt.files.map((entry) =>
+      entry.path === path
+        ? { ...entry, size: Buffer.byteLength(bytes), sha256: createHash("sha256").update(bytes).digest("hex") }
+        : entry,
+    )
+    if (approved) {
+      const name = "desktop/orchestra-desktop-win-x64.exe.blockmap"
+      await writeFile(join(root, name), blockmap)
+      files.push({
+        path: name,
+        size: Buffer.byteLength(blockmap),
+        sha256: createHash("sha256").update(blockmap).digest("hex"),
+      })
+    }
+    await expect(verifyReleaseArtifacts(root, { ...receipt, files }, expected)).resolves.toBeUndefined()
+  })
+}

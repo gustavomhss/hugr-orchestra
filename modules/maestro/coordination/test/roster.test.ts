@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
+import { Seats } from "../src/seats"
 import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, nativeProfiles, roster } from "@orchestra/maestro/roster"
 
 describe("Maestro roster", () => {
@@ -198,5 +199,14 @@ describe("Maestro roster", () => {
     for (const tool of ReviewSeatTools.OWN) expect(nativeProfiles.billy![tool]).toBeUndefined()
     expect(nativeProfiles.lucy!.read).toEqual(nativeProfiles.review!.read)
     expect(lookupRosterMember("lucy")).toMatchObject({ status: "FOUND", member: { nativeProfile: "review" } })
+  })
+
+  test("staffing grants proposals and movement requests to non-review seats and reserves moves for Maestro", () => {
+    for (const seat of Object.values(Seats.all)) {
+      const canPropose = seat.profile !== "review"
+      expect(nativeProfiles[seat.id]?.board_issue === "allow").toBe(canPropose)
+      expect(nativeProfiles[seat.id]?.board_request_move === "allow").toBe(canPropose)
+      expect(nativeProfiles[seat.id]?.board_move).not.toBe("allow")
+    }
   })
 })

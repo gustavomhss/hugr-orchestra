@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio_util::sync::CancellationToken;
 
 use crate::error::Error;
-use crate::process::{self, Options, PipeChild, PtyChild};
+use crate::process::{self, Options, PipeChild, PtyChild, RunHandle};
 use crate::spawn::{Mode, Request};
 use crate::types::{PtySize, RunOutput, Stdin};
 
@@ -179,6 +179,11 @@ impl Command {
     /// A non-zero exit is not an error.
     pub async fn run(&self) -> Result<RunOutput, Error> {
         process::run(&self.request(self.pty), &self.opts).await
+    }
+
+    /// The binding's observer sees the actual child before the run first suspends.
+    pub(crate) async fn run_owned(&self, on_spawn: impl FnOnce(RunHandle) + Send) -> Result<RunOutput, Error> {
+        process::run_owned(&self.request(self.pty), &self.opts, on_spawn).await
     }
 
     fn request(&self, pty: Option<PtySize>) -> Request {

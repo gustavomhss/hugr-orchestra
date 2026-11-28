@@ -43,11 +43,11 @@ const STREAM_CHUNK_DEADLINE_MS = 10_000
  * in-memory database and fresh Location services, so one Scenario never sees another's state. Passing a password turns
  * Basic auth on; without one the server runs open, as it does for a local desktop.
  */
-export function makeApp(options: { auth: boolean }): ExerciseApp {
+export function makeApp(options: { auth: boolean; docker?: boolean }): ExerciseApp {
   const web = HttpRouter.toWebHandler(
     createRoutes({
       password: options.auth ? credentials.password : undefined,
-      host: [{ id: "docker-http-fixture", replacements: [[AppProcess.node, exerciseProcess]] }],
+      host: options.docker ? [{ id: "docker-http-fixture", replacements: [[AppProcess.node, exerciseProcess]] }] : undefined,
     }).pipe(Layer.provide(HttpServer.layerServices)),
     { disableLogger: true, memoMap: Layer.makeMemoMapUnsafe() },
   )

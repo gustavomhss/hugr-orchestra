@@ -1,15 +1,15 @@
-import { createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js"
+import { createMemo, createSignal, For, lazy, Match, onCleanup, onMount, Show, Suspense, Switch } from "solid-js"
 import { createStore, reconcile, unwrap } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { MxBadge, MxToggle } from "../kit"
-import { encode, narrow, Ring, Seat, Ticks } from "./parts"
+import { encode, Ring, Seat } from "./parts"
 import { createBoardExtras, ExtrasHeader, ExtrasPanels, ExtrasProof } from "./extras"
 import {
   age,
   across,
+  unproven,
   attachmentKind,
-  canUndo,
   columns,
   credential,
   group,
@@ -22,18 +22,30 @@ import {
   waitingOn,
   type Column,
   type Issue,
+  type ExecutionReport,
   type Page,
   type Snapshot,
   type Trail,
 } from "./model"
-import { actionKey, actorKey, healthKey, shippedKey, stageKey } from "./keys"
+import { healthKey, shippedKey, stageKey } from "./keys"
 import { Inbox } from "./inbox"
+import { createReplyDrafts } from "./reply-drafts"
 import { Intake } from "./intake"
+import { IssueDiscussion } from "./discussion"
+import { BoardWriteStatus } from "./write-status"
+import { IssueTabs, type IssueArea } from "./issue-tabs"
+import { ExecutionReceipt, IssueExecutions } from "./executions"
+import { IssueHistory } from "./history"
+import { IssueProperties } from "./properties"
+import { Ticks, TrailView } from "./trail"
 import { createReplay } from "./replay"
 import { boards, lists, trailBatch } from "./warm"
 import "./board.css"
+import "./issue-detail.css"
 import { EpicPage, ListView, Overview, Timeline, ViewSwitch } from "./views"
 import type { View } from "./plan"
+
+const IssueDocument = lazy(() => import("./document"))
 
 type Channel = "list" | "board" | "page"
 
@@ -46,6 +58,7 @@ const attachLimit = 25 * 1024 * 1024
 // context, pauses and undoes. Every view refetches whenever the server says a project changed. It is cross-project,
 // so it renders without a repository.
 export default function Board() {
+  const replies = createReplyDrafts()
   const language = useLanguage()
   const sdk = useServerSDK()
   const t = language.t
@@ -63,13 +76,28 @@ export default function Board() {
     full: false,
     page: undefined as Page | undefined,
     pageFailed: false,
+    execution: undefined as ExecutionReport | undefined,
+    executionFailed: false,
+    issueArea: "overview" as IssueArea,
     busy: false,
+    pendingWrite: undefined as { generation: number; ref: string } | undefined,
     failure: undefined as string | undefined,
+    writeStatus: undefined as { ref: string; message: string } | undefined,
+    detailGeneration: 0,
     draft: "",
+    draftRevision: 0,
     caught: false,
     secret: undefined as { name: string; value: string } | undefined,
+    secretRevision: 0,
+    secretBlocked: false,
     drop: undefined as string | undefined,
     inbox: false,
+    creating: false,
+    createdTitle: undefined as string | undefined,
+    newTitle: "",
+    newBody: "",
+    newRevision: 0,
+    generation: 0,
   })
   const channels: Partial<Record<Channel, AbortController>> = {}
   const begin = (name: Channel) => {
@@ -84,10 +112,15 @@ export default function Board() {
     key: () => store.key,
     issue: (ref) => store.snapshot?.issues.find((item) => item.ref === ref),
     refresh: (key) => (void loadBoard(key), void loadList()),
-    enter: () => setStore({ peek: undefined, full: false }),
+    enter: () => {
+      if (protectSecret()) return false
+      closePeek()
+      return true
+    },
   })
   onCleanup(() => Object.values(channels).forEach((controller) => controller?.abort()))
   let root: HTMLDivElement | undefined
+  let scroller: HTMLDivElement | undefined
   const [view, setView] = createSignal<View>("board")
   const [epic, setEpic] = createSignal<number>()
   // The epic page reads the project's snapshot; it shows only while that snapshot still holds the epic.
@@ -139,12 +172,14 @@ export default function Board() {
   }
 
   const loadBoard = (key: string) => {
+    if (store.key !== key) return
+    const scope = sdk().scope
     const controller = begin("board")
     return api()
       .get({ key }, { signal: controller.signal })
       .then(
         (result) => {
-          if (controller.signal.aborted) return
+          if (controller.signal.aborted || store.key !== key || sdk().scope !== scope) return
           setStore("snapshot", reconcile(result, { key: "id" }))
           setStore({ boardFailed: false, fetchedAt: Date.now() })
           extras.sync(key)
@@ -152,7 +187,7 @@ export default function Board() {
           // The CI trails come after the board has painted, a few at a time, so they never hold it back.
           setTimeout(() => void loadTrails(key, result, controller), 0)
         },
-        () => !controller.signal.aborted && setStore({ boardFailed: true }),
+        () => !controller.signal.aborted && store.key === key && sdk().scope === scope && setStore({ boardFailed: true }),
       )
   }
 
@@ -161,6 +196,14 @@ export default function Board() {
     if (!issue || !store.key) return
     const controller = begin("page")
     void extras.loadProof(ref)
+    void api().execution({ key: store.key, number: String(issue.number) }, { signal: controller.signal }).then(
+      (execution) => {
+        if (controller.signal.aborted) return
+        setStore("execution", reconcile(execution, { key: "n" }))
+        setStore("executionFailed", false)
+      },
+      () => !controller.signal.aborted && setStore({ executionFailed: true }),
+    )
     return api()
       .issue({ key: store.key, number: String(issue.number) }, { signal: controller.signal })
       .then(
@@ -171,50 +214,77 @@ export default function Board() {
 
   // One owner write at a time. A refusal shows the server's own words; success refetches here, and board.changed
   // refetches every other window.
-  const write = (run: (key: string) => Promise<unknown>) => {
+  const write = (run: (key: string) => Promise<unknown>, scope: "issue" | "project" = "issue", target?: string) => {
     const key = store.key
     if (!key || store.busy) return Promise.resolve(false)
-    setStore({ busy: true, failure: undefined })
+    const generation = store.generation
+    const detail = store.detailGeneration
+    const ref = target ?? (scope === "issue" ? store.peek : undefined) ?? key
+    setStore({ busy: true, pendingWrite: { generation, ref }, failure: undefined, writeStatus: undefined })
     return run(key).then(
       () => {
-        setStore("busy", false)
+        setStore({ busy: false, pendingWrite: undefined })
+        if (store.generation !== generation) return false
         void loadBoard(key)
+        if (scope === "issue" && detail !== store.detailGeneration) {
+          if (store.peek === ref) void loadPage(ref)
+          return false
+        }
         if (store.peek) void loadPage(store.peek)
         return true
       },
       (error: unknown) => {
-        setStore({ busy: false, failure: refusal(error) ?? t("orchestra.board.write.failed") })
+        setStore({ busy: false, pendingWrite: undefined })
+        console.error("Board write failed", { ref, error })
+        if (store.generation !== generation || scope === "project" || detail !== store.detailGeneration || ref !== store.peek) {
+          setStore("writeStatus", { ref, message: refusal(error) ?? t("orchestra.board.write.failed") })
+          return false
+        }
+        setStore("failure", refusal(error) ?? t("orchestra.board.write.failed"))
         return false
       },
     )
   }
-  const answer = (question: { id: string }, option: string, text?: string) =>
-    write((key) => api().answer({ key, id: question.id, option, text: text?.trim() || undefined }))
+  const answer = (question: { id: string; text: string; issue?: number | null }, option: string) => {
+    if (!store.key) return
+    const sent = replies.capture(store.key, question.id)
+    return write((key) => api().answer({ key, id: question.id, option, text: sent.text.trim() || undefined })
+      .then(() => replies.acknowledge(sent)), "project", t("orchestra.board.write.answer", { ref: question.issue == null ? store.key : `${store.key}-${question.issue}`, question: question.text }))
+  }
   const addNote = (issue: number) => {
     const body = store.draft.trim()
+    const revision = store.draftRevision
+    const ref = store.peek
     if (!body) return
     // A key never leaves as a note; the owner moves it into the vault first.
     if (credential(body)) return setStore("caught", true)
-    return write((key) => api().note({ key, number: String(issue), body })).then((ok) => ok && setStore("draft", ""))
+    return write((key) => api().note({ key, number: String(issue), body })).then((ok) => ok && store.peek === ref && store.draftRevision === revision && setStore("draft", ""))
   }
   const toSecret = () => {
     const token = credential(store.draft)
     if (!token) return setStore("caught", false)
-    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), secret: { name: "", value: token } })
+    setStore({ caught: false, draft: store.draft.replace(token, "").trim(), draftRevision: store.draftRevision + 1, secret: { name: "", value: token }, secretRevision: store.secretRevision + 1, secretBlocked: false, issueArea: "overview" })
+    queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
   }
   const saveSecret = (issue: number) => {
-    const secret = store.secret
+    const secret = store.secret ? { ...store.secret } : undefined
+    const revision = store.secretRevision
     if (!secret?.name.trim() || !secret.value) return
     return write((key) =>
       api().attach({ key, number: String(issue), kind: "secret", name: secret.name.trim(), value: secret.value }),
-    ).then((ok) => ok && setStore("secret", undefined))
+    ).then((ok) => ok && store.secretRevision === revision && setStore({ secret: undefined, secretBlocked: false }))
   }
-  const attach = (issue: number, files: readonly File[]) => {
+  const attach = (ref: string, issue: number, files: readonly File[]) => {
     if (!files.length) return
     const big = files.find((file) => file.size > attachLimit)
-    if (big) return setStore("failure", t("orchestra.board.attach.tooBig", { name: big.name }))
-    return write((key) =>
-      Promise.all(
+    if (big) {
+      const message = t("orchestra.board.attach.tooBig", { name: big.name })
+      if (store.peek === ref) setStore("failure", message)
+      if (store.peek !== ref) setStore("writeStatus", { ref, message })
+      return
+    }
+    return write(
+      (key) => Promise.all(
         files.map(async (file) =>
           api().attach({
             key,
@@ -226,11 +296,13 @@ export default function Board() {
           }),
         ),
       ),
+      "issue",
+      ref,
     )
   }
   const undo = (id: string) => write((key) => api().undo({ key, id }))
   const toggleProject = () =>
-    write((key) => (store.snapshot?.project.status === "paused" ? api().resume({ key }) : api().pause({ key })))
+    write((key) => (store.snapshot?.project.status === "paused" ? api().resume({ key }) : api().pause({ key })), "project")
   const toggleIssue = (issue: Issue) =>
     write((key) =>
       issue.paused
@@ -248,7 +320,7 @@ export default function Board() {
     onDrop: (event: DragEvent) => {
       event.preventDefault()
       setStore("drop", undefined)
-      void attach(issue, [...(event.dataTransfer?.files ?? [])])
+      void attach(ref, issue, [...(event.dataTransfer?.files ?? [])])
     },
   })
 
@@ -267,32 +339,53 @@ export default function Board() {
     }),
   )
 
+  // Unsaved credentials stay only in memory. Every navigation path shares this fence, not just Escape.
+  const protectSecret = () => {
+    if (!store.secret) return false
+    setStore({ secretBlocked: true, issueArea: "overview" })
+    queueMicrotask(() => root?.querySelector<HTMLInputElement>('.board-secret input[type="text"]')?.focus())
+    return true
+  }
+  const openEpic = (number?: number) => {
+    if (protectSecret()) return
+    setEpic(number)
+  }
   const openProject = (key: string) => {
+    if (protectSecret()) return
+    setStore("generation", (value) => value + 1)
+    channels.page?.abort()
     const held = boards.read(warmKey(key))
-    setStore({ key, snapshot: held?.snapshot, boardFailed: false, trails: held?.trails ?? {}, focused: undefined, peek: undefined, full: false })
+    setStore({ key, snapshot: held?.snapshot, boardFailed: false, trails: held?.trails ?? {}, focused: undefined, peek: undefined, full: false, creating: false, newTitle: "", newBody: "", writeStatus: undefined, createdTitle: undefined, failure: undefined, draft: "", caught: false, secret: undefined, secretBlocked: false, page: undefined, execution: undefined, executionFailed: false, detailGeneration: store.detailGeneration + 1 })
     void loadBoard(key)
   }
   const closeProject = () => {
+    if (protectSecret()) return
+    setStore("generation", (value) => value + 1)
     channels.board?.abort()
     channels.page?.abort()
-    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false })
+    setStore({ key: undefined, snapshot: undefined, peek: undefined, page: undefined, full: false, failure: undefined, writeStatus: undefined, createdTitle: undefined, draft: "", caught: false, secret: undefined, secretBlocked: false, execution: undefined, executionFailed: false, detailGeneration: store.detailGeneration + 1 })
     void loadList()
   }
   const openPeek = (ref: string) => {
-    if (store.peek !== ref) setStore({ draft: "", caught: false, secret: undefined, failure: undefined })
+    if (store.peek !== ref && protectSecret()) return
+    if (store.peek !== ref) setStore({ detailGeneration: store.detailGeneration + 1, draft: "", caught: false, secret: undefined, failure: undefined, issueArea: "overview", execution: undefined, executionFailed: false })
     setStore({ peek: ref, focused: ref, page: store.page?.issue.ref === ref ? store.page : undefined, pageFailed: false })
     void loadPage(ref)
   }
   const closePeek = () => {
+    if (protectSecret()) return
     channels.page?.abort()
     const ref = store.peek
-    setStore({ peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined })
+    setStore({ detailGeneration: store.detailGeneration + 1, peek: undefined, full: false, page: undefined, draft: "", caught: false, secret: undefined, failure: undefined, execution: undefined })
     if (ref) focus(ref)
   }
   // The peek's button leaves the DOM when the page opens, so focus moves to the page to keep J, K and Esc working.
   const openFull = () => {
     setStore("full", true)
-    requestAnimationFrame(() => root?.querySelector<HTMLElement>(".board-full")?.focus())
+    requestAnimationFrame(() => {
+      scroller?.scrollTo({ top: 0 })
+      root?.querySelector<HTMLElement>(".board-full")?.focus({ preventScroll: true })
+    })
   }
   const focus = (ref: string) => {
     setStore("focused", ref)
@@ -306,7 +399,11 @@ export default function Board() {
   const asks = () => (store.projects ?? []).reduce((sum, item) => sum + item.openQuestions, 0)
   const needs = () => (
     <Show when={asks() > 0}>
-      <button type="button" class="board-chip board-needs" onClick={() => setStore({ inbox: true, peek: undefined })}>
+      <button type="button" class="board-chip board-needs" onClick={() => {
+        if (protectSecret()) return
+        closePeek()
+        setStore("inbox", true)
+      }}>
         {t("orchestra.board.ask.title")} · <b>{asks()}</b>
       </button>
     </Show>
@@ -326,20 +423,25 @@ export default function Board() {
 
   const move = (next: string | undefined) => {
     if (!next) return
+    if (protectSecret()) return
     focus(next)
     if (store.peek && store.peek !== next) openPeek(next)
   }
   const keydown = (event: KeyboardEvent) => {
     if (!store.snapshot || store.inbox) return
     const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
-    const current = store.focused ?? store.peek
+    const current = store.peek ?? store.focused
     if (key === "Escape" && extras.state.panel) return (event.preventDefault(), extras.closePanel())
     if (extras.state.panel) return
+    if (key === "Escape" && store.secret) return (event.preventDefault(), void protectSecret())
+    if (key === "Escape" && (event.target as HTMLElement).closest("textarea") && store.draft) return
     if (key === "Escape" && store.peek) return (event.preventDefault(), closePeek())
     // Typing a note or an answer never moves the board.
     const target = event.target as HTMLElement
-    if (target.closest("input, textarea, [contenteditable]")) return
+    if (target.closest("input, textarea, select, [contenteditable], .board-detail, .board-issue-tabs")) return
     if (event.metaKey || event.ctrlKey || event.altKey) return
+    // Board navigation belongs to cards and the board/full-page surfaces, never an unrelated toolbar control.
+    if (target.closest("button, a, [role=tab], [role=switch]") && !target.closest("[data-ref]")) return
     // Digits answer the top question only while the board view shows it.
     const top = view() === "board" && !opened() ? questions()[0] : undefined
     const choice = /^[1-9]$/.test(key) && !store.peek ? top?.options[Number(key) - 1] : undefined
@@ -524,85 +626,7 @@ export default function Board() {
     )
   }
 
-  const TrailView = (props: { trail: Trail; branch: string | null }) => (
-    <Switch>
-      <Match when={narrow(props.trail, "signed_out")}>
-        {(trail) => (
-          <div class="board-trail-note">
-            <strong>{t("orchestra.board.trail.signedOut")}</strong>
-            <p>{trail().message}</p>
-          </div>
-        )}
-      </Match>
-      <Match when={narrow(props.trail, "error")}>
-        {(trail) => (
-          <div class="board-trail-note">
-            <strong>{t("orchestra.board.trail.error")}</strong>
-            <p>{trail().message}</p>
-          </div>
-        )}
-      </Match>
-      <Match when={props.trail.state === "none"}>
-        <div class="board-trail-note">
-          <Show when={props.branch} fallback={<p>{t("orchestra.board.trail.none")}</p>}>
-            {(branch) => (
-              <p>
-                {t("orchestra.board.trail.branchOnly")} <span class="board-mono">{branch()}</span>
-              </p>
-            )}
-          </Show>
-        </div>
-      </Match>
-      <Match when={narrow(props.trail, "ok")}>
-        {(trail) => (
-          <div class="board-trail">
-            <div class="board-trail-head">
-              <span class="board-mono board-strong">#{trail().pr.number}</span>
-              <span class="board-chip">
-                {trail().pr.merged
-                  ? t("orchestra.board.pr.merged")
-                  : trail().pr.state.toLowerCase() === "closed"
-                    ? t("orchestra.board.pr.closed")
-                    : t("orchestra.board.pr.open")}
-              </span>
-              <span class="board-trail-title">{trail().pr.title}</span>
-            </div>
-            <div class="board-trail-facts">
-              <span>
-                {t("orchestra.board.trail.branch")} <span class="board-mono">{trail().branch}</span>
-              </span>
-              <Ticks trail={trail()} />
-              <Show when={trail().pr.reviewDecision}>
-                {(decision) => <span>{t("orchestra.board.trail.review", { state: decision().toLowerCase().replaceAll("_", " ") })}</span>}
-              </Show>
-              <Show when={trail().pr.mergeCommit}>
-                {(hash) => (
-                  <span>
-                    {t("orchestra.board.trail.merge")} <span class="board-mono">{hash().slice(0, 7)}</span>
-                  </span>
-                )}
-              </Show>
-            </div>
-            <Show when={trail().commits.length > 0}>
-              <ol class="board-commits">
-                <For each={trail().commits}>
-                  {(commit) => (
-                    <li>
-                      <span class="board-mono">{commit.hash.slice(0, 7)}</span>
-                      <span class="board-commit-message">{commit.message}</span>
-                      <Seat seat={commit.seat} />
-                    </li>
-                  )}
-                </For>
-              </ol>
-            </Show>
-          </div>
-        )}
-      </Match>
-    </Switch>
-  )
-
-  // One renderer for the peek and the full page; the page adds the properties rail and the whole activity log.
+  // Both views render the same issue workspace and share the same draft state.
   const Detail = (props: { page: Page; full: boolean }) => {
     const issue = () => props.page.issue
     const progress = () => steps(issue())
@@ -611,73 +635,93 @@ export default function Board() {
       return number === null ? undefined : epics().get(number)
     }
     const open = () => props.page.questions.filter((question) => question.status === "open")
-    const activity = () => (props.full ? props.page.activity : props.page.activity.slice(-3))
-    const index = () => refs().indexOf(issue().ref)
+    const execution = () => store.execution?.ref === issue().ref ? store.execution : undefined
     let picker: HTMLInputElement | undefined
     return (
       <div class="board-detail" data-full={props.full}>
         <div class="board-detail-main">
-          <div class="board-detail-top">
-            <span class="board-id">{issue().ref}</span>
-            <span class="board-chip">
-              <Ring stage={issue().stage} />
-              {t(stageKey[issue().stage])}
-            </span>
-            <span class="board-spacer" />
-            <Show when={props.full}>
-              <span class="board-quiet">{t("orchestra.board.pager", { index: index() + 1, total: refs().length })}</span>
-            </Show>
-            <Show when={!props.full}>
-              <button type="button" class="mx-btn" onClick={openFull}>
-                {t("orchestra.board.openPage")}
+          <header class="board-issue-header">
+            <div class="board-detail-top">
+              <span class="board-id">{issue().ref}</span>
+              <span class="board-chip">
+                <Ring stage={issue().stage} />
+                {t(stageKey[issue().stage])}
+              </span>
+              <Show when={issue().paused}><span class="board-chip board-issue-paused">{t("orchestra.board.paused.plain")}</span></Show>
+              <Show when={issue().holdBeforeMerge}><span class="board-chip board-issue-paused">{t("orchestra.board.hold")}</span></Show>
+              <span class="board-spacer" />
+              <Show when={!props.full}>
+                <button type="button" class="mx-btn board-open-full" onClick={openFull}>
+                  {t("orchestra.board.openPage")}
+                </button>
+              </Show>
+              <details class="board-issue-actions" onKeyDown={(event) => {
+                if (event.key !== "Escape" || !event.currentTarget.open) return
+                event.preventDefault()
+                event.stopPropagation()
+                event.currentTarget.open = false
+                event.currentTarget.querySelector("summary")?.focus()
+              }}>
+                <summary class="board-icon-button" aria-label={t("orchestra.actions.title")} title={t("orchestra.actions.title")}>
+                  <svg viewBox="0 0 16 16" aria-hidden="true">
+                    <path d="M3 8h.01m4.99 0h.01m4.99 0h.01" />
+                  </svg>
+                </summary>
+                <div class="board-controls">
+                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleIssue(issue())}>
+                    {issue().paused ? t("orchestra.board.resume.issue") : t("orchestra.board.pause.issue")}
+                  </button>
+                  <label class="board-hold">
+                    <MxToggle
+                      checked={issue().holdBeforeMerge}
+                      label={t("orchestra.board.holdToggle")}
+                      disabled={store.busy}
+                      onChange={(next) => void hold(issue(), next)}
+                    />
+                    <span>{t("orchestra.board.holdToggle")}</span>
+                  </label>
+                </div>
+              </details>
+              <button
+                type="button"
+                class="board-icon-button"
+                aria-label={props.full ? t("orchestra.board.backToBoard") : t("orchestra.board.closePeek")}
+                onClick={closePeek}
+              >
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M4 4l8 8M12 4l-8 8" />
+                </svg>
               </button>
-            </Show>
-            <button
-              type="button"
-              class="board-icon-button"
-              aria-label={props.full ? t("orchestra.board.backToBoard") : t("orchestra.board.closePeek")}
-              onClick={closePeek}
+            </div>
+            <h2 id="board-detail-title">{issue().title}</h2>
+            <Show
+              when={unproven(
+                issue(),
+                props.page.trail,
+                extras.state.proof?.ref === issue().ref ? extras.state.proof : undefined,
+              )}
             >
-              <svg viewBox="0 0 16 16" aria-hidden="true">
-                <path d="M4 4l8 8M12 4l-8 8" />
-              </svg>
-            </button>
-          </div>
-          <h2 id="board-detail-title">{issue().title}</h2>
-          <div class="board-meta">
-            <Show when={epic()}>{(title) => <span>{title()}</span>}</Show>
-            <Show when={issue().seat}>
-              {(seat) => (
-                <span>
-                  <Seat seat={seat()} />
-                  {seat()}
-                </span>
+              {(claim) => (
+                <div class="board-claim" role="status">
+                  <b>{t(claim().stage === "building" ? "orchestra.board.claim.building" : "orchestra.board.claim.review")}</b>
+                  <ul>
+                    <Show when={claim().missing.includes("branch")}>
+                      <li>{t("orchestra.board.trail.none")}</li>
+                    </Show>
+                    <Show when={claim().missing.includes("pr")}>
+                      <li>{t("orchestra.proof.pr.none")}</li>
+                    </Show>
+                    <Show when={claim().attempts}>
+                      {(attempts) => <li>{t("orchestra.proof.attempts", { n: attempts().n, of: attempts().of })}</li>}
+                    </Show>
+                    <Show when={claim().missing.includes("verified")}>
+                      <li>{t("orchestra.proof.verified.none")}</li>
+                    </Show>
+                  </ul>
+                </div>
               )}
             </Show>
-            <span>{t("orchestra.board.day", { day: age(issue(), Date.now()) })}</span>
-            <Show when={props.page.dependencies.blocks.length > 0}>
-              <span>
-                {t("orchestra.board.blocks")} <span class="board-mono">{props.page.dependencies.blocks.join(", ")}</span>
-              </span>
-            </Show>
-          </div>
-          <Show when={issue().body}>
-            <p class="board-body">{issue().body}</p>
-          </Show>
-          <div class="board-controls">
-            <button type="button" class="mx-btn" disabled={store.busy} onClick={() => void toggleIssue(issue())}>
-              {issue().paused ? t("orchestra.board.resume.issue") : t("orchestra.board.pause.issue")}
-            </button>
-            <label class="board-hold">
-              <MxToggle
-                checked={issue().holdBeforeMerge}
-                label={t("orchestra.board.holdToggle")}
-                disabled={store.busy}
-                onChange={(next) => void hold(issue(), next)}
-              />
-              <span>{t("orchestra.board.holdToggle")}</span>
-            </label>
-          </div>
+          </header>
           <Show when={store.failure}>
             {(failure) => (
               <p class="mx-error" role="alert">
@@ -685,51 +729,70 @@ export default function Board() {
               </p>
             )}
           </Show>
-          <ExtrasProof extras={extras} cardRef={issue().ref} />
-
+          <IssueTabs id={issue().id} value={store.issueArea} onChange={(issueArea) => {
+            setStore({ issueArea })
+            queueMicrotask(() => root?.querySelector<HTMLElement>(".board-issue-tabs")?.scrollIntoView?.({ block: "nearest" }))
+          }} />
+          <div class="board-issue-panel board-issue-overview" role="tabpanel" id={`${issue().id}-panel-overview`} aria-labelledby={`${issue().id}-tab-overview`} hidden={store.issueArea !== "overview"} tabIndex={0}>
+          <Show when={execution()}>{(report) => <ExecutionReceipt report={report()} stage={issue().stage} stageEnteredAt={issue().stageEnteredAt} time={time} />}</Show>
+          <Show when={store.executionFailed && (issue().stage === "shipped" || issue().stage === "cut")}><p class="board-quiet">{t("orchestra.board.workspace.failed")}</p></Show>
           <Show when={open().length > 0}>
-            <section class="board-sec">
-              <h3>{t("orchestra.board.sec.questions")}</h3>
+            <section class="board-sec board-issue-questions">
+              <h3>
+                {t("orchestra.board.sec.questions")}
+                <span class="board-count">{open().length}</span>
+              </h3>
               <For each={open()}>
                 {(question) => {
-                  let reply: HTMLInputElement | undefined
                   return (
-                    <div class="board-question">
-                      <p>{question.text}</p>
-                      <ul>
-                        <For each={question.options}>
-                          {(option) => (
-                            <li>
-                              <button
-                                type="button"
-                                class="board-option"
-                                data-recommended={option.id === question.recommended}
-                                disabled={store.busy}
-                                onClick={() => void answer(question, option.id, reply?.value)}
-                              >
-                                <b>{option.label}</b>
-                                <Show when={option.id === question.recommended}>
-                                  <span class="board-quiet"> · {t("orchestra.board.recommended")}</span>
-                                </Show>
-                                <Show when={option.consequence}>
-                                  <small>{option.consequence}</small>
-                                </Show>
-                              </button>
-                            </li>
-                          )}
-                        </For>
-                      </ul>
-                      <input
-                        ref={reply}
-                        class="board-input"
-                        type="text"
-                        aria-label={t("orchestra.board.answer.text")}
-                        placeholder={t("orchestra.board.answer.text")}
-                      />
-                    </div>
+                    <details class="board-question">
+                      <summary>{question.text}</summary>
+                      <div class="board-question-body">
+                        <ul>
+                          <For each={question.options}>
+                            {(option) => (
+                              <li>
+                                <button
+                                  type="button"
+                                  class="board-option"
+                                  data-recommended={option.id === question.recommended}
+                                  disabled={store.busy}
+                                  onClick={() => void answer(question, option.id)}
+                                >
+                                  <b>{option.label}</b>
+                                  <Show when={option.id === question.recommended}>
+                                    <span class="board-issue-recommendation">{t("orchestra.board.recommended")}</span>
+                                  </Show>
+                                  <Show when={option.consequence}>
+                                    <small>{option.consequence}</small>
+                                  </Show>
+                                </button>
+                              </li>
+                            )}
+                          </For>
+                        </ul>
+                        <input
+                          value={replies.read(store.key!, question.id)}
+                          onInput={(event) => replies.edit(store.key!, question.id, event.currentTarget.value)}
+                          class="board-input"
+                          type="text"
+                          aria-label={t("orchestra.board.answer.text")}
+                          placeholder={t("orchestra.board.answer.text")}
+                        />
+                      </div>
+                    </details>
                   )
                 }}
               </For>
+            </section>
+          </Show>
+
+          <Show when={issue().body}>
+            <section class="board-sec board-issue-description">
+              <h3>{t("orchestra.board.workspace.description")}</h3>
+              <Suspense fallback={<p class="board-body">{issue().body}</p>}>
+                <IssueDocument text={issue().body} links={false} />
+              </Suspense>
             </section>
           </Show>
 
@@ -757,7 +820,7 @@ export default function Board() {
             </section>
           </Show>
 
-          <section class="board-sec">
+          <section class="board-sec board-issue-git">
             <h3>{t("orchestra.board.sec.git")}</h3>
             <TrailView trail={props.page.trail} branch={issue().branch} />
           </section>
@@ -792,17 +855,16 @@ export default function Board() {
                     multiple
                     hidden
                     onChange={(event) => {
-                      void attach(issue().number, [...(event.currentTarget.files ?? [])])
+                      void attach(issue().ref, issue().number, [...(event.currentTarget.files ?? [])])
                       event.currentTarget.value = ""
                     }}
                   />
                   <button type="button" class="mx-btn" disabled={store.busy} onClick={() => picker?.click()}>
                     {t("orchestra.board.attach.file")}
                   </button>
-                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore("secret", { name: "", value: "" })}>
+                  <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore({ secret: { name: "", value: "" }, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
                     {t("orchestra.board.attach.secret")}
                   </button>
-                  <span class="board-quiet">{t("orchestra.board.attach.drop")}</span>
                 </div>
               }
             >
@@ -819,7 +881,7 @@ export default function Board() {
                     <input
                       type="text"
                       value={secret().name}
-                      onInput={(event) => setStore("secret", "name", event.currentTarget.value)}
+                      onInput={(event) => setStore({ secret: { ...secret(), name: event.currentTarget.value }, secretRevision: store.secretRevision + 1 })}
                     />
                   </label>
                   <label class="mx-field">
@@ -828,10 +890,11 @@ export default function Board() {
                       type="password"
                       autocomplete="off"
                       value={secret().value}
-                      onInput={(event) => setStore("secret", "value", event.currentTarget.value)}
+                      onInput={(event) => setStore({ secret: { ...secret(), value: event.currentTarget.value }, secretRevision: store.secretRevision + 1 })}
                     />
                   </label>
                   <p class="board-quiet">{t("orchestra.board.secret.hint")}</p>
+                  <Show when={store.secretBlocked}><p class="board-quiet" role="status">{t("orchestra.board.secret.leave")}</p></Show>
                   <div class="board-add">
                     <button
                       type="submit"
@@ -840,7 +903,7 @@ export default function Board() {
                     >
                       {t("orchestra.board.secret.save")}
                     </button>
-                    <button type="button" class="mx-btn" onClick={() => setStore("secret", undefined)}>
+                    <button type="button" class="mx-btn" disabled={store.busy} onClick={() => setStore({ secret: undefined, secretRevision: store.secretRevision + 1, secretBlocked: false })}>
                       {t("orchestra.board.cancel")}
                     </button>
                   </div>
@@ -849,28 +912,10 @@ export default function Board() {
             </Show>
           </section>
 
-          <section class="board-sec">
-            <h3>
-              {t("orchestra.board.sec.notes")}
-              <span class="board-count">{props.page.notes.length}</span>
-            </h3>
-            <For each={props.page.notes}>
-              {(note) => (
-                <div class="board-note">
-                  <div class="board-note-by">
-                    <b>
-                      {note.author === "owner"
-                        ? t(actorKey.owner)
-                        : note.author === "maestro"
-                          ? t(actorKey.maestro)
-                          : note.author.replace(/^github:/, "@")}
-                    </b>
-                    <span class="board-quiet">{time(note.timeCreated)}</span>
-                  </div>
-                  <p>{note.body}</p>
-                </div>
-              )}
-            </For>
+          <ExtrasProof extras={extras} cardRef={issue().ref} />
+          </div>
+          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-conversation`} aria-labelledby={`${issue().id}-tab-conversation`} hidden={store.issueArea !== "conversation"} tabIndex={0}>
+          <IssueDiscussion channel="comments" issueID={issue().id} notes={props.page.notes} time={time}>
             <form
               class="board-composer"
               onSubmit={(event) => {
@@ -880,11 +925,11 @@ export default function Board() {
             >
               <textarea
                 class="board-input"
-                rows={3}
+                rows={2}
                 value={store.draft}
                 aria-label={t("orchestra.board.note.placeholder")}
                 placeholder={t("orchestra.board.note.placeholder")}
-                onInput={(event) => setStore({ draft: event.currentTarget.value, caught: false })}
+                onInput={(event) => setStore({ draft: event.currentTarget.value, draftRevision: store.draftRevision + 1, caught: false })}
               />
               <Show when={store.caught}>
                 <div class="board-caught" role="alert">
@@ -900,99 +945,31 @@ export default function Board() {
                 </button>
               </div>
             </form>
-          </section>
+          </IssueDiscussion>
+          </div>
+          <div class="board-issue-panel" role="tabpanel" id={`${issue().id}-panel-executions`} aria-labelledby={`${issue().id}-tab-executions`} hidden={store.issueArea !== "executions"} tabIndex={0}>
+            <IssueExecutions report={execution()} failed={store.executionFailed} page={props.page} time={time} retry={() => void loadPage(issue().ref)} />
+          </div>
 
-          <section class="board-sec">
-            <h3>
-              {props.full ? t("orchestra.board.sec.activity") : t("orchestra.board.sec.latest")}
-              <span class="board-count">{props.page.activity.length}</span>
-            </h3>
-            <Show when={activity().length > 0} fallback={<p class="board-quiet">{t("orchestra.board.activity.none")}</p>}>
-              <ol class="board-activity">
-                <For each={activity()}>
-                  {(entry) => (
-                    <li>
-                      <span>
-                        <b>{t(actorKey[entry.actor])}</b> {t(actionKey[entry.action])}
-                        <Show when={entry.reason}>{(reason) => <span class="board-why"> · {reason()}</span>}</Show>
-                      </span>
-                      <span class="board-activity-end">
-                        <Show when={entry.undoneBy !== null}>
-                          <span class="board-chip">{t("orchestra.board.undone")}</span>
-                        </Show>
-                        <Show when={canUndo(entry)}>
-                          <button type="button" class="mx-link" disabled={store.busy} onClick={() => void undo(entry.id)}>
-                            {t("orchestra.board.undo")}
-                          </button>
-                        </Show>
-                        <span class="board-quiet">{time(entry.timeCreated)}</span>
-                      </span>
-                    </li>
-                  )}
-                </For>
-              </ol>
-            </Show>
-          </section>
+          <IssueHistory
+            issueID={issue().id}
+            activity={props.page.activity}
+            busy={store.busy}
+            active={store.issueArea === "history"}
+            onUndo={(id) => void undo(id)}
+            time={time}
+          />
         </div>
 
-        <Show when={props.full}>
-          <aside class="board-rail">
-            <h3>{t("orchestra.board.sec.properties")}</h3>
-            <dl class="board-props">
-              <dt>{t("orchestra.board.prop.stage")}</dt>
-              <dd>
-                {t(stageKey[issue().stage])}
-                <Show when={progress().current}>
-                  {(current) => <small>{t("orchestra.board.stage.of", { current: current(), total: progress().total })}</small>}
-                </Show>
-              </dd>
-              <dt>{t("orchestra.board.prop.epic")}</dt>
-              <dd>{epic() ?? t("orchestra.board.none")}</dd>
-              <dt>{t("orchestra.board.prop.seat")}</dt>
-              <dd>{issue().seat ?? t("orchestra.board.none")}</dd>
-              <dt>{t("orchestra.board.prop.type")}</dt>
-              <dd>{t(`orchestra.board.type.${issue().type}`)}</dd>
-              <dt>{t("orchestra.board.prop.estimate")}</dt>
-              <dd>{issue().estimate?.toUpperCase() ?? t("orchestra.board.none")}</dd>
-              <dt>{t("orchestra.board.prop.age")}</dt>
-              <dd>{t("orchestra.board.day", { day: age(issue(), Date.now()) })}</dd>
-            </dl>
-            <h3>{t("orchestra.board.sec.dependencies")}</h3>
-            <dl class="board-props">
-              <dt>{t("orchestra.board.prop.dependsOn")}</dt>
-              <dd class="board-mono">{props.page.dependencies.dependsOn.join(", ") || t("orchestra.board.none")}</dd>
-              <dt>{t("orchestra.board.prop.blocks")}</dt>
-              <dd class="board-mono">{props.page.dependencies.blocks.join(", ") || t("orchestra.board.none")}</dd>
-            </dl>
-            <Show when={props.page.activity[0]}>
-              {(first) => (
-                <>
-                  <h3>{t("orchestra.board.sec.history")}</h3>
-                  <dl class="board-props">
-                    <dt>{t("orchestra.board.prop.created")}</dt>
-                    <dd>{date(first().timeCreated)}</dd>
-                    <dt>{t("orchestra.board.prop.updated")}</dt>
-                    <dd>{time(props.page.activity[props.page.activity.length - 1].timeCreated)}</dd>
-                  </dl>
-                </>
-              )}
-            </Show>
-            <p class="board-footnote">
-              <b>{t("orchestra.board.yours")}</b> {t("orchestra.board.yoursBody")}
-              <span class="board-keys">
-                <span>
-                  <kbd>J</kbd>
-                  <kbd>K</kbd>
-                  {t("orchestra.board.keys.issues")}
-                </span>
-                <span>
-                  <kbd>Esc</kbd>
-                  {t("orchestra.board.keys.board")}
-                </span>
-              </span>
-            </p>
-          </aside>
-        </Show>
+          <IssueProperties
+            page={props.page}
+            execution={execution()}
+            failed={store.executionFailed}
+            epic={epic()}
+            retry={() => void loadPage(issue().ref)}
+            date={date}
+            time={time}
+          />
       </div>
     )
   }
@@ -1022,10 +999,12 @@ export default function Board() {
     </Switch>
   )
 
-  return (
-    <div class="board-root mx-page" ref={root} onKeyDown={keydown}>
+  const ScrollContent = () => (
+    <div class="mx-page" ref={scroller}>
+      <Show when={store.busy && store.pendingWrite && store.pendingWrite.generation !== store.generation}><p class="board-quiet" role="status">{t("orchestra.board.write.waiting", { ref: store.pendingWrite!.ref })}</p></Show>
       <Show when={store.inbox}>
         <Inbox
+          replies={replies}
           onOpen={(key) => (setStore("inbox", false), openProject(key))}
           onClose={() => (setStore("inbox", false), store.key ? void loadBoard(store.key) : void loadList())}
         />
@@ -1068,14 +1047,18 @@ export default function Board() {
       >
         <section class="board-page" aria-labelledby="board-title">
           <nav class="board-crumb" aria-label={t("orchestra.board.crumb")}>
-            <button type="button" class="mx-link" onClick={() => (setEpic(undefined), closeProject())}>
+            <button type="button" class="mx-link" onClick={() => {
+              if (protectSecret()) return
+              setEpic(undefined)
+              closeProject()
+            }}>
               {t("orchestra.board.title")}
             </button>
             <span aria-hidden="true">/</span>
             <Show when={opened()} fallback={<span class="board-mono">{store.key}</span>}>
               {(open) => (
                 <>
-                  <button type="button" class="mx-link board-mono" onClick={() => setEpic(undefined)}>
+                  <button type="button" class="mx-link board-mono" onClick={() => openEpic(undefined)}>
                     {store.key}
                   </button>
                   <span aria-hidden="true">/</span>
@@ -1110,14 +1093,8 @@ export default function Board() {
                     focused={store.focused}
                     peek={store.peek}
                     onOpen={openPeek}
-                    onEpic={setEpic}
+                    onEpic={openEpic}
                   />
-                  <Show when={store.peek}>
-                    <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
-                    <aside class="board-peek" role="dialog" aria-labelledby="board-detail-title">
-                      <DetailState full={false} />
-                    </aside>
-                  </Show>
                 </>
               )}
             </Match>
@@ -1152,6 +1129,10 @@ export default function Board() {
                     </div>
                     <div class="board-head-end">
                       {needs()}
+                      <button type="button" class="mx-btn board-create" aria-expanded={store.creating} disabled={store.busy && store.creating} onClick={() => {
+                        setStore({ creating: !store.creating, newRevision: store.newRevision + 1 })
+                        queueMicrotask(() => root?.querySelector<HTMLInputElement>(".board-new-issue input")?.focus())
+                      }}>{t("orchestra.board.workspace.create")}</button>
                       <ExtrasHeader extras={extras} t={t} />
                       <ViewSwitch view={view()} onChange={setView} />
                       <Show when={crew().length > 0}>
@@ -1169,6 +1150,31 @@ export default function Board() {
                       </button>
                     </div>
                   </header>
+                  <Show when={store.creating}>
+                    <form class="board-new-issue" onSubmit={(event) => {
+                      event.preventDefault()
+                      if (!store.newTitle.trim()) return
+                      const revision = store.newRevision
+                      const title = store.newTitle.trim()
+                      void write((key) => api().create({ key, title: store.newTitle.trim(), body: store.newBody }), "project").then((ok) => {
+                        if (!ok) return
+                        setStore("createdTitle", title)
+                        if (store.newRevision !== revision) return
+                        setStore({ creating: false, newTitle: "", newBody: "", createdTitle: title })
+                        queueMicrotask(() => root?.querySelector<HTMLButtonElement>(".board-create")?.focus())
+                      })
+                    }}>
+                      <label class="mx-field"><span>{t("orchestra.board.workspace.newTitle")}</span>
+                        <input type="text" required value={store.newTitle} onInput={(event) => setStore({ newTitle: event.currentTarget.value, newRevision: store.newRevision + 1 })} />
+                      </label>
+                      <label class="mx-field"><span>{t("orchestra.board.workspace.newBody")}</span>
+                        <textarea class="board-input" rows={3} value={store.newBody} onInput={(event) => setStore({ newBody: event.currentTarget.value, newRevision: store.newRevision + 1 })} />
+                      </label>
+                      <div class="board-add"><button class="mx-btn primary" type="submit" disabled={store.busy || !store.newTitle.trim()}>{t("orchestra.board.workspace.create")}</button>
+                        <button class="mx-btn" type="button" disabled={store.busy} onClick={() => setStore({ creating: false, newRevision: store.newRevision + 1 })}>{t("orchestra.board.cancel")}</button></div>
+                    </form>
+                  </Show>
+                  <Show when={store.createdTitle}>{(title) => <p class="board-quiet" role="status">{t("orchestra.board.workspace.created", { title: title() })}</p>}</Show>
                   <Show when={!store.peek && store.failure}>
                     {(failure) => (
                       <p class="mx-error" role="alert">
@@ -1183,11 +1189,11 @@ export default function Board() {
                       focused={store.focused}
                       peek={store.peek}
                       onOpen={openPeek}
-                      onEpic={setEpic}
+                      onEpic={openEpic}
                     />
                   </Show>
                   <Show when={view() === "timeline"}>
-                    <Timeline snapshot={snapshot()} onOpen={openPeek} onEpic={setEpic} />
+                    <Timeline snapshot={snapshot()} onOpen={openPeek} onEpic={openEpic} />
                   </Show>
                   <div class="board-top" hidden={view() !== "board"}>
                     <section class="board-brief" aria-label={t("orchestra.board.brief")}>
@@ -1279,8 +1285,8 @@ export default function Board() {
                     <Intake
                       snapshot={snapshot()}
                       busy={store.busy}
-                      onAccept={(number) => void write((key) => api().accept({ key, number: String(number) }))}
-                      onDecline={(number) => void write((key) => api().decline({ key, number: String(number) }))}
+                      onAccept={(number) => void write((key) => api().accept({ key, number: String(number) }), "project", `${store.key}-${number}`)}
+                      onDecline={(number) => void write((key) => api().decline({ key, number: String(number) }), "project", `${store.key}-${number}`)}
                     />
                     <replay.Bar />
                   </Show>
@@ -1297,12 +1303,6 @@ export default function Board() {
                     <p class="board-quiet">{t("orchestra.board.stale")}</p>
                   </Show>
 
-                  <Show when={store.peek}>
-                    <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
-                    <aside class="board-peek" role="dialog" aria-labelledby="board-detail-title">
-                      <DetailState full={false} />
-                    </aside>
-                  </Show>
                   <ExtrasPanels
                     extras={extras}
                     snapshot={snapshot()}
@@ -1315,6 +1315,19 @@ export default function Board() {
           </Switch>
         </section>
       </Show>
+    </div>
+  )
+
+  return (
+    <div class="board-root" ref={root} onKeyDown={keydown}>
+      <ScrollContent />
+      <Show when={store.key && store.snapshot && store.peek && !store.full && !store.inbox}>
+        <div class="board-scrim" aria-hidden="true" onClick={closePeek} />
+        <aside class="board-peek" role="dialog" aria-labelledby="board-detail-title">
+          <DetailState full={false} />
+        </aside>
+      </Show>
+      <BoardWriteStatus status={store.writeStatus} onDismiss={() => setStore("writeStatus", undefined)} />
     </div>
   )
 }

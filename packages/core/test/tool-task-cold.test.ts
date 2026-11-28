@@ -42,6 +42,9 @@ function fixture(source: "native" | "legacy" | "markdown", engine?: "orchestra" 
     await Bun.write(path.join(tmp.path, ".global", "orchestra.json"),
       JSON.stringify({ trusted_projects: [tmp.path] }))
     await fs.mkdir(path.join(tmp.path, ".orchestra", "agents"), { recursive: true })
+    await fs.mkdir(path.join(tmp.path, ".global"), { recursive: true })
+    // Runtime declarations in this fixture's project are authorized by its isolated user's config.
+    await Bun.write(path.join(tmp.path, ".global", "orchestra.json"), JSON.stringify({ trusted_projects: [tmp.path] }))
     await Bun.write(path.join(tmp.path, ".orchestra", "orchestra.json"), JSON.stringify({
       snapshots: false,
       providers: {

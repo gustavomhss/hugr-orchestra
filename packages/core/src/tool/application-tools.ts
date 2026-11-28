@@ -3,6 +3,7 @@ export * as ApplicationTools from "./application-tools"
 import { Context, Effect, Layer, Scope } from "effect"
 import { State } from "../state"
 import { Tool } from "./tool"
+import { Tools } from "./tools"
 import { makeGlobalNode } from "../effect/app-node"
 
 type Data = {
@@ -43,7 +44,7 @@ const layer = Layer.effect(
       register: Effect.fn("ApplicationTools.register")(function* (tools) {
         const entries = Object.entries(tools)
         if (entries.length === 0) return
-        yield* Effect.forEach(entries, ([name]) => Tool.validateName(name), { discard: true })
+        yield* Effect.forEach(entries, ([name]) => Tools.validateOrdinaryName(name), { discard: true })
         const registrations = entries.map(([name, tool]) => [name, { identity: {}, tool }] as const)
         yield* state.transform((draft) => {
           for (const [name, entry] of registrations) draft.set(name, entry)

@@ -12,25 +12,21 @@ let currentPath = OAUTH_CALLBACK_PATH
 interface PendingAuth {
   resolve: (code: string) => void
   reject: (error: Error) => void
-  timeout: ReturnType<typeof setTimeout>
+  name?: string
+  cancel: () => void
 }
 
 let server: ReturnType<typeof createServer> | undefined
 let starting: Promise<void> | undefined
 const pendingAuths = new Map<string, PendingAuth>()
-// Reverse index: mcpName → oauthState, so cancelPending(mcpName) can
-// find the right entry in pendingAuths (which is keyed by oauthState).
-const mcpNameToState = new Map<string, string>()
-
 const CALLBACK_TIMEOUT_MS = 5 * 60 * 1000 // 5 minutes
 
-function cleanupStateIndex(oauthState: string) {
-  for (const [name, state] of mcpNameToState) {
-    if (state === oauthState) {
-      mcpNameToState.delete(name)
-      break
-    }
-  }
+function settle(state: string, pending: PendingAuth, outcome: { code: string } | { error: Error }) {
+  if (pendingAuths.get(state) !== pending) return
+  pendingAuths.delete(state)
+  pending.cancel()
+  if ("code" in outcome) pending.resolve(outcome.code)
+  if ("error" in outcome) pending.reject(outcome.error)
 }
 
 function stopIfIdle() {
@@ -66,10 +62,7 @@ function handleRequest(req: import("http").IncomingMessage, res: import("http").
     const errorMsg = errorDescription || error
     if (pendingAuths.has(state)) {
       const pending = pendingAuths.get(state)!
-      clearTimeout(pending.timeout)
-      pendingAuths.delete(state)
-      cleanupStateIndex(state)
-      pending.reject(new Error(errorMsg))
+      settle(state, pending, { error: new Error(errorMsg) })
     }
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
     res.end(OauthCallbackPage.error(errorMsg, { provider: "MCP" }))
@@ -93,10 +86,7 @@ function handleRequest(req: import("http").IncomingMessage, res: import("http").
 
   const pending = pendingAuths.get(state)!
 
-  clearTimeout(pending.timeout)
-  pendingAuths.delete(state)
-  cleanupStateIndex(state)
-  pending.resolve(code)
+  settle(state, pending, { code })
 
   res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" })
   res.end(OauthCallbackPage.success({ provider: "MCP" }))
@@ -131,7 +121,9 @@ async function start(port: number, path: string) {
 
   const candidate = createServer(handleRequest)
   await new Promise<void>((resolve, reject) => {
-    candidate.on("error", (error: NodeJS.ErrnoException) => reject(error.code === "EADDRINUSE" ? portInUse(port) : error))
+    candidate.on("error", (error: NodeJS.ErrnoException) =>
+      reject(error.code === "EADDRINUSE" ? portInUse(port) : error),
+    )
     candidate.listen(port, OAUTH_CALLBACK_HOST, () => resolve())
   })
   server = candidate
@@ -143,34 +135,35 @@ function portInUse(port: number) {
   )
 }
 
-export function waitForCallback(oauthState: string, mcpName?: string): Promise<string> {
-  if (mcpName) mcpNameToState.set(mcpName, oauthState)
+export function waitForCallback(
+  oauthState: string,
+  mcpName?: string,
+  options?: { scheduleTimeout?: (onTimeout: () => void, delayMs: number) => () => void },
+): Promise<string> {
+  if (pendingAuths.has(oauthState)) return Promise.reject(new Error("OAuth state already registered"))
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => {
-      if (pendingAuths.has(oauthState)) {
-        pendingAuths.delete(oauthState)
-        if (mcpName) mcpNameToState.delete(mcpName)
-        reject(new Error("OAuth callback timeout - authorization took too long"))
-        stopIfIdle()
-      }
+    const pending: PendingAuth = { resolve, reject, name: mcpName, cancel: () => {} }
+    pendingAuths.set(oauthState, pending)
+    const schedule =
+      options?.scheduleTimeout ??
+      ((onTimeout: () => void, delayMs: number) => {
+        const timer = setTimeout(onTimeout, delayMs)
+        return () => clearTimeout(timer)
+      })
+    const cancel = schedule(() => {
+      settle(oauthState, pending, { error: new Error("OAuth callback timeout - authorization took too long") })
+      stopIfIdle()
     }, CALLBACK_TIMEOUT_MS)
-
-    pendingAuths.set(oauthState, { resolve, reject, timeout })
+    pending.cancel = cancel
+    if (pendingAuths.get(oauthState) !== pending) cancel()
   })
 }
 
-export function cancelPending(mcpName: string): void {
-  // Look up the oauthState for this mcpName via the reverse index
-  const oauthState = mcpNameToState.get(mcpName)
-  const key = oauthState ?? mcpName
-  const pending = pendingAuths.get(key)
-  if (pending) {
-    clearTimeout(pending.timeout)
-    pendingAuths.delete(key)
-    mcpNameToState.delete(mcpName)
-    pending.reject(new Error("Authorization cancelled"))
-    stopIfIdle()
-  }
+export function cancelPending(mcpName: string, expectedState: string): void {
+  const pending = pendingAuths.get(expectedState)
+  if (!pending || pending.name !== mcpName) return
+  settle(expectedState, pending, { error: new Error("Authorization cancelled") })
+  stopIfIdle()
 }
 
 export async function isPortInUse(port: number = OAUTH_CALLBACK_PORT): Promise<boolean> {
@@ -187,17 +180,12 @@ export async function isPortInUse(port: number = OAUTH_CALLBACK_PORT): Promise<b
 }
 
 export async function stop(): Promise<void> {
-  if (server) {
-    await new Promise<void>((resolve) => server!.close(() => resolve()))
-    server = undefined
+  const current = server
+  server = undefined
+  for (const [state, pending] of pendingAuths) {
+    settle(state, pending, { error: new Error("OAuth callback server stopped") })
   }
-
-  for (const [_name, pending] of pendingAuths) {
-    clearTimeout(pending.timeout)
-    pending.reject(new Error("OAuth callback server stopped"))
-  }
-  pendingAuths.clear()
-  mcpNameToState.clear()
+  if (current) await new Promise<void>((resolve) => current.close(() => resolve()))
 }
 
 export function isRunning(): boolean {

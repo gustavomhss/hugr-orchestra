@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "scope": "Third cold Linux E2E results plus later scoped thinking-control fixture repair; no union-as-full-green or ledger closure.",
+  "run": "43479893813",
+  "snapshot": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+  "aggregateConclusion": "failure",
+  "allJobs": {
+    "success": 63,
+    "failure": 7,
+    "cancelled": 0
+  },
+  "E2E": {
+    "pass": 570,
+    "fail": 1,
+    "skip": 3,
+    "cases": 574,
+    "flaky": 0,
+    "configuredRetries": 2,
+    "actualRetryAttempts": 2,
+    "workers": 1,
+    "testTimeoutMs": 60000,
+    "expectTimeoutMs": 10000,
+    "shardStepDeadlineMinutes": 12,
+    "windowsE2E": false
+  },
+  "bins": [
+    {"bin": 1, "pass": 53, "fail": 0, "skip": 0, "retryAttempts": 0, "sha256": "a6bc2d6a5648285cfda972d8592b1506ac5ebd0b48d2a5211e188e42a94ea849", "job": "132073530790", "conclusion": "success"},
+    {"bin": 2, "pass": 58, "fail": 0, "skip": 0, "retryAttempts": 0, "sha256": "da07a9f1ed8276fea43a5ad71cc7cf24c1f1bd782bff07865cec4bc8e901ab15", "job": "132073530983", "conclusion": "success"},
+    {"bin": 3, "pass": 62, "fail": 0, "skip": 1, "retryAttempts": 0, "sha256": "a99986059d87cb84f90b9627bc62e8ff6b17e042b2fef29641632e38c9a743b4", "job": "132073531046", "conclusion": "success"},
+    {"bin": 4, "pass": 61, "fail": 1, "skip": 0, "retryAttempts": 2, "sha256": "8ccbe5c75488011b1d14e12710dd6728e91b179da7b3181e829e452808fb645e", "job": "132073531030", "conclusion": "failure"},
+    {"bin": 5, "pass": 116, "fail": 0, "skip": 1, "retryAttempts": 0, "sha256": "d13c8d524bd8415078f2a0bd47d5599aceb870506599da5d2dbb8c73a61f43db", "job": "132073530781", "conclusion": "success"},
+    {"bin": 6, "pass": 88, "fail": 0, "skip": 0, "retryAttempts": 0, "sha256": "be72b9c373a77e21b161f988b95c4a8b018bc7be8bfb05034f6d3264f71552bb", "job": "132073530751", "conclusion": "success"},
+    {"bin": 7, "pass": 72, "fail": 0, "skip": 0, "retryAttempts": 0, "sha256": "85739d89ad8a86f4a091db18aa27acee9288c52d0b7bf09c3377362d55795642", "job": "132073530814", "conclusion": "success"},
+    {"bin": 8, "pass": 60, "fail": 0, "skip": 1, "retryAttempts": 0, "sha256": "29563b8a934d72e64303c47cb8fad66670d7ec5a11e01de053716c2fc5b21a09", "job": "132073530965", "conclusion": "success"}
+  ],
+  "onlyE2EFailure": {
+    "bin": 4,
+    "path": "packages/app-shell/e2e/regression/prompt-thinking-level.spec.ts",
+    "line": 70,
+    "cause": "Menu item named high absent after mouse move; same test failed all3 configured attempts.61pass1fail.",
+    "failureArtifact": "14063684760",
+    "failureArtifactSHA256": "18f313c2bac9af68c1615a6b3b067be914007989b0b8abcd10b4e5785b5f9c40"
+  },
+  "existingSession": {
+    "bin": 8,
+    "job": "132073530965",
+    "testOutcome": "passed",
+    "retry": 0,
+    "durationMs": 3487,
+    "strongerDOMCommit": "651b738403e48f94871b27924de83a9e4b9a81fb",
+    "actualAssertedPartID": "msg_1d623c256001T3rNxjaQozMQmp:text:0",
+    "canonicalGETStatus": 200,
+    "canonicalGETCount": 1,
+    "eventDeliveryBytes": 348,
+    "entireRetryBodyAndIDIdentical": true,
+    "proof": "Successful embedded report line128 explicitly asserts canonical partID before held ACK abort; subsequent failed-ACK editor restoration, retry200 and one-row assertions pass.",
+    "document": "docs/audits/evidence/existing-session-http-controls.json"
+  },
+  "thinkingHistory": [
+    {"run": "43485312141", "result": "Label-only followup still fails first visibility atline67, before mousemove. Trace shows correct Model default/Reasoning: high menu afterclick46029.808; event EOF/reconnect46038.891 (~9mslater), then repeated~250msEOFs and menu disappearance. Canonical execution200ready includes high; not a missing catalog or another label correction.", "artifact": "14067247245", "artifactSHA256": "e523d10e4df84be47aaf0116e380c71d8c341cadf4d14be7f1d1374daa662513"},
+    {"run": "43486973940", "snapshot": "2d743c6133282b5bf8fdcaa4ab72c74cc8ac14ba", "snapshotParent": "765ba85f73733a00409b8b481bfc591c42e8e26d", "sourceRepair": "a02f0a0a9d", "qualifiedTestBlob": "d5387ace4a594123d711ef75ac65bf0bf4757cfd", "job": "132097890444", "cleanupJob": "132099616350", "conclusion": "success", "cleanup": "success", "pass": 1, "fail": 0, "retry": 0, "caseDurationMs": 1596, "artifact": "14067373704", "artifactSHA256": "2338c654e87050134d01012ca81ac3188c06ead0c1f01cf5e9363cae6b2a5fed", "rawLogSHA256": "480a4b0b74ab36f67567f8ead4bb63f47fdf95327ea37831cc0add6f3ccf5d98", "reportSHA256": "e790c4627101e2a68fc3c0da3a8d99a80bfb9bed8b934563bccf631a0adbf3b4", "result": "One stable SSE transport before bootstrap; all original idle/hover/focus/control/menu/high-selection statements preserved, plus one continuously open/api/event assertions at three boundaries. Scoped positive transport qualification, not continuous reconnect coverage."}
+  ],
+  "limits": [
+    "Third full cold is RED; later focused thinking1P does not convert it into aggregate GREEN. Seven failed jobs include six outside E2E; this record does not diagnose or close them.",
+    "All previous first-Send baseline/intermediate REDs remain in existing-session-http-controls.json; the erroneous held-text assumption was corrected to the existing clear-in-flight/restore-on-failure contract.",
+    "Actual production UI/Local/follower/composer/SDK with controlled HTTP/SSE. No backend durability, physical capture, provider/tool execution or universal reconnect claim.",
+    "Passed Playwright cases retain embedded report steps/receipts, not raw DOM traces under retain-on-failure. Actual DOM assertion execution is supported by the report, with messageID supplied by receipt."
+  ]
+}

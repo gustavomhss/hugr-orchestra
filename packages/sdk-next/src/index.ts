@@ -1,5 +1,6 @@
 export * as Orchestra from "./orchestra"
 export * as Tool from "./tool"
+export { StoreInUseError, UnsupportedStoreError } from "./storage-custody"
 
 export { ClientError } from "@orchestra/client/effect"
 export {

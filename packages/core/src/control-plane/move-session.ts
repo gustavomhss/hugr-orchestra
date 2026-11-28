@@ -44,6 +44,7 @@ export class CaptureChangesError extends Schema.TaggedErrorClass<CaptureChangesE
   },
 ) {}
 
+/** Legacy compatibility type. Session moves retain source changes and no longer emit this error. */
 export class ResetSourceChangesError extends Schema.TaggedErrorClass<ResetSourceChangesError>()(
   "MoveSession.ResetSourceChangesError",
   {
@@ -109,32 +110,6 @@ const layer = Layer.effect(
         subdirectory: RelativePath.make(path.relative(destination.directory, directory).replaceAll("\\", "/")),
         timestamp: yield* DateTime.now,
       })
-
-      if (patch) {
-        const repository = yield* git.repo.discover(current.location.directory)
-        if (!repository)
-          return yield* new ResetSourceChangesError({
-            directory: current.location.directory,
-            message: "Source is not a Git repository",
-          })
-        yield* git.change
-          .discard({
-            repository,
-            path: current.location.directory,
-            index: "preserve",
-            untracked: "remove",
-          })
-          .pipe(
-            Effect.mapError(
-              (error) =>
-                new ResetSourceChangesError({
-                  directory: current.location.directory,
-                  message: error.message,
-                  cause: error.cause,
-                }),
-            ),
-          )
-      }
     })
 
     return Service.of({ moveSession })

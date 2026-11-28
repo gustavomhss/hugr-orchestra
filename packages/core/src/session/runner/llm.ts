@@ -18,6 +18,7 @@ import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
 import { InstructionContext } from "../../instruction-context"
 import { Location } from "../../location"
+import { LocationMutation } from "../../location-mutation"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
 import { Project } from "../../project"
@@ -49,6 +50,7 @@ import { TodoTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
+import { ModelExecution } from "../../model-execution"
 import { createLLMEventPublisher } from "./publish-llm-event"
 import { Prompt } from "../prompt"
 import { ExecutionHost } from "./execution-host"
@@ -56,6 +58,7 @@ import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
+import { createAuxiliary } from "./auxiliary"
 import { hostedCall, hostedHooks } from "./hosted-call"
 import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
@@ -93,9 +96,11 @@ const layer = Layer.effect(
     const mcp = yield* Mcp.Service
     const reader = yield* ReadToolFileSystem.Service
     const models = yield* SessionRunnerModel.Service
+    const modelExecution = yield* ModelExecution.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
+    const mutations = yield* LocationMutation.Service
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
@@ -103,7 +108,6 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const snapshots = yield* Snapshot.Service
     const database = yield* Database.Service
-    const hosts = yield* ExecutionHost.Service
     const permissions = yield* PermissionV2.Service
     const relay = yield* Relay.Service
     const fs = yield* FSUtil.Service
@@ -196,7 +200,7 @@ const layer = Layer.effect(
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
       const model = host ? undefined : yield* models.resolve(session)
-      const modelRef = model ? SessionRunnerModel.reference(model) : (session.model ?? agent.info?.model)
+      const modelRef = model ? SessionRunnerModel.reference(model) : hosted?.ref
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
@@ -208,13 +212,14 @@ const layer = Layer.effect(
       const isLastStep =
         currentStep >= (agent.info?.steps ?? DEFAULT_MAX_STEPS) || (scoped !== undefined && SessionScope.exhausted(scoped))
       if (!isLastStep) yield* mcp.ready()
-      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.tools() : {})
+      const stepTools = narrowStepTools(workflow?.view.tools, workflow?.view.tools?.mcp ? yield* mcp.toolIds() : {})
       const materialized = isLastStep ? undefined : yield* tools.materialize([...effectiveRules, ...stepTools.hidden])
       // The scope narrows what is advertised; `settle` and `authorize` refuse the rest.
-      const toolMaterialization =
-        materialized && scoped
-          ? { ...materialized, definitions: materialized.definitions.filter((tool) => scoped.scope.tools.includes(tool.name)) }
-          : materialized
+      const toolMaterialization = materialized && {
+        ...materialized,
+        definitions: materialized.definitions.filter((tool) =>
+          stepTools.advertises(tool.name) && (!scoped || scoped.scope.tools.includes(tool.name))),
+      }
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const contextText = [system.baseline, workflow?.view.instructions].filter((part): part is string => !!part)
       const systemText = agent.info?.system ? [agent.info.system, ...contextText] : contextText
@@ -252,13 +257,14 @@ const layer = Layer.effect(
         ? Effect.succeed(captured.value)
         : Fiber.join(captureFiber).pipe(Effect.interruptible))
       const startSnapshot = host ? yield* snapshotReady : undefined
+      const modelVariant = host ? modelRef?.variant : session.model?.variant
       const publisher = createLLMEventPublisher(events, {
         sessionID: session.id,
         agent: agent.id,
         model: {
           id: model ? ModelV2.ID.make(model.id) : (modelRef?.id ?? ModelV2.ID.make("default")),
           providerID: model ? ProviderV2.ID.make(model.provider) : (modelRef?.providerID ?? ProviderV2.ID.make("anthropic")),
-          ...(session.model?.variant === undefined ? {} : { variant: session.model.variant }),
+          ...(modelVariant === undefined ? {} : { variant: modelVariant }),
         },
         snapshot: startSnapshot,
         snapshotReady: host ? undefined : snapshotReady,
@@ -327,20 +333,46 @@ const layer = Layer.effect(
             const decision = yield* store.charge(session.id, { type: "tool", name: input.safety?.tool ?? input.action })
             if (!decision.admitted) return yield* new PermissionV2.CorrectedError({ feedback: decision.deviation.detail })
           }
-          yield* permissions
-            .authorize({
+          const target = input.filesystem
+            ? yield* mutations.resolve(input.filesystem).pipe(
+                Effect.mapError(() => new ToolSafety.Denied({ reason: "hosted-filesystem-path" })),
+              )
+            : undefined
+          const authorizePermission = Effect.fnUntraced(function* (
+            request: Pick<PermissionV2.AssertInput, "action" | "resources" | "save">,
+          ) {
+            // For hosted file access, a Session rule can narrow the seat's permission.
+            if (target) {
+              const rules = yield* store.permissions(session.id)
+              if (request.resources.some((resource) => PermissionV2.evaluate(request.action, resource, rules).effect === "deny"))
+                return yield* new PermissionV2.BlockedError({ rules })
+            }
+            return yield* permissions.authorize({
+              ...request,
               sessionID: session.id,
               agent: agent.id,
-              action: input.action,
-              resources: [...input.resources],
               metadata: { tool: input.tool, callID: input.callID },
-            })
-            .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+            }).pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+          })
+          if (target?.externalDirectory)
+            yield* authorizePermission(LocationMutation.externalDirectoryPermission(target.externalDirectory))
+          const fileResource = input.filesystem?.resource === "path" ? target?.resource : undefined
+          const resources = fileResource === undefined ? [...input.resources] : [fileResource]
+          yield* authorizePermission({ action: input.action, resources })
           if (!input.safety) return {}
-          const call = input.safety
+          // The SDK keeps its input. Action permission and ToolSafety judge the same physical target.
+          const call = target
+            ? {
+                ...input.safety,
+                args: {
+                  ...input.safety.args,
+                  ...(input.filesystem?.resource === "path" ? { filePath: target.canonical } : { path: target.canonical }),
+                },
+              }
+            : input.safety
           const hooks = hostedHooks(permissions, {
             sessionID: session.id, agent: agent.id, location, fs,
-            callID: input.callID, action: input.action, resources: input.resources,
+            callID: input.callID, action: input.action, resources, fileResource,
           })
           const authorization = yield* tools.hosted(
             {
@@ -556,6 +588,7 @@ const layer = Layer.effect(
                 finish: stepSettlement.finish,
                 // What the provider or host reported, else the model's price list over the settled tokens.
                 cost: stepSettlement.cost ?? (model ? SessionRunnerModel.cost(SessionRunnerModel.pricing(model), stepSettlement.tokens) : 0),
+                costSource: host ? "unavailable" : stepSettlement.cost === undefined ? "catalog" : "provider",
                 tokens: stepSettlement.tokens,
                 usageKnown: stepSettlement.usageKnown,
                 snapshot: endSnapshot,
@@ -690,47 +723,12 @@ const layer = Layer.effect(
         ),
       )
 
-    const compact = Effect.fn("SessionRunner.compact")(function* (sessionID: SessionSchema.ID) {
-      const session = yield* getSession(sessionID)
-      const history = yield* SessionHistory.load(db, session.id)
-      if (history.length === 0) return false
-      const model = yield* models.resolve(session)
-      return yield* compaction.compact({
-        sessionID: session.id,
-        entries: history.map((message, seq) => ({ seq, message })),
-        model,
-        request: LLM.request({ model, http: { headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID) } }),
-      })
-    })
-
-    const generate = Effect.fn("SessionRunner.generate")(function* (input: {
-      readonly sessionID: SessionSchema.ID
-      readonly prompt: string
-    }) {
-      const session = yield* getSession(input.sessionID)
-      const model = yield* models.resolve(session)
-      yield* subagentModels.assert(session.id, SessionRunnerModel.reference(model))
-      const history = yield* SessionHistory.load(db, session.id)
-      const chunks: string[] = []
-      yield* llm
-        .stream(
-          LLM.request({ model, http: { headers: SessionRunnerModel.sessionHeaders(model, session.id, session.parentID) }, messages: toLLMMessages(history, model), prompt: input.prompt }),
-        )
-        .pipe(
-          Stream.runForEach((event) => {
-            if (LLMEvent.is.providerError(event)) return Effect.die(new Error(event.message))
-            if (LLMEvent.is.textDelta(event)) chunks.push(event.text)
-            return Effect.void
-          }),
-        )
-      return chunks.join("")
-    })
-
+    const auxiliary = createAuxiliary({ getSession, db, llm, models, subagentModels, compaction })
 
     return Service.of({
       run,
-      compact,
-      generate,
+      compact: auxiliary.compact,
+      generate: auxiliary.generate,
       shell: (input) => SessionDirectCommands.shell({ events, location, config, appProcess }, input),
       skill: (input) => SessionDirectCommands.skill({ events, skills, fs }, input),
     })
@@ -748,9 +746,11 @@ export const node = makeLocationNode({
     Mcp.node,
     ReadToolFileSystem.node,
     SessionRunnerModel.node,
+    ModelExecution.node,
     SessionSubagentModels.node,
     SessionStore.node,
     Location.node,
+    LocationMutation.node,
     SystemContextRegistry.node,
     SkillGuidance.node,
     ReferenceGuidance.node,

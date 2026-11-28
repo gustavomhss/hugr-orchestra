@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "scope": "Browser consumer fixture repair; focused qualification only",
+  "originalWhole": {
+    "run": "43450977244",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43450977244",
+    "snapshot": "823c529c9444b5a941a68c7fcde90582b831a803",
+    "conclusion": "failure",
+    "linux": {
+      "job": "131972729550", "pass": 579, "fail": 3, "assertions": 14353,
+      "tests": 582, "files": 99, "seconds": 325.50,
+      "rawLogSHA256": "b7cb352832bdd81482d9f12bc9c6541f55fa63ff5f10af460158764ac06120d6"
+    },
+    "windows": {
+      "job": "131972729253", "pass": 579, "fail": 3, "assertions": 14353,
+      "tests": 582, "files": 99, "seconds": 551.93,
+      "rawLogSHA256": "97ff1c36569a6358cd150e6c1f9bb544d47c47c5ae377723cee87c9bf3e3d1a7"
+    },
+    "sameThreeSetupFailuresBothOS": [
+      "test-browser/model-execution-consumer.test.tsx",
+      "test-browser/model-execution-context.test.ts",
+      "test-browser/model-variant-intent.test.ts"
+    ],
+    "firstCause": "SyntaxError: Export named 'createModelExecutionView' not found in module src/context/local.tsx",
+    "controlsBothOS": "Actual PASS: chapter route 1 own spawn, native product 3, prompt retry 3; zero delegated. Nondeclaring isolates report not applicable.",
+    "selectionAndPolicyJourneys": "passed on both OS",
+    "cleanup": { "job": "131981379820", "conclusion": "success" }
+  },
+  "repair": {
+    "sourceCommit": "5819c52506",
+    "path": "packages/app-shell/test-browser/model-execution-consumer.fixture.tsx",
+    "gitBlob": "d721b72836c84524fa7709994f5e03324f718278",
+    "binding": "consumer-draft:local forwards the already-loaded actual localModule.createModelExecutionView; existing hooks, rows mock, import URLs/order, owners and assertions remain unchanged",
+    "focusedSnapshotBlobVerifiedViaGitHubContentsAPI": true,
+    "finalColdSourceBlobVerifiedViaGitObject": "9ab7680cc512bfc6f4e44a77f7056eb723e2b74e"
+  },
+  "focused": {
+    "run": "43452732952",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43452732952",
+    "snapshot": "b3663903f6bc110c718a5606c90234eb73998a79",
+    "conclusion": "success",
+    "orderedFiles": [
+      "./test-browser/model-execution-consumer.test.tsx",
+      "./test-browser/model-execution-context.test.ts",
+      "./test-browser/model-variant-intent.test.ts"
+    ],
+    "linux": {
+      "job": "131978853552", "pass": 65, "fail": 0, "assertions": 383,
+      "tests": 65, "files": 3, "seconds": 11.26,
+      "rawLogSHA256": "9c0ea948cf93e4a86210194972e7753c8f5f8577d89b930992524387225d0650"
+    },
+    "windows": {
+      "job": "131978853051", "pass": 65, "fail": 0, "assertions": 383,
+      "tests": 65, "files": 3, "seconds": 20.49,
+      "rawLogSHA256": "d9eabe3691bbbad4cdc2ac319427167cc98b9cbcb888b24f5e0d1ff969b86f2a"
+    },
+    "controlsBothOS": "Consumer isolate PASS: 2 declaring tests, 2 own omni spawns, zero delegated; other two isolates not applicable",
+    "cleanup": { "job": "131982389195", "conclusion": "success" }
+  },
+  "limits": [
+    "The original whole-browser run remains RED; focused success is not a union-based whole-browser GREEN.",
+    "No local tests, builds or generators were executed for this evidence.",
+    "Final cold run 43453802489 is separate pending evidence and is not qualified by this record."
+  ]
+}
