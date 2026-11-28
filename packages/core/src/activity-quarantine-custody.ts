@@ -35,12 +35,17 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
     move(target, acquire) {
       return Effect.tryPromise({
         try: async () => {
-          if (!target.id.trim() || !target.generation.trim() || !target.identity.trim()) return "Refused"
+          if (!/^[0-9a-f]{48}$/.test(target.identity) || !target.label.trim() || !target.owner.trim() ||
+            !await Omni.quarantineBatch().catch(() => undefined)) return "Refused"
           const lease = await acquire(target, "apply").catch(() => undefined)
           if (!lease) return "Refused"
           try {
             if (!lease.originalPath.trim() || !lease.quarantinePath.trim() || lease.state !== "armed" ||
               lease.disposable !== "file") return "Refused"
+            if (Option.isNone(ActivityEmpty.decodeTarget({
+              targetID: target.id, generation: target.generation, label: target.label, owner: target.owner,
+              originalPath: lease.originalPath,
+            }))) return "Refused"
 
             const inserted = await Effect.runPromise(database.db.transaction((tx) => Effect.gen(function* () {
               const active = yield* tx.select({ phase: ActivityQuarantineCustodyTable.phase })
@@ -196,11 +201,13 @@ async function setPhase(
   from: "moving",
   to: "ready" | "finished" | "unknown",
 ) {
-  await Effect.runPromise(database.db.update(ActivityQuarantineCustodyTable).set({ phase: to })
+  const updated = await Effect.runPromise(database.db.update(ActivityQuarantineCustodyTable).set({ phase: to })
     .where(and(eq(ActivityQuarantineCustodyTable.target_id, target.id),
       eq(ActivityQuarantineCustodyTable.generation, target.generation),
       eq(ActivityQuarantineCustodyTable.identity, target.identity),
-      eq(ActivityQuarantineCustodyTable.phase, from))).run())
+      eq(ActivityQuarantineCustodyTable.phase, from)))
+    .returning({ targetID: ActivityQuarantineCustodyTable.target_id }).get())
+  if (!updated) throw new Error("Quarantine move reservation changed")
 }
 
 async function removeMoving(database: Database.Interface, target: ActivityQuarantineExecutor.Target) {

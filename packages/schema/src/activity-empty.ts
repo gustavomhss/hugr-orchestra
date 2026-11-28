@@ -1,6 +1,6 @@
 export * as ActivityEmpty from "./activity-empty"
 
-import { Schema } from "effect"
+import { Option, Schema } from "effect"
 import { ActivityArm } from "./activity-arm"
 import { NonNegativeInt } from "./schema"
 
@@ -9,7 +9,6 @@ const Target = Schema.Struct({
   ...ActivityArm.Target.fields,
   originalPath: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(1024)),
 })
-export const Request = Schema.Struct({})
 export const Confirm = Schema.Struct({ previewID })
 export type Confirm = typeof Confirm.Type
 export const Preview = Schema.Struct({
@@ -28,7 +27,12 @@ export const Receipt = Schema.Struct({
 })
 export type Receipt = typeof Receipt.Type
 
-export const decodeRequest = Schema.decodeUnknownOption(Request, { onExcessProperty: "error" })
+export function decodeRequest(input: unknown) {
+  return typeof input === "object" && input !== null && !Array.isArray(input) && Reflect.ownKeys(input).length === 0
+    ? Option.some({})
+    : Option.none()
+}
+export const decodeTarget = Schema.decodeUnknownOption(Target, { onExcessProperty: "error" })
 export const decodeConfirm = Schema.decodeUnknownOption(Confirm, { onExcessProperty: "error" })
 export const decodePreview = Schema.decodeUnknownOption(Preview, { onExcessProperty: "error" })
 export const decodeReceipt = Schema.decodeUnknownOption(Receipt, { onExcessProperty: "error" })
