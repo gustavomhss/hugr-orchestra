@@ -41,7 +41,7 @@ async function parent() {
     const stderr = new Response(child.stderr).text()
     let done = false
     const dialogs = handleDialogs(() => done, root)
-    const timer = setTimeout(() => child.kill("SIGKILL"), 180_000)
+    const timer = setTimeout(() => child.kill("SIGKILL"), 90_000)
     const status = await child.exited
     clearTimeout(timer)
     done = true
@@ -107,6 +107,7 @@ async function child() {
       ...dialog,
       showMessageBox: (async (parent: InstanceType<typeof BrowserWindow>, options: Parameters<typeof dialog.showMessageBox>[1]) => {
         await rename(join(root, "next-dialog.json"), join(root, "dialog.json"))
+        process.stderr.write("Native arm dialog opened\n")
         return dialog.showMessageBox(parent, options)
       }) as typeof dialog.showMessageBox,
     }
@@ -117,6 +118,7 @@ async function child() {
     const inspected = await inspect()
     const target = inspected.ready.find((item) => item.label.includes(".turbo"))
     assert.ok(target, `registered worktree did not produce a ready target: ${JSON.stringify(inspected)}`)
+    process.stderr.write("Live object qualified\n")
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
     const handle = await open(join(source, "payload"), "r")
     try {
@@ -126,6 +128,7 @@ async function child() {
     }
     const idle = (await inspect()).ready.find((item) => item.targetID === target.targetID)
     assert.ok(idle && idle.generation !== target.generation, "verified idleness must acquire a new generation")
+    process.stderr.write("Open file refused and new generation qualified\n")
     const request = { targets: [{ targetID: idle.targetID, generation: idle.generation }] }
     let step = 0
     const arm = async (mode: "cancel" | "change" | "confirm") => {
@@ -134,6 +137,7 @@ async function child() {
     }
     assert.equal(await arm("cancel"), undefined)
     assert.equal(receipts().length, 0, "cancellation cannot persist approval")
+    process.stderr.write("Native cancellation left no receipt\n")
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     const client = owned.openActivityArm()
     assert.ok(client)
@@ -142,6 +146,7 @@ async function child() {
     assert.equal(await arm("change"), undefined, "changed target must fail confirmation")
     assert.equal(receipts().length, 0, "identity mismatch cannot persist approval")
     assert.equal(await client.confirm({ previewID: stale.previewID }), undefined, "stale signed preview cannot arm")
+    process.stderr.write("Replacement and stale preview refused\n")
     await rm(source, { recursive: true })
     await rename(`${source}.original`, source)
     const refreshed = await inspect()
@@ -177,12 +182,13 @@ async function handleDialogs(done: () => boolean, root: string) {
       const status = await search.exited
       const id = status === 0 ? output.trim().split("\n").at(-1) : undefined
       if (id) {
+        process.stdout.write(`Acting on native dialog step ${request.step}\n`)
         if (request.mode === "change") {
           await rename(request.source, `${request.source}.original`)
           await mkdir(request.source)
           await writeFile(join(request.source, "payload"), "replacement\n")
         }
-        await run("xdotool", ["windowfocus", "--sync", id])
+        await run("xdotool", ["windowfocus", id])
         await run("xdotool", request.mode === "cancel" ? ["key", "Return"] : ["key", "Tab", "Return"])
         handled = request.step
       }
@@ -194,7 +200,12 @@ async function handleDialogs(done: () => boolean, root: string) {
 async function run(command: string, args: string[]) {
   const child = Bun.spawn([command, ...args], { stdout: "ignore", stderr: "pipe" })
   const error = new Response(child.stderr).text()
-  assert.equal(await child.exited, 0, `${command} failed: ${await error}`)
+  const timeout = setTimeout(() => child.kill("SIGKILL"), 6_000)
+  try {
+    assert.equal(await child.exited, 0, `${command} failed: ${await error}`)
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 if (process.argv.includes("--activity-arm-child"))
