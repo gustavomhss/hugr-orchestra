@@ -102,27 +102,32 @@
       "depth": "deep",
       "state": "HOLD",
       "trace_refs": [
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
       ],
-      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
+      "remaining_proof": "Dispatch-time source ownership checks need explicit captured server credentials, scope and directory binding, and focused remote regression for a change in behavior."
     },
     {
       "id": "S2-C2",
       "kind": "contract-violation",
       "depth": "deep",
-      "state": "HOLD",
+      "state": "PASS_IN_ISOLATED_EVALUATION",
       "trace_refs": [
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
-      ],
-      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
+      ]
     },
     {
       "id": "S2-C3",
@@ -144,13 +149,16 @@
       "depth": "deep",
       "state": "HOLD",
       "trace_refs": [
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
       ],
-      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
+      "remaining_proof": "Exact Dock then parallel CLI/environment startup order and the documented literal English early dialog clash with i18n."
     },
     {
       "id": "S2-C5",
@@ -246,15 +254,17 @@
       "kind": "direct-L2",
       "target": "s2.l2.design-tui",
       "depth": "routine",
-      "state": "HOLD",
+      "state": "PASS_IN_ISOLATED_EVALUATION",
       "trace_refs": [
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json"
-      ],
-      "remaining_proof": "Source-grounded knowledge correction, fresh binding and targeted case rerun."
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
+      ]
     },
     {
       "id": "S2-I3D",
@@ -608,12 +618,10 @@
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/checkpoint.json",
       "sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1"
     },
-    "dual_pass_count": 10,
+    "dual_pass_count": 12,
     "consumer_holds": [
       "S2-C1",
-      "S2-C2",
-      "S2-C4",
-      "S2-I2U"
+      "S2-C4"
     ],
     "consumer_fix_proposal": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/proposed-knowledge-corrections.md",
@@ -642,25 +650,19 @@
     },
     "u1_scope_state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
     "consumer_remaining": {
-      "next_required_state": "REVIEWED_AMENDED_CANDIDATE",
-      "affected_results": [
-        "s2.l2.app-session",
-        "s2.l2.desktop-web",
-        "s2.l2.design-tui"
-      ],
+      "next_required_state": "MINIMAL_SECOND_AMENDMENT",
       "required_cases": [
         "S2-C1",
-        "S2-C2",
-        "S2-C4",
-        "S2-I2U"
+        "S2-C4"
       ],
-      "prior_dual_pass_cases": 10,
       "material_gaps": {
-        "S2-C1": "Policy-write failure before dispatch as the specific empty-Session cleanup trigger.",
-        "S2-C2": "Different rejection behavior for untrusted wrapped IPC invoke and event.",
-        "S2-C4": "Preferred HTTP(S) remote first, stored order thereafter, and historical unsigned macOS scan context.",
-        "S2-I2U": "Explicit connection between selected Session model and the V2 prompt. A same-manifest retry received split judgments."
+        "S2-C1": "Dispatch-time source ownership checks need explicit captured server credentials, scope and directory binding, and focused remote regression for a change in behavior.",
+        "S2-C4": "Exact Dock then parallel CLI/environment startup order and the documented literal English early dialog clash with i18n."
       }
+    },
+    "first_amended_consumer_run": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
+      "sha256": "f914c69926f49d50a30a26859ef2bb1cc818a9d02a7637aef65489c39ab91682"
     }
   }
 }

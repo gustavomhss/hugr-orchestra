@@ -1,0 +1,66 @@
+{
+  "schema": "genesis-s2-retained-retry-cases/v1",
+  "prior_run": 46175962646,
+  "prior_manifest": "42aa03d5913551c7129b0f2091a40a6a455de35ad70c955204bafe2abb805b19",
+  "prior_checkpoint_sha256": "f914c69926f49d50a30a26859ef2bb1cc818a9d02a7637aef65489c39ab91682",
+  "corrected_body_sha256": {
+    "s2.l2.app-session": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
+    "s2.l2.design-tui": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
+    "s2.l2.desktop-web": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7"
+  },
+  "comparison_source_sha256": "fa7b769bb9c94367496a5e4f53cde6383e7996c957dd7799e5d0aca0fc05ac89",
+  "cases": [
+    {
+      "id": "S2-C2",
+      "served_bodies_identical": true,
+      "reads": [
+        {
+          "key": "s2.l2.desktop-web",
+          "section": "Privilege is checked at each request boundary",
+          "body_sha256": "a4b07d650f1c9ab4d140a5e3fb54621a26c6204eb6d34680973d81f2b895e95d",
+          "round2_body_sha256": "a4b07d650f1c9ab4d140a5e3fb54621a26c6204eb6d34680973d81f2b895e95d",
+          "identical": true,
+          "hosted_stdout_sha256": "5cf3d79378ca8ecaa8b08fd6e26e7515acfb689e852b499d9a6b11246036c105"
+        },
+        {
+          "key": "s2.l1.desktop-web",
+          "section": "2. Windows, persistence and IPC authority",
+          "body_sha256": "778aee8de3edacf47a1985fbae77abe474847b8cc6871a68fe334aea42670945",
+          "round2_body_sha256": "778aee8de3edacf47a1985fbae77abe474847b8cc6871a68fe334aea42670945",
+          "identical": true,
+          "hosted_stdout_sha256": "04818ff77886f540be4149a98f886892c6ca4aaf26c1e0fa5e517523d4343132"
+        }
+      ],
+      "verdicts": [
+        "PASS",
+        "PASS"
+      ]
+    },
+    {
+      "id": "S2-I2U",
+      "served_bodies_identical": true,
+      "reads": [
+        {
+          "key": "s2.l2.design-tui",
+          "section": "V2 actions and prompt admission",
+          "body_sha256": "1f2faeedb305e61a81b68a407864dee05be37d950cffd7c55af3eabaf27f7aba",
+          "round2_body_sha256": "1f2faeedb305e61a81b68a407864dee05be37d950cffd7c55af3eabaf27f7aba",
+          "identical": true,
+          "hosted_stdout_sha256": "111dbf229881a6cb80e52e4c299e43197c1cb3798fcb3a36d3a714c7a7efb264"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "section": "V2 session action boundary",
+          "body_sha256": "b6e55765117e64633199837184bdbc7d91a974d6d0a1e84d74f2fc1d907d0ab6",
+          "round2_body_sha256": "b6e55765117e64633199837184bdbc7d91a974d6d0a1e84d74f2fc1d907d0ab6",
+          "identical": true,
+          "hosted_stdout_sha256": "7391cd35f044bd97c8b7e0b7e2ca2f02d982516ccb633c54c6fa9a8bc3c9cde5"
+        }
+      ],
+      "verdicts": [
+        "PASS",
+        "PASS"
+      ]
+    }
+  ]
+}

@@ -3,10 +3,10 @@
   "author": "/root/s2_u1_terra",
   "baseline_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
   "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
-  "review_scope": "Three L2 recipe deltas only; seven original L3/L4 outputs were compared against the final clarifications. The runtime independently verifies unchanged inputs, original bytes and result identities.",
+  "review_scope": "Three final L2 recipe deltas only. Exact old downstream results are replayed if input bytes and result identities verify. The previously reviewed clarifications remain intact and the final body comparison is sealed.",
   "review_refs": {
-    "compatibility_sha256": "b287c301feac11fc880ab92b51959de7029a7d64aa99826b6142ab05e080eddf",
-    "authored_manifest_sha256": "b638eae11be5bd7583bb27b158cc479e03aece1600bccbec2e8afb8db58fc5d7"
+    "compatibility_sha256": "737a2f02e408aacba9f098d34fc528db9b716248d49060cd3e63e28e27873d9d",
+    "authored_manifest_sha256": "6686335a649b06ddc3242f80953eee5da262335e72aa0dcc71fb4c7bf93e5bae"
   },
   "entries": [
     {

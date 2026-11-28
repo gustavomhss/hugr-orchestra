@@ -6,10 +6,10 @@
   "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
   "source_admission_run": 46162067144,
   "baseline_commit": "529e24851cb7baa0b9ab017580e7295c656925bb",
-  "authored_manifest_sha256": "b638eae11be5bd7583bb27b158cc479e03aece1600bccbec2e8afb8db58fc5d7",
+  "authored_manifest_sha256": "6686335a649b06ddc3242f80953eee5da262335e72aa0dcc71fb4c7bf93e5bae",
   "authored_body_sha256": {
-    "s2.l2.app-session": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
-    "s2.l2.desktop-web": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+    "s2.l2.app-session": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
+    "s2.l2.desktop-web": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
     "s2.l2.design-tui": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555"
   },
   "method": "Matched each hosted stdout digest, reconstructed its original body from admitted result CAS, verified byte equality of the actual served section, then selected the same heading from the final authored body using the runtime heading/section boundaries. Unchanged artifact bodies use the original admitted CAS. No Atlas calls.",

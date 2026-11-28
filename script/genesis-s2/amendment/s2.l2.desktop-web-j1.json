@@ -2,9 +2,9 @@
   "reviewer": "J1",
   "purpose": "s2-amendment-semantic",
   "key": "s2.l2.desktop-web",
-  "body_sha256": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
-  "snapshot_sha256": "64c03b3c95a58b0d2e30dbdb040317f296b2036453c27e8c7630553ef29f3900",
-  "result_id": "0e87752e06abf7f3666af2d7a2cbb4ef8dfa2c833a2dc24d37b5d1164e7cb58c",
+  "body_sha256": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
+  "snapshot_sha256": "41eddd0ee9fd2893ec675d43f02bbb84427b71c479532a91220c20051da64618",
+  "result_id": "28aa83fe8b1b8008a3fe0ea41772bff56eda35ff781628b0456b24135a225393",
   "verdict": "PASS",
-  "reason": "The new text names `window.api` and the preload, cites main-process navigation denial for non-renderer pages, and states arbitrary support-page content does not inherit the privileged renderer origin. This resolves the missing IPC detail. It retains wrapper rejection/drop behavior, Dock versus Live/WSL boundaries, and partial CSP limits. I verified the local body hash; the snapshot/result remain projections for CI callback comparison."
+  "reason": "The added startup text states Dock channel, parallel CLI/environment resolution, then spawn; names main.log and server.log; discloses the literal English dialog's conflict with native i18n guidance; and specifies focused remote-health regression plus first/warm launch comparison. The existing 120-second, exit-race, and remote-health limits remain accurately scoped. I verified the response body hash."
 }

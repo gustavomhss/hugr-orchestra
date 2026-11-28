@@ -227,8 +227,28 @@ def admit_and_read(repo, root, receipts, request, target, corrected, summary, in
             and admitted['emission']['ok'] and admitted['emission']['data']['emitted'], 'corrected target did not emit')
     candidates = {row['key']: row['artifact']['result'] for row in candidate['entries']}
     plan = load(root / PREFIX / 'evaluation-plan.json')
-    routes = json.loads(committed(repo / 'script/genesis-s2/amendment/routes.json'))
-    require(len(routes) == 4 and {row['id'] for row in routes} == CASES, 'consumer scope mismatch')
+    scope_files = repo / 'script/genesis-s2/amendment'
+    routes = json.loads(committed(scope_files / 'routes.json'))
+    retained = set()
+    if (scope_files / 'retained-retry-cases.json').exists():
+        carry = json.loads(committed(scope_files / 'retained-retry-cases.json'))
+        require(carry['schema'] == 'genesis-s2-retained-retry-cases/v1' and carry['prior_run'] == 46175962646
+                and carry['prior_manifest'] == '42aa03d5913551c7129b0f2091a40a6a455de35ad70c955204bafe2abb805b19',
+                'retained retry evidence identity mismatch')
+        expected_bodies = {row['key']: row['body_sha256'] for row in load(scope_files / 'manifest.json')['deltas']}
+        require(carry['corrected_body_sha256'] == expected_bodies, 'retained retry evidence body mismatch')
+        archive = repo / Path(PREFIX).parent / 'runtime-followup/amendment-retries-46175962646'
+        prior_bytes = committed(archive / 'checkpoint.json')
+        prior = json.loads(prior_bytes)
+        require(sha(prior_bytes) == carry['prior_checkpoint_sha256'] and prior['manifest'] == carry['prior_manifest'], 'prior retry receipts drifted')
+        retained = {row['id'] for row in carry['cases']}
+        require(retained < CASES and len(retained) == len(carry['cases'])
+                and all(row['verdicts'] == ['PASS', 'PASS'] and row['served_bodies_identical']
+                        and prior['cases'][row['id']]['status'] == 'PASS'
+                        and sorted(item['body_sha256'] for item in row['reads'])
+                            == sorted(item['body_sha256'] for item in prior['cases'][row['id']]['reads']) for row in carry['cases']),
+                'retained retries require exact prior dual PASS and byte-identical evidence')
+    require(len(routes) == len(CASES - retained) and {row['id'] for row in routes} == CASES - retained, 'consumer scope mismatch')
     received = {}
     try:
         for route in routes:
@@ -257,8 +277,8 @@ def admit_and_read(repo, root, receipts, request, target, corrected, summary, in
             write(receipts / f'{case}-budget.json', ledgers[0])
     finally:
         access_path.write_bytes(encode(access))
-    require(len(list((root / '.atlas').glob('evaluation-budget-*.json'))) == 4, 'an unrequested consumer ran')
-    write(receipts / 'admission-and-retries.json', {**summary, 'status': 'AMENDED_ADMITTED_FOUR_RETRIED',
+    require(len(list((root / '.atlas').glob('evaluation-budget-*.json'))) == len(routes), 'an unrequested consumer ran')
+    write(receipts / 'admission-and-retries.json', {**summary, 'status': 'AMENDED_ADMITTED_SCOPED_RETRIES', 'retained_retries': sorted(retained),
           'manifest': admitted['ownership'], 'private_manifest': finalized['manifest'], 'emission': admitted['emission'], 'reads': received})
 
 

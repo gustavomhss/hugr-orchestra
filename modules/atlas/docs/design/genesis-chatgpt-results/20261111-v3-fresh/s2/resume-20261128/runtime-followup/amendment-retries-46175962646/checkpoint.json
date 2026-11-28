@@ -1,0 +1,233 @@
+{
+  "schema": "genesis-s2-amended-consumers/v1",
+  "run_id": 46175962646,
+  "run_head": "5920a4bf6fcbc8e179f41e8d8854017a3b828eeb",
+  "artifact_id": 15276020751,
+  "artifact_zip_sha256": "10e95a73e693379721b22013d4830b4a89f4ae8fa9fb9940607c0ea543e4df9e",
+  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+  "manifest": "42aa03d5913551c7129b0f2091a40a6a455de35ad70c955204bafe2abb805b19",
+  "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+  "emission": {
+    "ok": true,
+    "data": {
+      "emitted": true,
+      "id": "713a4f406c117e49d7e8badfbc2236ee627ee8456a520a963728185604dbfa8f",
+      "nodeKey": "eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86"
+    },
+    "guidance": {
+      "next": "a rejected write did not re-derive at source@sha — fix the citation and re-emit",
+      "invariant": "TOOLS-1/7: atlas-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link — ADR-0003)"
+    }
+  },
+  "prepare_and_admission_sha256": "8285c4577d4e371b9f206439b7aac466179d32db612fd86ba9a23678570efb3a",
+  "judgments": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
+      "sha256": "701a407aea23a1ea9306783d6458b101e6596d8fb46fa5c1056b7b00f39f7d68"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json",
+      "sha256": "81c476020a410d199fab26bc4ed21cb0620c2391218f79a4fb21c81a9755e3a2"
+    }
+  ],
+  "cases": {
+    "S2-C1": {
+      "consumer": "/root/s2_retry_c1_terra",
+      "status": "HOLD",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/S2-C1.md",
+        "sha256": "567ed13eb8dd7d3057df7e4e6493f9a28aa5989cfa06e68bea4d42ac9d6383b6"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.app-session",
+          "result": "507ab0d635b0a2c3ef9de425e9205611a7a125845d6a9d0322a396b51ea672bf",
+          "section": "First-send cleanup after policy-write failure",
+          "bytes": 800,
+          "read_sha256": "b13f780b9b27d9d7b5313b07324b0373c4273d02e91e99792c960fa37162273d",
+          "body_sha256": "5a387dc0e5f1ba1eda97db178591347d7f3e3523d3b227f57574a778a246f19d"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "section": "Prompt admission and draft ownership",
+          "bytes": 4394,
+          "read_sha256": "632d5a743dc7f320622930ba8914abea47d23a26c7f98a168212dda7a904d6b9",
+          "body_sha256": "70eaeb43054b38233dfe94386a3cc6a83ecdd789c06ca913e46cf595d6b321d1"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "section": "Authority, composition and identity",
+          "bytes": 4683,
+          "read_sha256": "96e4df0af3955b684aa9431a4a21f9f56b95b5b64d9255d170b0815cbd07685c",
+          "body_sha256": "0a5b7054f8675963018e5b7b096aa9c80c505d24ac1e6a1ae00f6f49564efeb9"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "section": "Assets, localization and verification evidence",
+          "bytes": 5263,
+          "read_sha256": "bd17e6a8dd7b70bd839fc681a765cd5467811022a2f2270114d952139447b7ab",
+          "body_sha256": "d56108a8e67fb86c8c250a711298d3080e4b6af8d79e430f87ff62957e8a7ce4"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C1",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 4,
+        "body_bytes_total": 15140
+      },
+      "budget_sha256": "e6b97d845299b79aa871991f98ee020ec38575155bc764557e54b0b9029143b9"
+    },
+    "S2-C2": {
+      "consumer": "/root/s2_retry_c2_luna",
+      "status": "PASS",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/S2-C2.md",
+        "sha256": "31e3c945b2ac7a3ded4df394cb27d87a97df7472273a2ada7f744878c3df78bd"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "0e87752e06abf7f3666af2d7a2cbb4ef8dfa2c833a2dc24d37b5d1164e7cb58c",
+          "section": "Privilege is checked at each request boundary",
+          "bytes": 2784,
+          "read_sha256": "5cf3d79378ca8ecaa8b08fd6e26e7515acfb689e852b499d9a6b11246036c105",
+          "body_sha256": "a4b07d650f1c9ab4d140a5e3fb54621a26c6204eb6d34680973d81f2b895e95d"
+        },
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+          "section": "2. Windows, persistence and IPC authority",
+          "bytes": 3309,
+          "read_sha256": "04818ff77886f540be4149a98f886892c6ca4aaf26c1e0fa5e517523d4343132",
+          "body_sha256": "778aee8de3edacf47a1985fbae77abe474847b8cc6871a68fe334aea42670945"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C2",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 2,
+        "body_bytes_total": 6093
+      },
+      "budget_sha256": "5f817b69d846f49f947b93062b87bb16a1f07843e1690465a47f9d733b328efe"
+    },
+    "S2-C4": {
+      "consumer": "/root/s2_retry_c4_terra",
+      "status": "HOLD",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/S2-C4.md",
+        "sha256": "5523c4abb38fc8721989211d2516ebba8b92c9bc9f825be9a3795ff97edc8038"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "0e87752e06abf7f3666af2d7a2cbb4ef8dfa2c833a2dc24d37b5d1164e7cb58c",
+          "section": "Startup publishes readiness before the renderer proceeds",
+          "bytes": 2599,
+          "read_sha256": "087bdf078decf12cf88dc939a828a1d4465e345836c054fdf014a6c03337fd63",
+          "body_sha256": "4347ed5e83cc46b651377674e28b1a92f6f6a10d3d278d929f4fb24d7a1b235b"
+        },
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+          "section": "1. Startup, readiness and shutdown",
+          "bytes": 4227,
+          "read_sha256": "ea24b730181cd7727d28a43f04fd08816971bf43f0e46fe639628d16824c8380",
+          "body_sha256": "efd693ceb11d7fc200b051f9fed78af7b6285ac79f0b4cfc5cfe33420335a817"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+          "section": "Launch, choose a server and identify the health decision",
+          "bytes": 2644,
+          "read_sha256": "7e7f309eab016afe0a475a3c39f1a0df61f1290500f666e69924c33e7646041b",
+          "body_sha256": "41071aa3421084de1f8f4b003c5332ae99a007d85736883f04f16b0c1ef8b9d3"
+        },
+        {
+          "key": "s2.l4.desktop-web",
+          "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+          "section": "Maintenance protocol",
+          "bytes": 6847,
+          "read_sha256": "ed35b04d330fe02626032c3b3f8e1d87b1761959dcdebd9f770865fba9bfe684",
+          "body_sha256": "b5500144b95da259d7f9a1bf1dea1a9a6eba598398ce27e29b99dbd40d1c9b7c"
+        },
+        {
+          "key": "s2.l4.desktop-web",
+          "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+          "section": "Verification and boundaries",
+          "bytes": 3062,
+          "read_sha256": "2632e4d480f7a0b10b373517e52e6515f4df605d34c0f596a0dd6d74720741d0",
+          "body_sha256": "5c59c3c863bee5939bc24937df27780faa8fc81c96f8ac0a71e085d87c2d09a6"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C4",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 5,
+        "body_bytes_total": 19379
+      },
+      "budget_sha256": "090dda6ceed81233a937899d9f89d581c08f2db8560d0759b086f42dfb5434e9"
+    },
+    "S2-I2U": {
+      "consumer": "/root/s2_retry_i2u_luna",
+      "status": "PASS",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/S2-I2U.md",
+        "sha256": "cad3712280ad1140461a141c05b0a3111e7887c0c9c682a82815e643ca943dab"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.design-tui",
+          "result": "3cc5e2635468df6e73e1b1f592d0f7b706152354530402358181031f41aecd68",
+          "section": "V2 actions and prompt admission",
+          "bytes": 3675,
+          "read_sha256": "111dbf229881a6cb80e52e4c299e43197c1cb3798fcb3a36d3a714c7a7efb264",
+          "body_sha256": "1f2faeedb305e61a81b68a407864dee05be37d950cffd7c55af3eabaf27f7aba"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+          "section": "V2 session action boundary",
+          "bytes": 5817,
+          "read_sha256": "7391cd35f044bd97c8b7e0b7e2ca2f02d982516ccb633c54c6fa9a8bc3c9cde5",
+          "body_sha256": "b6e55765117e64633199837184bdbc7d91a974d6d0a1e84d74f2fc1d907d0ab6"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-I2U",
+        "mode": "routine",
+        "index_calls": 0,
+        "read_calls": 2,
+        "body_bytes_total": 9492
+      },
+      "budget_sha256": "c4f7aaf9f54bb313f796ac0d447469debd0a5034b253b93a050d70c681b9df93"
+    }
+  },
+  "prior_passes_preserved": 10,
+  "prior_u1_run": 46173202455,
+  "new_dual_pass": [
+    "S2-C2",
+    "S2-I2U"
+  ],
+  "remaining_holds": [
+    "S2-C1",
+    "S2-C4"
+  ]
+}

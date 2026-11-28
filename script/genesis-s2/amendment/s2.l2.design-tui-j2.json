@@ -3,8 +3,8 @@
   "purpose": "s2-amendment-semantic",
   "key": "s2.l2.design-tui",
   "body_sha256": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
-  "snapshot_sha256": "afdb46f43b2a548ace29e6cc0fedf10a5b96f43a2dc1d8f9ed58b1347f4ae79c",
+  "snapshot_sha256": "6ed2e2bf84ebfa81d4893249d41faf02e6c2037c6ba9f9e6ba4c557ec13002b1",
   "result_id": "3cc5e2635468df6e73e1b1f592d0f7b706152354530402358181031f41aecd68",
   "verdict": "PASS",
-  "reason": "Corpo e resultado permanecem iguais aos da revisão anterior; o novo snapshot previsto depende de confronto no CI."
+  "reason": "O hash confere e o corpo e resultado permanecem iguais aos já revisados. O snapshot previsto requer confronto no CI."
 }

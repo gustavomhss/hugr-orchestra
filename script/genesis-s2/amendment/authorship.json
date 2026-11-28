@@ -21,19 +21,19 @@
       "body": "app-session.md",
       "hold": "S2-C1",
       "baseline_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
-      "corrected_sha256": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
+      "corrected_sha256": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
       "baseline_bytes": 24434,
-      "corrected_bytes": 25234,
-      "change": "append peer section; preserve original Durable admission section byte-for-byte"
+      "corrected_bytes": 25978,
+      "change": "append peer section; preserve original Durable admission section byte-for-byte; C1 adds owner/server/credential/scope/directory and dispatch policy guards plus focused regression/i18n/benchmark guidance"
     },
     {
       "body": "desktop-web.md",
       "hold": "S2-C2/C4",
       "baseline_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
-      "corrected_sha256": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+      "corrected_sha256": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
       "baseline_bytes": 18440,
-      "corrected_bytes": 19855,
-      "change": "replace exactly the IPC and startup paragraphs; add one pinned preload/navigation sentence in the IPC paragraph"
+      "corrected_bytes": 20611,
+      "change": "replace exactly the IPC and startup paragraphs; add one pinned preload/navigation sentence in the IPC paragraph; C4 adds exact initialization order/log filenames, i18n conflict, focused remote regression and first/warm benchmark guidance"
     },
     {
       "body": "design-tui.md",
@@ -57,12 +57,10 @@
     "packages/app-shell/src/components/prompt-input/submit.ts": {
       "sha256": "9fc3fde5e453fe6e36b92909488249be788189d640c132d83c9c7a5407b42c80",
       "line_spans": [
-        455,
-        476,
-        547,
-        575,
-        583,
-        674
+        283,
+        303,
+        525,
+        541
       ]
     },
     "apps/desktop/src/main/ipc.ts": {
@@ -112,7 +110,9 @@
       "sha256": "79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11",
       "line_spans": [
         431,
-        475
+        475,
+        498,
+        508
       ]
     },
     ".orchestra/skills/desktop-startup-maintenance/SKILL.md": {
@@ -159,6 +159,38 @@
         324,
         335
       ]
+    },
+    "packages/app-shell/src/components/prompt-input/submit-admission.suite.ts": {
+      "sha256": "78893419277f529e3b0cd0df0a6c191663f2110fb7c87eefd21f0fa7049faaab",
+      "line_spans": [
+        181,
+        253
+      ]
+    },
+    "packages/app-shell/AGENTS.md": {
+      "sha256": "a41f7ec47513e9a399d9ef066fbdb20ffaae712fcbb0c1881e1701cfaf76d15d",
+      "line_spans": [
+        3,
+        4,
+        21,
+        28
+      ]
+    },
+    "apps/desktop/AGENTS.md": {
+      "sha256": "854f55f901c5bbf938c65d674de5dc3182feb1593f38009318bd029a3717ca81",
+      "line_spans": [
+        3,
+        9
+      ]
+    },
+    "AGENTS.md": {
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "line_spans": [
+        160,
+        162,
+        177,
+        179
+      ]
     }
   },
   "routes": {
@@ -171,7 +203,7 @@
           {
             "key": "s2.l2.app-session",
             "section": "First-send cleanup after policy-write failure",
-            "bytes": 800
+            "bytes": 1510
           },
           {
             "key": "s2.l1.app-session",
@@ -201,7 +233,7 @@
           {
             "key": "s2.l2.desktop-web",
             "section": "Startup publishes readiness before the renderer proceeds",
-            "bytes": 2067
+            "bytes": 3321
           },
           {
             "key": "s2.l1.desktop-web",
@@ -233,6 +265,21 @@
       "apps/desktop/src/preload/index.ts:254",
       "apps/desktop/src/main/windows.ts:324–335",
       "apps/desktop/src/main/renderer-origin.ts:7–22"
+    ]
+  },
+  "round2_additions": {
+    "app-session.md": {
+      "section": "## First-send cleanup after policy-write failure",
+      "addition": "owner/server/serialized HTTP credentials/scope/directory and dispatch policy rechecks; typed i18n, focused hosted policy/scope/owner regressions, production benchmark guidance"
+    },
+    "desktop-web.md": {
+      "section": "## Startup publishes readiness before the renderer proceeds",
+      "addition": "Dock -> parallel CLI/env -> spawn; main.log/server.log; literal-English native-dialog i18n conflict; focused hosted remote health/preferred-order regression and first/warm launch comparison"
+    },
+    "preserved_from_round1_byte_for_byte": [
+      "desktop-web.md: IPC C2 paragraph (including preload/navigation sentence)",
+      "design-tui.md: V2 actions and prompt admission (I2U)",
+      "all other source body spans, including material served to the ten PASS results"
     ]
   }
 }

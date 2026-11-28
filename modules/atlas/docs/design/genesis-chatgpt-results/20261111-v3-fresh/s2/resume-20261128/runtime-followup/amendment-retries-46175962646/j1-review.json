@@ -1,0 +1,23 @@
+{
+  "reviewer": "J1",
+  "run_id": 46175962646,
+  "manifest": "42aa03d5913551c7129b0f2091a40a6a455de35ad70c955204bafe2abb805b19",
+  "case_verdicts": {
+    "S2-C1": {
+      "verdict": "HOLD",
+      "reason": "The answer preserves exact retry identity after dispatch, narrows deletion to a never-dispatched policy-write failure with confirmed emptiness, and covers unsent edits, i18n, verification, and benchmark requirements. It says credentials, scope, and directory are captured, but does not establish their recheck at API dispatch; the cited recheck covers owner and policy revision."
+    },
+    "S2-C2": {
+      "verdict": "PASS",
+      "reason": "The answer covers packaged origin handling, permitted development origin, senderFrame checks, handle rejection versus event drop, window.api/preload, navigation limits, Dock-specific checks, Live/WSL exceptions, and the enforced versus report-only CSP boundary. It avoids generalizing wrapper coverage or claiming runtime proof."
+    },
+    "S2-C4": {
+      "verdict": "HOLD",
+      "reason": "The answer covers the 120-second ceiling versus immediate child exit, historical unsigned macOS scan, userData/global, health-checked configured remotes, diagnostics, and no restart. It explicitly says the reads do not establish the ordering between CLI and environment resolution, and does not establish that resolution occurs after the Dock channel as the frozen criterion requires. It also does not explicitly disclose the early English dialog's conflict with the i18n instruction."
+    },
+    "S2-I2U": {
+      "verdict": "PASS",
+      "reason": "The answer states switchAgent then switchModel, synthetic context with resume:false before prompt, and that prompt uses the Session's selected model. It limits the claim to static declarations rather than server outcomes."
+    }
+  }
+}
