@@ -68,6 +68,7 @@ export type Interface = {
   readonly closeVariants: (ticket: Ticket, input: { readonly stop: ReviewVariantSchemaV2.VariantStop }) => Effect.Effect<Record, Tool.Failure>
   readonly finish: (ticket: Ticket, outcome: Outcome) => Effect.Effect<Terminal, Tool.Failure>
   readonly readFix: (id: Identity) => Effect.Effect<FixRecord | undefined, Tool.Failure>
+  readonly expireFix: (id: Identity) => Effect.Effect<FixRecord | undefined, Tool.Failure>
   readonly lookupFix: (parent: SessionSchema.Info, reportID: string) => Effect.Effect<FixTerminal | undefined, Tool.Failure>
   readonly admitFix: (identity: Identity, input: ReviewEngagementPolicyV2.Input, owner: string,
     model?: SessionSchema.Info["model"]) => Effect.Effect<FixRecord, Tool.Failure>
@@ -103,6 +104,9 @@ export function readPriorAuthority(value: unknown): Effect.Effect<Terminal, Tool
   return Effect.gen(function* () {
     const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Union([StateV2, StateV3]))(value, strict),
       catch: (error) => invalid(String(error)) })
+    const expected = identity({ id: data.identity.parentID, projectID: data.identity.projectID,
+      location: data.identity.location } as SessionSchema.Info, data.input)
+    if (!same(expected, data.identity)) return yield* invalid("prior authority namespace is inconsistent")
     const row = { id: data.identity.leadID, parent_id: data.identity.parentID, agent: "lucy",
       project_id: data.identity.projectID, directory: data.identity.location.directory,
       workspace_id: data.identity.location.workspaceID ?? null, model: data.model ?? null, metadata: { [KEY]: value } } as Row
@@ -150,6 +154,13 @@ export function make(database: Database.Interface): Interface {
       const row = yield* load(database.db, id.leadID)
       return row ? yield* decodeFix(row, id) : undefined
     }),
+    expireFix: (id) => atomic((tx) => Effect.gen(function* () {
+      const row = yield* load(tx, id.leadID)
+      if (!row) return undefined
+      const record = yield* decodeFix(row, id)
+      if (!record || record.state === "terminal" || (yield* Clock.currentTimeMillis) < record.budget.deadlineAt) return record
+      return yield* stopFix(tx, record, "expired")
+    })),
     lookup: (parent, reportID) => Effect.gen(function* () {
       // SQL restricts the authoritative placement before any report ID or JSON record is inspected.
       const rows = yield* database.db.select().from(SessionTable).where(and(eq(SessionTable.parent_id, parent.id),
