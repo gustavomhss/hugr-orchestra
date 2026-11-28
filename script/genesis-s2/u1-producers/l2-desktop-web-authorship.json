@@ -1,0 +1,30 @@
+{
+  "kind": "s2-u1-producer-result/v1",
+  "operationRun": 46168692382,
+  "target": "s2.l2.desktop-web",
+  "author": "/root/s2_content_delta_luna",
+  "callback": {
+    "event": "callback-enter",
+    "snapshotSha256": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+    "snapshotSha256VerifiedInTargetAndSealedProducer": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+    "observedFollowup": "callback-hold: sealed-producer-output-required; matches=0"
+  },
+  "baseline": {
+    "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+    "bodySha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+    "bytes": 18440
+  },
+  "output": {
+    "path": "l2-desktop-web-response.json",
+    "bodySha256": "94dd8d56a4e85027a13df03d9f8812306246802c999f25e5c6f29237516da838",
+    "bytes": 18440
+  },
+  "changedSpan": {
+    "before": "120-second ceiling",
+    "after": "150-second ceiling",
+    "count": 1,
+    "allOtherBodyBytesPreserved": true
+  },
+  "sourceCaptureSha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+  "review": null
+}

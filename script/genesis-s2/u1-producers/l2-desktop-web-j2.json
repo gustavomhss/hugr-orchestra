@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "s2-u1-semantic-result",
+  "key": "s2.l2.desktop-web",
+  "snapshot_sha256": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+  "result_id": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+  "verdict": "PASS",
+  "reason": "A captura examinada tem SHA-256 9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08 e define READY_TIMEOUT como 150000 ms, usado na corrida de readiness. O corpo produzido descreve o limite de 150 segundos nesse contexto. A evidência do produtor registra uma única substituição e preservação dos demais bytes; não comparei diretamente o corpo anterior nem recalculei o result ID. O parecer se limita à interpretação estática dessa alteração: não demonstra tempo observado em produto, admissão, aceitação por consumidores ou outros resultados. Os HOLDs anteriores permanecem."
+}

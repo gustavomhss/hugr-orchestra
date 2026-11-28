@@ -30,6 +30,10 @@ on:
         description: Run real reuse and isolated drift planning after M0 admission
         type: boolean
         default: false
+      admit_exact_m1:
+        description: Finalize, resume and admit only a separately reviewed exact U1 M1 target
+        type: boolean
+        default: false
   push:
     branches: ["genesis-interfaces-resume"]
     paths:
@@ -159,9 +163,9 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - name: Validate selected phases
-        if: ${{ inputs.run_reuse_and_drift == true && inputs.admit_exact_m0 != true }}
+        if: ${{ (inputs.run_reuse_and_drift == true && inputs.admit_exact_m0 != true) || (inputs.admit_exact_m1 == true && inputs.run_reuse_and_drift != true) }}
         run: |
-          echo 'Reuse and drift require exact M0 admission in the same run.' >&2
+          echo 'M1 admission requires reuse and drift with an exact M0 admission in the same run.' >&2
           exit 1
       - name: Create fixed runtime
         shell: bash
@@ -199,6 +203,26 @@ jobs:
             args+=(--producer-manifest script/genesis-s2/u1-producers/manifest.json)
           fi
           python3 script/genesis-s2/u1-operate.py "${args[@]}"
+      - name: Finalize the exact M1 private target
+        if: ${{ inputs.admit_exact_m1 == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$U1_ROOT/evidence/u1-operation"
+          python3 script/genesis-s2/u1-admit-target.py --phase finalize --target M1 \
+            --request "$root/changed-prepare.request.json" --target-file "$root/target-checkpoint/result.json" \
+            --callback-root "$root/target-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m1 \
+            --output "$U1_ROOT/evidence/u1-m1-admission"
+      - name: Resume, admit and read the exact M1 target
+        if: ${{ inputs.admit_exact_m1 == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$U1_ROOT/evidence/u1-operation"
+          python3 script/genesis-s2/u1-admit-target.py --phase resume --target M1 \
+            --request "$root/changed-prepare.request.json" --target-file "$root/target-checkpoint/result.json" \
+            --callback-root "$root/target-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m1 \
+            --output "$U1_ROOT/evidence/u1-m1-admission"
       - name: Preserve baseline evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-s2-u1-observed-recipe-progress/v1",
+  "run_id": 46168692382,
+  "run_head": "a41254de06f78caef633b0f5738a8e31ea361631",
+  "artifact_id": 15273405325,
+  "artifact_zip_sha256": "18ab5cf6fe40b645eb72800b0213d43387a8897b7b2c03177e2d5e0b09a44cfc",
+  "m0_candidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "m0_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "observed_status": "AWAITING_REAL_PRODUCER_OR_SEMANTIC_EVIDENCE",
+  "returned": [
+    {
+      "key": "s2.l1.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+      "result_id": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8"
+    }
+  ],
+  "next_observed_callback": {
+    "key": "s2.l2.desktop-web",
+    "snapshot_sha256": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+    "reason": "actual-producer-output-required",
+    "baseline_result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+    "baseline_body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+    "dependencies": [
+      {
+        "key": "s2.l1.desktop-web",
+        "result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8"
+      }
+    ]
+  },
+  "post_run_sealed_output": {
+    "result_id": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+    "response": "script/genesis-s2/u1-producers/l2-desktop-web-response.json",
+    "response_sha256": "c99a4b10c08189375a86b2066a2a2e65bd7c8af63e3100331215c7f758efe561",
+    "decisions": [
+      {
+        "path": "script/genesis-s2/u1-producers/l2-desktop-web-j1.json",
+        "sha256": "fe41537df877e8b6b97685ac8a76d1836723ac1b67b8eaeec2d11dbd69a53c87"
+      },
+      {
+        "path": "script/genesis-s2/u1-producers/l2-desktop-web-j2.json",
+        "sha256": "63bc00ccf16b4b8279e494621cb41e9a5e51309f20370edc43bc900f3a0e0b54"
+      }
+    ],
+    "callback_return": "PENDING_IN_THIS_RUN"
+  },
+  "file_sha256": {
+    "ledger.json": "fa5b6bb30fd0ccfc823ae7ff185f9732106a075274ebdc86c3b3ec3613fd479f",
+    "drift-plan.stdout.txt": "d57cce5f690e4610e18fcf0f3aa826acf78b7e899dca90cc6fbc85efaf481abc",
+    "target-checkpoint/callbacks.jsonl": "c32e9ac7a1ffc7973d5660b2680debfba38b5f684a9e6cb3ca3564693cb6c585",
+    "changed-prepare.stdout.txt": "3f28bfaaf85cdead4c0a2a1dfa27b3d6ec8dd694b2e5c6683d3a8753a01611c5",
+    "target-checkpoint/snapshot-1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6.json": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+    "target-checkpoint/capture-9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08.bin": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08"
+  }
+}

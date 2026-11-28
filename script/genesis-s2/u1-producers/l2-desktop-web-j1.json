@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j1",
+  "purpose": "s2-u1-semantic-result",
+  "key": "s2.l2.desktop-web",
+  "snapshot_sha256": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+  "result_id": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+  "verdict": "PASS",
+  "reason": "I read the local producer evidence and baseline/output bodies. Both bodies are 18,440 bytes; replacing the single `120-second ceiling` occurrence with `150-second ceiling` in the baseline exactly reproduces the output. The producer evidence binds that change to the supplied callback snapshot, source capture hash, and L1 result. I did not independently verify the hosted source capture or recompute the Atlas result ID. This supports only the exact stated semantic change, not candidate admission or any broader product claim."
+}
