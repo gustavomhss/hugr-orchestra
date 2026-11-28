@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s3-operation-receipt/v1",
+  "operation": "prepare",
+  "started_at": "2026-11-28T07:23:10.863217+00:00",
+  "status": "OPERATION_RETURNED_SUCCESS",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "plan": {
+    "path": "/home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/run-plan.json",
+    "byte_length": 2959,
+    "sha256": "97ad37b21594f485cf7dff6fff1aef42eb26bf8936bc976a56777371e8d8ba76"
+  },
+  "run_id": "46120849935",
+  "run_attempt": "1",
+  "harness_sha": "03444ea9c111709cc069abe0b58ffcb8895ebffb",
+  "consumer_verdict": "NOT_JUDGED",
+  "ownership_manifest": null,
+  "ended_at": "2026-11-28T07:23:57.915757+00:00"
+}

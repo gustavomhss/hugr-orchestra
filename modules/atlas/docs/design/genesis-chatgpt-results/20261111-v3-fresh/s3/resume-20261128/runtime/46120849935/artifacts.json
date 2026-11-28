@@ -1,0 +1,42 @@
+{
+  "artifacts": [
+    {
+      "id": 15253567927,
+      "name": "genesis-s3-state-03444ea9c111709cc069abe0b58ffcb8895ebffb-1",
+      "size_in_bytes": 73857035,
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15253567927",
+      "archive_download_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15253567927/zip",
+      "expired": false,
+      "created_at": "2026-11-28T07:24:01Z",
+      "expires_at": "2026-12-28T07:23:58Z",
+      "updated_at": "2026-11-28T07:24:01Z",
+      "digest": "sha256:74d5f03223ff3cbccfc791db866d5bafc12c2c66146a0bdf7aa978a749911981",
+      "workflow_run": {
+        "id": 46120849935,
+        "repository_id": 1405035578,
+        "head_repository_id": 1405035578,
+        "head_branch": "genesis-s3-resume",
+        "head_sha": "03444ea9c111709cc069abe0b58ffcb8895ebffb"
+      }
+    },
+    {
+      "id": 15252993471,
+      "name": "genesis-s3-guards-03444ea9c111709cc069abe0b58ffcb8895ebffb-1",
+      "size_in_bytes": 1076,
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15252993471",
+      "archive_download_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15252993471/zip",
+      "expired": false,
+      "created_at": "2026-11-28T07:23:10Z",
+      "expires_at": "2026-12-28T07:23:10Z",
+      "updated_at": "2026-11-28T07:23:10Z",
+      "digest": "sha256:6a50b8aa0ad263d51c2f1bff9579593a2fe57c6526aca5a1e64d53e4b1194d49",
+      "workflow_run": {
+        "id": 46120849935,
+        "repository_id": 1405035578,
+        "head_repository_id": 1405035578,
+        "head_branch": "genesis-s3-resume",
+        "head_sha": "03444ea9c111709cc069abe0b58ffcb8895ebffb"
+      }
+    }
+  ]
+}

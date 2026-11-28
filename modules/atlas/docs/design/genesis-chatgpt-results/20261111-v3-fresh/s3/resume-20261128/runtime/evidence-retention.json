@@ -1,0 +1,25 @@
+{
+  "schema": "genesis-s3-evidence-retention/v1",
+  "reason": "Actual guard agent-scratch rejects tracked raw job logs. Remove the two newly added raw outputs from the current tree; retain structured receipts, analysis, hashes and Actions artifact references. Guard rule and implementation unchanged.",
+  "removed_tracked_logs": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/runtime/46120101744/guards-job.log",
+      "retained_in_commit": "f266bc060a1fb42296edd6bfb683729dd33490d3",
+      "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46120101744",
+      "local_captured_sha256": "edfa845fd6813d15c43b8f14d1bf514c0133c02d8d5c7dbe383e667c1cdcb9c4",
+      "local_capture_present": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/runtime/46120101744/operation-job.log",
+      "retained_in_commit": "f266bc060a1fb42296edd6bfb683729dd33490d3",
+      "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46120101744",
+      "local_captured_sha256": "191a1ec732ffe3940f3f02c26a28fbe7ef38585713ad2bf2ac173e0f0f0a4748",
+      "local_capture_present": true
+    }
+  ],
+  "limitations": [
+    "The raw logs remain in the original historical commit and Actions record; this commit does not rewrite branch history.",
+    "Artifact retention follows GitHub Actions metadata; archive identity does not promise indefinite hosting.",
+    "Prepare success does not imply workflow success, binding, publication or consumer acceptance."
+  ]
+}

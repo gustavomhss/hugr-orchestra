@@ -1,0 +1,242 @@
+{
+  "schema": "genesis-s3-prepare-review/v1",
+  "status": "PREPARE_SUCCEEDED_WORKFLOW_GUARD_FAILED",
+  "run_id": 46120849935,
+  "harness_sha": "03444ea9c111709cc069abe0b58ffcb8895ebffb",
+  "candidate_id": "7c7dafa40b78156e70c8ed1fe9ade40e3f656744e8cc4b5f62c7078170ea25cc",
+  "package_sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "candidate_entries": 11,
+  "candidate_observations": 4646,
+  "all_input_lock_sha256_measured": true,
+  "input_lock_files": 4639,
+  "membership_count": 45,
+  "protocol_index_overlay": {
+    "kind": "explicit-pinned-protocol-index-overlay",
+    "prefix": ".orchestra/skills/execute-genesis",
+    "file_count": 21,
+    "added_entries": 21,
+    "head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "before_index_sha256": "4d73cb1737eff6e489fe16a6aa97f7fc9307a8b427f4fd839c3ffb1eb8037cf1",
+    "after_index_sha256": "55df5a005aa913c48aa6cb0dd72be371c2221361487ae4bc22eee40d4fe47b11",
+    "source_entries_removed_or_replaced": false,
+    "ignore_rules_changed": false,
+    "prior_ignore_stdout": ".orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/campaign.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/completion.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/criteria.json\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fatia-1.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fatia-2.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fatia-3.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fatia-4.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fatia-5.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/fresh-start.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/handoffs.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/integration.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/judging.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/migration.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/orchestration.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/parallel-partition.json\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/principles.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/runtime.md\n.orchestra/.gitignore:7:references/\t.orchestra/skills/execute-genesis/references/transport.md\n",
+    "prior_ignore_exit_code": 0,
+    "entries": [
+      {
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "mode": "100644",
+        "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/agents/openai.yaml",
+        "mode": "100644",
+        "git_blob_sha": "7c8f7584437e404843af25a3d479f3b1975c9d76",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "175974372d48c89d26a352933d7b81131768f0d1d28f5b8bcf6d861827bfc2fb"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+        "mode": "100644",
+        "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/completion.md",
+        "mode": "100644",
+        "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+        "mode": "100644",
+        "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+        "mode": "100644",
+        "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+        "mode": "100644",
+        "git_blob_sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+        "mode": "100644",
+        "git_blob_sha": "c9ed9ba1de32d4a60af8177103cf66745d51e2ab",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+        "mode": "100644",
+        "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+        "mode": "100644",
+        "git_blob_sha": "9151d0c026ad59bf53f220007774a08fc2a98a4b",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "0258382587f5f7a0ccd8dcdc677daffcc22c9700485ab0a9d89493ca19c309bd"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/fresh-start.md",
+        "mode": "100644",
+        "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+        "mode": "100644",
+        "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/integration.md",
+        "mode": "100644",
+        "git_blob_sha": "e9bd813f08eaad30e829c27e0f73ff0e3aef602d",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "cd4c606b7242d5290d736c28d44aa233279189ef72f7862d15c2c8c284ff9492"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/judging.md",
+        "mode": "100644",
+        "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/migration.md",
+        "mode": "100644",
+        "git_blob_sha": "5ee40fdf10215f5d12cc0c613b761f1bb4cd3c2f",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "a63399e16fabe131cd387b801bbe687e8290b9e7e4a71183290a87139ebcece5"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+        "mode": "100644",
+        "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+        "mode": "100644",
+        "git_blob_sha": "cdd2fba881059af6152371b417d8a791d8090a9f",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "c8ade6470889a801b000583cfbb8f121482ec9ba1f2c4c72c539513723801d07"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/principles.md",
+        "mode": "100644",
+        "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+        "mode": "100644",
+        "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/references/transport.md",
+        "mode": "100644",
+        "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+      },
+      {
+        "path": ".orchestra/skills/execute-genesis/scripts/check_partition.py",
+        "mode": "100644",
+        "git_blob_sha": "def60dec5009a4f6a932bf51078f693d307cf7dd",
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "sha256": "e245039c66efcaef13793cfbec8f007c75ff4f007661700b0f3d7fdb58a79fc2"
+      }
+    ]
+  },
+  "publication_attempted": false,
+  "binding": "NOT_REQUESTED",
+  "consumer_verdict": "NOT_JUDGED",
+  "scope_limit": "Operational proof for selected package v3. Entry navigation revision v4 will require a distinct package and prepare. No binding can be transplanted.",
+  "evidence_files": [
+    {
+      "path": "baseline-state-separation.json",
+      "bytes": 1010,
+      "sha256": "03d65860e3a146154a6b3b6fc5d327044772f07c4808a02ad8a27049b15471b9"
+    },
+    {
+      "path": "input-lock.observed.json",
+      "bytes": 1989954,
+      "sha256": "45e352507832eee486f4b987dd69482c7e326bee6d4ad1b0d8fc8b948559aa38"
+    },
+    {
+      "path": "materialization.json",
+      "bytes": 5513428,
+      "sha256": "3c311da09e50b09ebeeabfbc1214a2c72eb1282fe9865cb2eb4dca0f7aab2271"
+    },
+    {
+      "path": "prepare.receipt.json",
+      "bytes": 1041,
+      "sha256": "5df84b0f7471d0e5b8d414d4bd78e8724275897d80674bd045012628703f1027"
+    },
+    {
+      "path": "prepare.stderr.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "prepare.stdout.json",
+      "bytes": 2083894,
+      "sha256": "9795cd00b6a3aed698756ed206b88869699ac6e99bb6f101ac45aa575c76db9d"
+    },
+    {
+      "path": "prepared.json",
+      "bytes": 2616453,
+      "sha256": "dd95c4a355c4e0c6e5bcd9dff195a40ce257275c35055058d9257e98d1394196"
+    },
+    {
+      "path": "state-archive.receipt.json",
+      "bytes": 172,
+      "sha256": "2139d990d942025d6936e66ecfd6e7975210b6ca06bcb942746f64bb6d70ab04"
+    },
+    {
+      "path": "state.json",
+      "bytes": 2865695,
+      "sha256": "58cc64370d02aa7181867ed2d899a3601d9603bf4dff7c31cfa9dcf45e00f1e0"
+    },
+    {
+      "path": "summary.json",
+      "bytes": 822,
+      "sha256": "01230844ca6413a02284cb85f8508385d67a167332869dbcd058ee50884cd5c9"
+    }
+  ],
+  "guard_findings": [
+    "agent-scratch: two raw job logs added under runtime/46120101744; remove from tracked tree, retain structured receipts and Actions artifacts."
+  ],
+  "artifact": {
+    "id": 15253567927,
+    "bytes": 73857035,
+    "sha256": "74d5f03223ff3cbccfc791db866d5bafc12c2c66146a0bdf7aa978a749911981",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46120849935/artifacts/15253567927"
+  }
+}

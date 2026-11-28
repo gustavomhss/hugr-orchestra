@@ -1,0 +1,119 @@
+{
+  "schema": "s3-failed-prepare-state-verification/v1",
+  "run_id": 46120101744,
+  "candidate_id": null,
+  "publication_attempted": false,
+  "state_json_sha256": "4991a1ee55079769b454cacf4c263625711b4e7dac1748c5fd848b002dda5ee4",
+  "protocol_files_present": 21,
+  "protocol_bytes": 111465,
+  "protocol_reference_files": 18,
+  "all_exact_to_pinned_protocol": true,
+  "actual_git_listing": "NOT_CAPTURED_IN_FAILED_HARNESS",
+  "files": [
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "bytes": 8143
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/agents/openai.yaml",
+      "sha256": "175974372d48c89d26a352933d7b81131768f0d1d28f5b8bcf6d861827bfc2fb",
+      "bytes": 312
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb",
+      "bytes": 4842
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+      "bytes": 4497
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+      "bytes": 4001
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-1.md",
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "bytes": 3987
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb",
+      "bytes": 3921
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-3.md",
+      "sha256": "6cb2f61b7e5351b09de55e56e09c2a12943fcfe6b1ea5a5841a660e486f3fcb9",
+      "bytes": 3933
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da",
+      "bytes": 4911
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-5.md",
+      "sha256": "0258382587f5f7a0ccd8dcdc677daffcc22c9700485ab0a9d89493ca19c309bd",
+      "bytes": 3962
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fresh-start.md",
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "bytes": 4983
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+      "bytes": 6282
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/integration.md",
+      "sha256": "cd4c606b7242d5290d736c28d44aa233279189ef72f7862d15c2c8c284ff9492",
+      "bytes": 3240
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "bytes": 5787
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/migration.md",
+      "sha256": "a63399e16fabe131cd387b801bbe687e8290b9e7e4a71183290a87139ebcece5",
+      "bytes": 1125
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/orchestration.md",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "bytes": 4408
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/parallel-partition.json",
+      "sha256": "c8ade6470889a801b000583cfbb8f121482ec9ba1f2c4c72c539513723801d07",
+      "bytes": 13725
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "bytes": 6010
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "bytes": 10217
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "bytes": 8478
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/scripts/check_partition.py",
+      "sha256": "e245039c66efcaef13793cfbec8f007c75ff4f007661700b0f3d7fdb58a79fc2",
+      "bytes": 4701
+    }
+  ]
+}

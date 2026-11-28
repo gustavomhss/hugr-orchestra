@@ -1,0 +1,16 @@
+{
+  "argv": [
+    "bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "base_ref": "origin/dev",
+  "base_sha": "b0aa063868f657d7bedc172ddc822d3132a0d0ab",
+  "candidate_revision": "03444ea9c111709cc069abe0b58ffcb8895ebffb",
+  "exit_code": 1,
+  "log_bytes": 4341,
+  "log_sha256": "f13bc14337e308a55af2b5734f6e363c44b8f643189ccf849cb0d5ec1801410e",
+  "schema": "genesis-s3-guards/v1"
+}
