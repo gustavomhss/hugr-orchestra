@@ -1,11 +1,11 @@
-import { For, Match, Show, Switch } from "solid-js"
+import { For, Match, onCleanup, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { MxBadge } from "../kit"
 import { pipelineClaim } from "./pipeline"
-import { roster, statusKey, statusTone, type SourceStatus } from "./roster"
+import { statusKey, statusTone, useRagRoster, type SourceStatus } from "./roster"
 import { settleSourceRead, sourceClaim } from "./source-read"
 
 import { SourceText } from "./source-text"
@@ -27,6 +27,7 @@ function lightKey(light: (typeof lights)[number]) {
 export function Question(props: ChapterPageProps) {
   const language = useLanguage()
   const sdk = useSDK()
+  const { roster } = useRagRoster()
   const [state, setState] = createStore({
     text: "",
     askedText: "",
@@ -51,15 +52,16 @@ export function Question(props: ChapterPageProps) {
   const claim = () => pipelineClaim(roster.pipelineKnown, roster.embeddingModel)
   const sourcePane = () => sourceClaim(state.sourceKnown, state.sourceFailed)
   let askRead = 0
+  onCleanup(() => { askRead += 1 })
   const reportSource = (error: unknown) => {
     console.error(error)
     setState({ error: true, sourceFailed: true, sourceKnown: false })
   }
 
   return (
-    <section>
+    <section class="rag-section">
       <div class="rag-section-head">
-        <h3 class="mx-section">{language.t("orchestra.ragStudio.question")}</h3>
+        <h2>{language.t("orchestra.ragStudio.diagnosis")}</h2>
         <Show
           when={claim() === "named" ? roster.embeddingModel : undefined}
           fallback={
@@ -184,12 +186,13 @@ export function Question(props: ChapterPageProps) {
                 sourceFailed: false,
               })
             })
-            .catch(() => {
+            .catch((error: unknown) => {
               if (started !== askRead) return
               if (props.directory !== directory) {
                 setState({ busy: false })
                 return
               }
+              console.error(error)
               setState({ busy: false, error: true })
             })
         }}
@@ -206,106 +209,106 @@ export function Question(props: ChapterPageProps) {
           {language.t("orchestra.ragStudio.ask")}
         </button>
       </form>
-      <Show when={state.asked && state.sense === "missing"}>
-        <p class="mx-note">{language.t("orchestra.ragStudio.sense.missing")}</p>
-      </Show>
-      <Show when={state.sense === "fused"}>
-        <p class="mx-note">{language.t("orchestra.ragStudio.sense.fused")}</p>
-      </Show>
-      <Show when={state.light === "sent"}>
-        <p class="mx-note">{language.t("orchestra.ragStudio.sentNote")}</p>
-      </Show>
-      <Show when={state.optional}>
-        <p class="mx-note">{language.t("orchestra.ragStudio.retrieval")}</p>
+      <Show when={state.error}>
+        <p class="mx-error" role="alert">{language.t("orchestra.ragStudio.actionError")}</p>
       </Show>
       <Show when={state.asked}>
-        <div class="rag-follow">
-          <Switch>
-            <Match when={sourcePane() === "recorded" && state.sourcePath && state.source}>
-              <div class="rag-open-head">
-                <p class="mx-note rag-path" dir="ltr">
-                  <bdi>{state.sourcePath}</bdi>
-                </p>
+        <div class="rag-result">
+          <div class="rag-result-head">
+            <bdi>{state.askedText}</bdi>
+            <Show when={state.span}>
+              <button
+                class="mx-btn"
+                type="button"
+                disabled={state.busy}
+                onClick={() => {
+                  const span = state.span
+                  if (!span || state.busy) return
+                  const started = askRead
+                  setState({ busy: true, error: false })
+                  void sdk().orchestra.ragStudio.question({
+                    location: location(),
+                    revisionId: state.revisionId,
+                    text: state.askedText,
+                    span,
+                  }).then(
+                    () => { if (started === askRead) setState({ busy: false, saved: true }) },
+                    (error: unknown) => {
+                      if (started !== askRead) return
+                      console.error(error)
+                      setState({ busy: false, error: true })
+                    },
+                  )
+                }}
+              >
+                {language.t("orchestra.ragStudio.save")}
+              </button>
+            </Show>
+          </div>
+          <Show when={state.saved}>
+            <p class="mx-note" role="status">{language.t("orchestra.ragStudio.saved")}</p>
+          </Show>
+          <div class="rag-columns rag-diagnosis">
+            <section class="rag-evidence" aria-label={language.t("orchestra.ragStudio.sourcePassage")}>
+              <div class="rag-evidence-head">
+                <h3>{language.t("orchestra.ragStudio.sourcePassage")}</h3>
                 <Show when={fileStatus(state.status)}>
                   {(status) => <MxBadge tone={statusTone(status())}>{language.t(statusKey(status()))}</MxBadge>}
                 </Show>
+                <Show when={sourcePane() === "recorded" && state.sourcePath}>
+                  <p class="rag-path" dir="ltr"><bdi>{state.sourcePath}</bdi></p>
+                </Show>
               </div>
-              <SourceText text={state.source} cuts={state.span ? [state.span] : []} />
-            </Match>
-            <Match when={sourcePane() !== "failed"}>
-              <Show when={fileStatus(state.status)}>
-                {(status) => (
-                  <div class="rag-open-head">
-                    <MxBadge tone={statusTone(status())}>{language.t(statusKey(status()))}</MxBadge>
-                  </div>
-                )}
-              </Show>
-              <div class="mx-empty" role="status">
-                {language.t("orchestra.ragStudio.notRecorded")}
+              <Switch>
+                <Match when={sourcePane() === "recorded" && state.source}>
+                  <SourceText text={state.source} cuts={state.span ? [state.span] : []} />
+                </Match>
+                <Match when={sourcePane() === "failed"}>
+                  <p class="rag-evidence-note">{language.t("orchestra.ragStudio.sourceUnavailable")}</p>
+                </Match>
+                <Match when={true}>
+                  <p class="rag-evidence-note">{language.t("orchestra.ragStudio.notRecorded")}</p>
+                </Match>
+              </Switch>
+            </section>
+            <section class="rag-evidence rag-trace" aria-label={language.t("orchestra.ragStudio.trace")}>
+              <div class="rag-evidence-head"><h3>{language.t("orchestra.ragStudio.trace")}</h3></div>
+              <div class="rag-trace-body">
+                <Show when={state.light === "sent"}>
+                  <p>{language.t("orchestra.ragStudio.sentNote")}</p>
+                </Show>
+                <Show when={state.optional}>
+                  <p>{language.t("orchestra.ragStudio.retrieval")}</p>
+                </Show>
+                <Show when={state.sense === "missing"}>
+                  <p>{language.t("orchestra.ragStudio.sense.missing")}</p>
+                </Show>
+                <Show when={state.sense === "fused"}>
+                  <p>{language.t("orchestra.ragStudio.sense.fused")}</p>
+                </Show>
+                <Show when={state.prompt}>
+                  <details class="rag-trace-detail" open>
+                    <summary>{language.t("orchestra.ragStudio.prompt")}</summary>
+                    <pre class="mx-log rag-source" dir="ltr" tabindex="0">{state.prompt}</pre>
+                  </details>
+                </Show>
+                <Show when={state.dropped.length > 0 && sourcePane() !== "failed"}>
+                  <details class="rag-trace-detail">
+                    <summary>{language.t("orchestra.ragStudio.leftOut")}</summary>
+                    <ul>
+                      <For each={state.dropped}>
+                        {(text) => <li class="rag-passage">{text || language.t("orchestra.ragStudio.notRecorded")}</li>}
+                      </For>
+                    </ul>
+                  </details>
+                </Show>
+                <dl class="rag-trace-revision">
+                  <dt>{language.t("orchestra.ragStudio.revision")}</dt>
+                  <dd><bdi>{state.revisionId}</bdi></dd>
+                </dl>
               </div>
-            </Match>
-          </Switch>
-        </div>
-      </Show>
-      <Show when={state.span}>
-        <div class="rag-actions">
-          <button
-            class="mx-btn"
-            type="button"
-            disabled={state.busy}
-            onClick={() => {
-              const span = state.span
-              if (!span || state.busy) return
-              setState({ busy: true, error: false })
-              void sdk()
-                .orchestra.ragStudio.question({
-                  location: location(),
-                  revisionId: state.revisionId,
-                  text: state.askedText,
-                  span,
-                })
-                .then(() => {
-                  setState({ busy: false, saved: true, error: false })
-                })
-                .catch(() => setState({ busy: false, error: true }))
-            }}
-          >
-            {language.t("orchestra.ragStudio.save")}
-          </button>
-        </div>
-      </Show>
-      <Show when={state.saved}>
-        <p class="mx-note" role="status">
-          {language.t("orchestra.ragStudio.saved")}
-        </p>
-      </Show>
-      <Show when={state.error}>
-        <p class="mx-error" role="alert">
-          {language.t("orchestra.ragStudio.actionError")}
-        </p>
-      </Show>
-      <Show when={state.dropped.length > 0 && sourcePane() !== "failed"}>
-        <div class="rag-follow">
-          <p class="mx-note">{language.t("orchestra.ragStudio.leftOut")}</p>
-          <div class="mx-table">
-            <For each={state.dropped}>
-              {(text) => (
-                <div class="mx-row">
-                  <div class="mx-grow">
-                    <span class="rag-passage">{text || language.t("orchestra.ragStudio.notRecorded")}</span>
-                  </div>
-                </div>
-              )}
-            </For>
+            </section>
           </div>
-        </div>
-      </Show>
-      <Show when={state.prompt}>
-        <div class="rag-follow">
-          <p class="mx-note">{language.t("orchestra.ragStudio.prompt")}</p>
-          <pre class="mx-log rag-source" dir="ltr" tabindex="0">
-            {state.prompt}
-          </pre>
         </div>
       </Show>
     </section>
