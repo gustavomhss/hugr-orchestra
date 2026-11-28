@@ -1,0 +1,182 @@
+{
+  "schema": "s3-binding-supplement-queue-transport/v1",
+  "messenger": "/root/s3_maintenance_cases",
+  "recorded_at": "2026-11-28T08:08:25.644305+00:00",
+  "role": "Authorized technical messenger only; no judgment or approval",
+  "source_manifest": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/message-identities.source.json",
+    "sha256": "c6f8df020f1bc21ba9362fd8f49fd90fef2a5f964569da5ea7d0742e8ad897bc"
+  },
+  "source_sha_byte_checks_completed": true,
+  "sources_read_in_full": true,
+  "requested_message_count": 9,
+  "submitted_without_error_count": 9,
+  "remaining_messages": [],
+  "events": [
+    {
+      "sequence": 1,
+      "target": "/root/s3_j2",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/01-s3_j2-00-original-J2.txt",
+        "byte_length": 26028,
+        "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s3_j1",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/02-s3_j1-01-contract-and-criteria.message.txt",
+        "byte_length": 29991,
+        "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s3_j2",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/03-s3_j2-01-contract-and-criteria.message.txt",
+        "byte_length": 29991,
+        "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s3_j1",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/04-s3_j1-02-results-L1.message.txt",
+        "byte_length": 21998,
+        "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s3_j2",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/05-s3_j2-02-results-L1.message.txt",
+        "byte_length": 21998,
+        "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s3_j1",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/06-s3_j1-03-results-L2-L3.message.txt",
+        "byte_length": 16039,
+        "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 7,
+      "target": "/root/s3_j2",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/07-s3_j2-03-results-L2-L3.message.txt",
+        "byte_length": 16039,
+        "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 8,
+      "target": "/root/s3_j1",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/08-s3_j1-04-results-L4.message.txt",
+        "byte_length": 16220,
+        "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    },
+    {
+      "sequence": 9,
+      "target": "/root/s3_j2",
+      "tool": "collaboration.send_message",
+      "text_record": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/09-s3_j2-04-results-L4.message.txt",
+        "byte_length": 16220,
+        "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+      },
+      "tool_return": "empty response; no error exposed",
+      "status": "SUBMITTED_TO_EXISTING_HANDLE_QUEUE",
+      "host_message_id": null,
+      "host_payload_echo": null,
+      "automatic_byte_equality_of_call": "NOT_EXPOSED_BY_HOST",
+      "transcription": "Complete text manually transcribed from the fully displayed source; this file records that intended literal transcription, not a host payload echo.",
+      "manual_divergence_observed": false
+    }
+  ],
+  "followup_task_used": false,
+  "evaluate_message_sent": false,
+  "judge_activation_owner": "/root",
+  "new_agents_created": false,
+  "judge_decisions_shared": false,
+  "remote_writes": false,
+  "semantic_verdict": null,
+  "limits": [
+    "Successful send_message returns were empty; no host message IDs, queue IDs, payload echoes or automatic call byte-equality proof were exposed.",
+    "Local files preserve full source text and the manually transcribed text record. Their measured hashes do not constitute host-side receipt hashes.",
+    "No evaluation was initiated by this messenger. Only ROOT will initiate evaluation on the existing judge handles."
+  ]
+}

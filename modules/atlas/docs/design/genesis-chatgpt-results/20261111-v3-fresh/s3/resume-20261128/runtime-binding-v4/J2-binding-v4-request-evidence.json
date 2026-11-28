@@ -1,0 +1,130 @@
+{
+  "reviewer": "/root/s3_j2",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "contract": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "verdict": "REQUEST_EVIDENCE",
+  "criteria": [
+    {"id":"purpose and installed behavior","verdict":"PASS"},
+    {"id":"explicit contracts and authority","verdict":"PASS"},
+    {"id":"decisions and current/historical distinction","verdict":"PASS"},
+    {"id":"dependency and navigation distinction","verdict":"REQUEST_EVIDENCE"},
+    {"id":"concrete safe maintenance and failure handling","verdict":"PASS"},
+    {"id":"source provenance and honest execution limits","verdict":"PASS"},
+    {"id":"QS-1","verdict":"PASS"},
+    {"id":"QS-2","verdict":"PASS"},
+    {"id":"QS-3","verdict":"PASS"},
+    {"id":"QS-4","verdict":"REQUEST_EVIDENCE"},
+    {"id":"QS-5","verdict":"REQUEST_EVIDENCE"},
+    {"id":"QS-6","verdict":"PASS"},
+    {"id":"CC-1","verdict":"PASS"},
+    {"id":"CC-2","verdict":"PASS"},
+    {"id":"CC-3","verdict":"PASS"},
+    {"id":"CC-7","verdict":"PASS"},
+    {"id":"GO-A1","verdict":"PASS"},
+    {"id":"GO-A2","verdict":"PASS"},
+    {"id":"GO-A3","verdict":"PASS"},
+    {"id":"GO-A4","verdict":"REQUEST_EVIDENCE"},
+    {"id":"GO-A5","verdict":"PASS"},
+    {"id":"GO-A6","verdict":"PASS"},
+    {"id":"GO-A7","verdict":"PASS"},
+    {"id":"GO-I1","verdict":"PASS"},
+    {"id":"GO-I2","verdict":"PASS"},
+    {"id":"GO-I3","verdict":"REQUEST_EVIDENCE"},
+    {"id":"GO-I4","verdict":"REQUEST_EVIDENCE"},
+    {"id":"GO-I5","verdict":"REQUEST_EVIDENCE"},
+    {"id":"GO-I6","verdict":"PASS"},
+    {"id":"GO-I7","verdict":"PASS"},
+    {"id":"GO-I8","verdict":"PASS"},
+    {"id":"runtime-import-binding","verdict":"REQUEST_EVIDENCE"}
+  ],
+  "entries": [
+    {
+      "key":"s3-l1-maestro",
+      "result":"9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+      "inputs":"bb033a95793ef5f062ca78b3feb9d0abd2024184b850dcc8cb5cc5cf008a778e"
+    },
+    {
+      "key":"s3-l1-relay",
+      "result":"39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+      "inputs":"6c38131a0d472293fcd7e3c9904f9699f793985ed67b442cf60a8637c63e945b"
+    },
+    {
+      "key":"s3-l1-integrations",
+      "result":"7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+      "inputs":"fc2d0c8b2df7071d38a1c8357d993d9ec5066a5585319fa55ecb16c9de460729"
+    },
+    {
+      "key":"s3-l2-maestro",
+      "result":"44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "inputs":"7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e"
+    },
+    {
+      "key":"s3-l2-relay",
+      "result":"60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "inputs":"6c535f0963c6b598cb537ebba9639786d459110a4ff484450b9b0cbb332a9090"
+    },
+    {
+      "key":"s3-l2-integrations",
+      "result":"5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "inputs":"7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e"
+    },
+    {
+      "key":"s3-l3-flows",
+      "result":"dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "inputs":"61082310f993aab96932fd282a7603de3ab9449da70fba5359968d802f660931"
+    },
+    {
+      "key":"s3-l4-entry",
+      "result":"11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+      "inputs":"bbaebd5f1d2b709010852687c4cd3821f0258d921979eec9a69df9de5e25046b"
+    },
+    {
+      "key":"s3-l4-ownership",
+      "result":"2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+      "inputs":"524c307597583e2221d660bb9452cc3aa0e8a68ef04410716d4a547a018f67ed"
+    },
+    {
+      "key":"s3-l4-maintenance",
+      "result":"3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+      "inputs":"46fddf1e89de844be890b0d390f203d8404a57e3e28b6a3b9b30c62180b711ce"
+    },
+    {
+      "key":"s3-l4-operational",
+      "result":"8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+      "inputs":"328642439e801c3d989d80d7c77ed9e3f4be030bb9a2e34ba7060e711c33e426"
+    }
+  ],
+  "findings": [
+    {
+      "id": "BIND-V4-ENTRY-H2-INPUT-COVERAGE",
+      "type": "evidence-gap",
+      "expected": "Os títulos H2 copiados de s3-l1-relay e s3-l1-integrations para entry v4 precisam estar cobertos por inputs ou dependências que impeçam reutilizar esse catálogo quando os títulos mudarem.",
+      "observed": "O corpo entry v4 consome e reproduz exatamente 18 títulos desses dois predecessores. Entretanto, seus build_dependencies_exact contêm somente s3-l3-flows e s3-l1-maestro; s3-l1-relay e s3-l1-integrations aparecem em navigation_exact. Os 265 inputs individuais de entry foram omitidos. A igualdade mecânica dos inputs declarados não demonstra, por si, que os dois conteúdos consumidos estão contemplados.",
+      "reason": "A presença transitiva dos L1 sob L3 não basta para concluir essa proteção sem conhecer a semântica de invalidação: uma mudança de título pode alterar o L1 sem alterar o resultado textual de L2/L3. O novo catálogo deixou de ser apenas um link de consulta. Não concluo ainda que o vínculo esteja ausente; ele pode existir nos inputs omitidos ou em uma garantia runtime equivalente.",
+      "required_resolution": "Mostrar o vínculo exato desses conteúdos ao entry preparado, ou a garantia runtime equivalente. Se não houver esse vínculo, corrigir a declaração de dependências/inputs e preparar um novo candidato para revisão."
+    }
+  ],
+  "evidence_requests": [
+    {
+      "id": "ER-BIND-V4-ENTRY-H2",
+      "fields": [
+        "input_keys do artefato s3-l4-entry no pacote selecionado, limitados às fontes dos H2 copiados de s3-l1-relay e s3-l1-integrations",
+        "/candidate/entries/7/inputs: pares exatos correspondentes a essas fontes, ou declaração explícita de que não existem",
+        "/candidate/observations: registros correspondentes que identifiquem os bytes/versões efetivamente acompanhados",
+        "Alternativamente, trecho decisivo do contrato/código de invalidação demonstrando proteção quando os H2 dos L1 mudam e os result IDs intermediários L2/L3 permanecem iguais"
+      ],
+      "reason": "Resolver exclusivamente a cobertura de dependência introduzida pelo catálogo H2 v4. Não é necessário reenviar os inventários completos, os corpos aceitos ou executar consumidores para responder."
+    }
+  ],
+  "limitations": [
+    "Recebi a vista inicial e os quatro complementos. Avaliei os 11 resultados completos, metadados, referências declaradas, critérios e custódia fornecida; os pareceres semânticos anteriores permanecem preservados.",
+    "Os PASS parciais referem-se à preservação dos requisitos aplicáveis nesta transformação de importação. Não declaram cumprimento global de QS, CC ou GO, nem fecham consumidores, manutenção ou a matriz final.",
+    "Os pares entries acima identificam o candidato examinado; sua reprodução neste parecer não constitui autorização de binding enquanto a decisão geral for REQUEST_EVIDENCE.",
+    "Não li prepared/raw, vetores completos de inputs, observações ou inventories omitidos. A lacuna delimitada acima exige parte desse material.",
+    "Não usei ferramentas, arquivos, navegador, testes, edição ou delegação. IDs do kernel, SHA256, medidas e resultados CI são os fornecidos; não os recomputei.",
+    "Prepare, typecheck e guards não foram usados como substitutos da decisão semântica. Não emito identidade de mensagem do host.",
+    "Não afirmo publicação, manifest de ownership emitido, index/read, consumidores ou manutenção executados. Nenhum aceite é concedido aos originais superiores ausentes.",
+    "A autorização local declarada e futuros gates governados permanecem separados deste voto; nenhum HOLD pode ser ultrapassado por este parecer."
+  ]
+}

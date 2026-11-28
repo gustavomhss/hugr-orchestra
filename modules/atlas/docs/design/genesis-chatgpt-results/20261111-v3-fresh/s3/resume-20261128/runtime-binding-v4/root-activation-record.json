@@ -1,0 +1,88 @@
+{
+  "schema": "s3-binding-root-activation-record/v1",
+  "recorded_at": "2026-11-28T08:09:10.119359+00:00",
+  "root": "/root",
+  "prior_queue_receipt_sha256": "268dbc211a83bcc9313b39d5e3842611ab39320ef80ab0b318cda5b8f5d44094",
+  "local_transcription_checks": [
+    {
+      "sequence": 1,
+      "target": "/root/s3_j2",
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s3_j1",
+      "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s3_j2",
+      "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s3_j1",
+      "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s3_j2",
+      "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s3_j1",
+      "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 7,
+      "target": "/root/s3_j2",
+      "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 8,
+      "target": "/root/s3_j1",
+      "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22",
+      "local_record_exact": true
+    },
+    {
+      "sequence": 9,
+      "target": "/root/s3_j2",
+      "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22",
+      "local_record_exact": true
+    }
+  ],
+  "activation_events": [
+    {
+      "target": "/root/s3_j1",
+      "tool": "collaboration.followup_task",
+      "message_file": "s3-runtime-implementation/binding/supplements/evaluate.message.txt",
+      "message_sha256": "10bbfc02d2e9042da5e62de6388d83664032cc0170ffd9eb0db2b889a3913cef",
+      "message_bytes": 971,
+      "tool_return": "empty response; no error exposed",
+      "host_message_id": null,
+      "host_payload_echo": null
+    },
+    {
+      "target": "/root/s3_j2",
+      "tool": "collaboration.followup_task",
+      "message_file": "s3-runtime-implementation/binding/supplements/evaluate.message.txt",
+      "message_sha256": "10bbfc02d2e9042da5e62de6388d83664032cc0170ffd9eb0db2b889a3913cef",
+      "message_bytes": 971,
+      "tool_return": "empty response; no error exposed",
+      "host_message_id": null,
+      "host_payload_echo": null
+    }
+  ],
+  "limits": [
+    "Host dispatch payload bytes are not echoed; preserved text is the actual manual transcription record, not a cryptographic host attestation.",
+    "No decision was produced or copied by the messenger or this record."
+  ]
+}

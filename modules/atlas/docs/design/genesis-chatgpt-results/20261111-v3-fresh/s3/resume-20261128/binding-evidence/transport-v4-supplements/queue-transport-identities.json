@@ -1,0 +1,85 @@
+{
+  "schema": "s3-binding-supplement-transport-identities/v1",
+  "files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/00-original-J2.txt",
+      "byte_length": 26028,
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/01-contract-and-criteria.message.txt",
+      "byte_length": 29991,
+      "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/02-results-L1.message.txt",
+      "byte_length": 21998,
+      "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/03-results-L2-L3.message.txt",
+      "byte_length": 16039,
+      "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/04-results-L4.message.txt",
+      "byte_length": 16220,
+      "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/message-identities.source.json",
+      "byte_length": 805,
+      "sha256": "c6f8df020f1bc21ba9362fd8f49fd90fef2a5f964569da5ea7d0742e8ad897bc"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/queue-transport-receipt.json",
+      "byte_length": 9025,
+      "sha256": "268dbc211a83bcc9313b39d5e3842611ab39320ef80ab0b318cda5b8f5d44094"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/01-s3_j2-00-original-J2.txt",
+      "byte_length": 26028,
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/02-s3_j1-01-contract-and-criteria.message.txt",
+      "byte_length": 29991,
+      "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/03-s3_j2-01-contract-and-criteria.message.txt",
+      "byte_length": 29991,
+      "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/04-s3_j1-02-results-L1.message.txt",
+      "byte_length": 21998,
+      "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/05-s3_j2-02-results-L1.message.txt",
+      "byte_length": 21998,
+      "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/06-s3_j1-03-results-L2-L3.message.txt",
+      "byte_length": 16039,
+      "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/07-s3_j2-03-results-L2-L3.message.txt",
+      "byte_length": 16039,
+      "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/08-s3_j1-04-results-L4.message.txt",
+      "byte_length": 16220,
+      "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4-supplements/transcribed/09-s3_j2-04-results-L4.message.txt",
+      "byte_length": 16220,
+      "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+    }
+  ]
+}

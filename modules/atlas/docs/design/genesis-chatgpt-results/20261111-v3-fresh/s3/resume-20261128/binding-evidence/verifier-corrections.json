@@ -1,0 +1,16 @@
+{
+  "schema": "s3-binding-verifier-corrections/v1",
+  "author": "/root/s3_maintenance_cases",
+  "product_failure": false,
+  "initial_failure": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/verifier-initial-symlink-hypothesis-failure.json",
+    "sha256": "1f48e8cdf0a3fa61f51107bfabc8ca2ea642c9de59de22b2a708957550094388",
+    "byte_length": 1510
+  },
+  "error": "Initial verifier hypothesis compared symlink inventory identity to target-file bytes. The prepared source and archive were not wrong.",
+  "source": "s3-runtime-runner/runner.py inventory(): kind=symlink,target=os.readlink(path),sha256=SHA256(target.encode()), no byte_length",
+  "correction": "Compare archived linkname to recorded target, SHA256 its UTF-8 bytes, verify internal target exists separately, never extract the symlink.",
+  "correct_target": "../../ui/src/custom-elements.d.ts",
+  "correct_target_sha256": "aac56a933012440aeff9fe2549b8e7e5aca90e5cc446b6111b3d1208bde0f739",
+  "result": "Subsequent v4 audit completed all byte and mapping comparisons. No runtime/product/tests executed."
+}

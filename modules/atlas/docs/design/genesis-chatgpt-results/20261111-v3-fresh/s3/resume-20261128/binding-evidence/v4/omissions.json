@@ -1,0 +1,195 @@
+{
+  "schema": "s3-limited-view-omissions/v1",
+  "omissions": [
+    {
+      "name": "complete_prepared",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": ""
+      }
+    },
+    {
+      "name": "observations",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/observations",
+        "omitted_from_limited_view": true,
+        "item_count": 4646
+      }
+    },
+    {
+      "name": "all_entry_input_vectors",
+      "per_entry_references": [
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/0/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 464
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/1/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 3722
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/2/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 486
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/3/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 165
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/4/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 114
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/5/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 165
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/6/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/7/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/8/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/9/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/10/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        }
+      ],
+      "total_items_with_repetition": 6441
+    },
+    {
+      "name": "observed_input_lock_files",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/input-lock.observed.json",
+          "sha256": "5957f3e6358f5c60fc865c8264406c817935e95b4072876757cef7a4687002d5",
+          "byte_length": 1989942
+        },
+        "json_pointer": "/files",
+        "item_count": 4639
+      }
+    },
+    {
+      "name": "materialization_membership_vectors",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/materialization.json",
+          "sha256": "5e558b90b4b0ca6c949e12124af753b997201ce0b44427c6e509b1eddf14c417",
+          "byte_length": 5513382
+        },
+        "json_pointer": "/memberships",
+        "item_count": 45
+      }
+    },
+    {
+      "name": "full_state_file_inventory",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/state.json",
+          "sha256": "7968f84ac77f2e0e90515274f1d909a610e4da4f37f73b5c7f178dc41fa98f3a",
+          "byte_length": 2865680
+        },
+        "json_pointer": "/files",
+        "item_count": 14577
+      }
+    },
+    {
+      "name": "body_and_reference_prose",
+      "reference": "cas-index.json contains exact raw CAS and decoded file identities; per-body/per-reference decoded locators are in binding-view.json."
+    }
+  ],
+  "limitations": [
+    "No semantic assessment, judge vote, runtime binding, approval, publication or consumer execution is produced by this verifier.",
+    "Kernel IDs and inputs_id are observed prepare values. Canonical source was captured at the runtime pin; Python blake3 is unavailable. No substitute digest or kernel ID recomputation was performed.",
+    "CAS raw SHA-256 and decoded body SHA-256 are file integrity checks, distinct from kernel BLAKE3 canonical identity.",
+    "All extensive input/observation/membership vectors and body/reference prose are omitted from the limited view and linked by exact file SHA, byte length and JSON Pointer or decoded CAS file.",
+    "No assertion that judges read the 2.6 MB prepared document, omitted vectors, body prose, producer requests, oracle prose or review prose follows from this view.",
+    "Membership path lists were checked as sorted, unique and present in the archived materialization. Original raw git ls-files stdout is absent: enumeration_sha256 and membership kernel versions were preserved, not independently recomputed.",
+    "Git readback receipts are previously captured evidence. This program performs no network access and does not establish fresh remote state.",
+    "Prepare evidence is tied to this exact package and candidate; a later prepare or changed package requires a fresh view and independent binding decisions."
+  ]
+}

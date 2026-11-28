@@ -1,0 +1,22 @@
+[
+  {
+    "path": "s3-runtime-implementation/binding/supplements/01-contract-and-criteria.message.txt",
+    "bytes": 29991,
+    "sha256": "95868c6b03230918bdd9ac07bbe372fe91888652beabf3fa8cd6f3bfaf8d94a9"
+  },
+  {
+    "path": "s3-runtime-implementation/binding/supplements/02-results-L1.message.txt",
+    "bytes": 21998,
+    "sha256": "26e755ca1e566adc8ff477d1f8949b4620c5f5b4ea831c96a5f2a498cdc48da5"
+  },
+  {
+    "path": "s3-runtime-implementation/binding/supplements/03-results-L2-L3.message.txt",
+    "bytes": 16039,
+    "sha256": "73cc42b5725dca067f79d620b0fa4c1af76318ded708e89894c0dec7e24cede0"
+  },
+  {
+    "path": "s3-runtime-implementation/binding/supplements/04-results-L4.message.txt",
+    "bytes": 16220,
+    "sha256": "0f96422634e2db544dce12f373c1fcfff2be1a8834f23abbaf2b51e7fb865e22"
+  }
+]

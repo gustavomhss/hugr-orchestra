@@ -1,0 +1,97 @@
+{
+  "schema": "s3-binding-evidence-artifact-identities/v1",
+  "author": "/root/s3_maintenance_cases",
+  "scope": "Local mechanical deliverables only; no semantic or binding verdict. Large extracted CAS are identified separately by each version cas-index.",
+  "files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/README.md",
+      "byte_length": 6753,
+      "sha256": "b96da2370cbd66d45ea599ab449580bb750f65ba788f90afb0e8efce3808a7ae"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/binding-view.json",
+      "byte_length": 124939,
+      "sha256": "45c76b4e45148858a4c08bcde3aaec428bd5396fd9886ee1965ea32e2e28dd88"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/cas-index.json",
+      "byte_length": 48090,
+      "sha256": "e418122be91aedf744e6abe4daba0a9aa57e07ec456ac35203b9fd4a8cd6bd2d"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/dispatch-summary.json",
+      "byte_length": 21561,
+      "sha256": "4aed638b388d32d2bab989f4a9dfdd8db538d4626d46c80db16d8b0d8993ebd6"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/handoff.md",
+      "byte_length": 3047,
+      "sha256": "918503aabe3a7eed04fcd1f4e9d9046f71f23e8ea21ca234c5d9ad7f94d9249d"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/mechanical-report.json",
+      "byte_length": 12438,
+      "sha256": "7e09ff23cf07ea997848129e3fdcfc210dd58ce1221b577dfcfda3b3f7abf2c6"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3/omissions.json",
+      "byte_length": 8207,
+      "sha256": "ef720f6684721aacc5baf9842859c257483a49f23eeb81a6c1495e68e9f172d8"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v3-config.json",
+      "byte_length": 8217,
+      "sha256": "5e3b33aadf9e686e72eb0d993bc0bb6af5a02526e2c8283cd12da690dc99e73c"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/binding-view.json",
+      "byte_length": 125051,
+      "sha256": "dc4ead301744b76936431ddd6f095d0743d42794b13252f55a62fbb39e32fd74"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/cas-index.json",
+      "byte_length": 48091,
+      "sha256": "c55179500d3025d8e6511a60a90487b30af36848654a191cc1d88c7bc67a410a"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/dispatch-summary.json",
+      "byte_length": 21597,
+      "sha256": "f303637e97c75f4990f410029bb9530b6d6e34a1c156b58b498981d38aaf4143"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/handoff.md",
+      "byte_length": 3065,
+      "sha256": "28a6e982afff83cf009ebbad38949855ebbea1d6b1cbd83ddec5a722e1ae5851"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/mechanical-report.json",
+      "byte_length": 12477,
+      "sha256": "6215b98adb277f04fd4c8f893b00ef8562f0840c3c15c3e2b818ef30c615eba2"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/omissions.json",
+      "byte_length": 8207,
+      "sha256": "73294ebbbfc6faea4751f54dc2e694fe6780768497fe4553587463f6b200082c"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4/verifier-initial-symlink-hypothesis-failure.json",
+      "byte_length": 1510,
+      "sha256": "1f48e8cdf0a3fa61f51107bfabc8ca2ea642c9de59de22b2a708957550094388"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4-config.json",
+      "byte_length": 8256,
+      "sha256": "de72a95876b753fb44e806d89284c575469a9c078c59a1c3f66f9de3cdb1656a"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/verifier-corrections.json",
+      "byte_length": 1089,
+      "sha256": "503c5218f089883cdcff6db5729d48feca3c69055c7c383ce42cb82781fa527e"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/verify_prepare.py",
+      "byte_length": 36909,
+      "sha256": "fede1ba80d0966aa6eb9dfcb2004fc33db1de9c41f84c3b0951ded60cd617a7d"
+    }
+  ]
+}

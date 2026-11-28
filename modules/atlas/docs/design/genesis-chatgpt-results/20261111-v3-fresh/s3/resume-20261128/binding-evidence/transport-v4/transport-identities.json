@@ -1,0 +1,30 @@
+{
+  "schema": "s3-binding-transport-identities/v1",
+  "files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J1-response-host-visible.json",
+      "sha256": "e8e788cc59cfee115ce25b6826bb7c1a5ae5232041c53d255c4a6b96b24d7737",
+      "byte_length": 7783
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J1-sent-text-as-transcribed.txt",
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "byte_length": 26028
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J2-attempted-text-not-delivered.txt",
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "byte_length": 26028
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/request-exact.txt",
+      "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "byte_length": 26028
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/transport-receipt.json",
+      "sha256": "e2ba38eca4a440333cbaf7ce4028e4fc7eb0a03fb126d85225befec8a50f6ac7",
+      "byte_length": 3049
+    }
+  ]
+}

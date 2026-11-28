@@ -1,0 +1,223 @@
+{
+  "schema": "s3-binding-result-exact-supplement/v1",
+  "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "contract": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "binding_view_sha256": "dc4ead301744b76936431ddd6f095d0743d42794b13252f55a62fbb39e32fd74",
+  "selected_package_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+  "oracle_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/oracles/ownership-cases.json",
+    "sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367"
+  },
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+  },
+  "limits": "Whole decoded OwnershipResult objects and exact package reference values follow. Reference prose and raw input vectors are not repeated. Corpus/body provenance and limitations are preserved, not rewritten after prepare.",
+  "entries": [
+    {
+      "key": "s3-l2-maestro",
+      "result_id": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "inputs_id": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "package_references_exact": {
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/recipe.md",
+          "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b"
+        },
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/request.md",
+          "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/response.json",
+          "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25"
+        },
+        "semantic_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L2-v2.json",
+            "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L2-v2.json",
+            "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741"
+          }
+        ],
+        "runtime_receipt_refs": []
+      },
+      "body_sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "body_byte_length": 6979,
+      "result_cas_sha256": "401f693840fed219cfd5064a3095a3d3066bbed7c602617445a6d72f83b4fc0f"
+    },
+    {
+      "key": "s3-l2-relay",
+      "result_id": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "inputs_id": "6c535f0963c6b598cb537ebba9639786d459110a4ff484450b9b0cbb332a9090",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "package_references_exact": {
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/recipe.md",
+          "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b"
+        },
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/request.md",
+          "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/response.json",
+          "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25"
+        },
+        "semantic_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L2-v2.json",
+            "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L2-v2.json",
+            "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741"
+          }
+        ],
+        "runtime_receipt_refs": []
+      },
+      "body_sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "body_byte_length": 7235,
+      "result_cas_sha256": "f9e8cebad1b0191c7102dcd5384fe9549c1cb3a814f4213b74e85ff484e61d01"
+    },
+    {
+      "key": "s3-l2-integrations",
+      "result_id": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "inputs_id": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "package_references_exact": {
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/recipe.md",
+          "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b"
+        },
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/request.md",
+          "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/response.json",
+          "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25"
+        },
+        "semantic_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L2-v2.json",
+            "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L2-v2.json",
+            "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741"
+          }
+        ],
+        "runtime_receipt_refs": []
+      },
+      "body_sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "body_byte_length": 6968,
+      "result_cas_sha256": "2670293a1959f8ad3439c6a3a0151da7126a81577a7b89185e21c8eabc96c520"
+    },
+    {
+      "key": "s3-l3-flows",
+      "result_id": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "inputs_id": "61082310f993aab96932fd282a7603de3ab9449da70fba5359968d802f660931",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "package_references_exact": {
+        "recipe_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/recipe.md",
+          "sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359"
+        },
+        "producer_request_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/request.md",
+          "sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225"
+        },
+        "producer_response_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/response.json",
+          "sha256": "b68c8cbf2682d2c4fc230fcbc67cf13118a3198db658e0ecd336a4aec49087cb"
+        },
+        "semantic_review_refs": [
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L3-adoption-v1.json",
+            "sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035"
+          },
+          {
+            "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L3-adoption-v1.json",
+            "sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0"
+          }
+        ],
+        "runtime_receipt_refs": []
+      },
+      "body_sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+      "body_byte_length": 13637,
+      "result_cas_sha256": "52e1e55588bd3017b5f71a1faefe735f630827816125ee71ad7097a454310a4d"
+    }
+  ]
+}

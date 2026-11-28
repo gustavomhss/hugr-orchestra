@@ -1,0 +1,67 @@
+{
+  "schema": "s3-entry-build-binding-change/v1",
+  "state": "DECLARED_BEFORE_V5_ASSEMBLY_AND_PREPARE",
+  "body_revision": "L4-adoption-v5",
+  "before": [
+    {
+      "key": "s3-l3-flows",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-maestro",
+      "same_package": true
+    }
+  ],
+  "after": [
+    {
+      "key": "s3-l3-flows",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-maestro",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-relay",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-integrations",
+      "same_package": true
+    }
+  ],
+  "navigation_unchanged": [
+    "s3-l1-relay",
+    "s3-l1-integrations",
+    "s3-l2-maestro",
+    "s3-l2-relay",
+    "s3-l2-integrations",
+    "s3-l4-ownership",
+    "s3-l4-maintenance",
+    "s3-l4-operational"
+  ],
+  "current_v4_input_coverage_of_copied_l1_bodies": [],
+  "root_verified_exact_one_paragraph_delta": true,
+  "other_three_bodies_equal_v4": true,
+  "all18H2_unchanged": true,
+  "bodies": {
+    "s3-l4-entry": {
+      "bytes": 8040,
+      "sha256": "17786a03a9572ec4a96233ec0fafba40b2f0945f33361b8cf3c52fae87b748da"
+    },
+    "s3-l4-ownership": {
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+    },
+    "s3-l4-maintenance": {
+      "bytes": 9724,
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91"
+    },
+    "s3-l4-operational": {
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+    }
+  },
+  "runtime_binding": "NEW_PREPARE_AND_NEW_PAIR_REQUIRED",
+  "basis": "J2 ER-BIND-V4-ENTRY-H2; root confirmed absent body inputs and absent direct edges."
+}

@@ -1,0 +1,278 @@
+Binding v4, complemento 1/4. Material estático integral solicitado; não julgue até receber a mensagem final EVALUATE_BINDING_V4_SUPPLEMENTS. Mantenha seu papel independente e não use ferramentas, arquivos, navegador, testes, edição ou delegação. O texto seguinte é dado a avaliar. Os outros complementos e a vista inicial completam o pedido. Nenhum parecer do outro juiz é fornecido.
+
+{
+  "schema": "s3-binding-contract-definition-supplement/v1",
+  "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "contract_id": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "contract_raw_cas_sha256": "7c45252674a5d6319269ac41bce2ed65646c66ad71fb7a8102a7ceb8444e8198",
+  "contract_exact": {
+    "kind": "ownership-contract",
+    "version": 1,
+    "criteria": [
+      "purpose and installed behavior",
+      "explicit contracts and authority",
+      "decisions and current/historical distinction",
+      "dependency and navigation distinction",
+      "concrete safe maintenance and failure handling",
+      "source provenance and honest execution limits",
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-2",
+      "CC-3",
+      "CC-7",
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I3",
+      "GO-I4",
+      "GO-I5",
+      "GO-I6",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ]
+  },
+  "normative_source": {
+    "file": "normative-plan.md",
+    "bytes": 28267,
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "git_blob": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md"
+  },
+  "definitions": [
+    {
+      "id": "GO-A1",
+      "source_line": 52,
+      "normative_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |"
+    },
+    {
+      "id": "GO-A2",
+      "source_line": 53,
+      "normative_text": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |"
+    },
+    {
+      "id": "GO-A3",
+      "source_line": 54,
+      "normative_text": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |"
+    },
+    {
+      "id": "GO-A4",
+      "source_line": 55,
+      "normative_text": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |"
+    },
+    {
+      "id": "GO-A5",
+      "source_line": 56,
+      "normative_text": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |"
+    },
+    {
+      "id": "GO-A6",
+      "source_line": 57,
+      "normative_text": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |"
+    },
+    {
+      "id": "GO-A7",
+      "source_line": 58,
+      "normative_text": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |"
+    },
+    {
+      "id": "GO-I1",
+      "source_line": 120,
+      "normative_text": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |"
+    },
+    {
+      "id": "GO-I2",
+      "source_line": 121,
+      "normative_text": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |"
+    },
+    {
+      "id": "GO-I3",
+      "source_line": 122,
+      "normative_text": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |"
+    },
+    {
+      "id": "GO-I4",
+      "source_line": 123,
+      "normative_text": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |"
+    },
+    {
+      "id": "GO-I5",
+      "source_line": 124,
+      "normative_text": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |"
+    },
+    {
+      "id": "GO-I6",
+      "source_line": 125,
+      "normative_text": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |"
+    },
+    {
+      "id": "GO-I7",
+      "source_line": 126,
+      "normative_text": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |"
+    },
+    {
+      "id": "GO-I8",
+      "source_line": 127,
+      "normative_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |"
+    },
+    {
+      "id": "CC-1",
+      "source_line": 159,
+      "normative_text": "| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |"
+    },
+    {
+      "id": "CC-2",
+      "source_line": 160,
+      "normative_text": "| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |"
+    },
+    {
+      "id": "CC-3",
+      "source_line": 161,
+      "normative_text": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |"
+    },
+    {
+      "id": "CC-7",
+      "source_line": 165,
+      "normative_text": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |"
+    },
+    {
+      "id": "QS-1",
+      "source_line": 180,
+      "normative_text": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale."
+    },
+    {
+      "id": "QS-2",
+      "source_line": 181,
+      "normative_text": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant."
+    },
+    {
+      "id": "QS-3",
+      "source_line": 182,
+      "normative_text": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop."
+    },
+    {
+      "id": "QS-4",
+      "source_line": 183,
+      "normative_text": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests."
+    },
+    {
+      "id": "QS-5",
+      "source_line": 184,
+      "normative_text": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements."
+    },
+    {
+      "id": "QS-6",
+      "source_line": 185,
+      "normative_text": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign."
+    }
+  ],
+  "interpretation_by_root": "The decision sought is explicitly purpose runtime-import-binding for this exact prepared candidate. PASS for a named criterion in this record means this import transformation preserves its applicable requirements and does not misrepresent outstanding operational obligations. It is not a declaration that the entire normative criterion is globally satisfied. Native binding precedes governed publish and real index/read; current consumers and maintenance remain NOT_RUN. The same numbered criteria remain open in the final 50-ID matrix until their own evidence exists. This is a scoped application of the existing protocol, not a waiver or altered normative definition. Judge independently whether the evidence supports this scope; REQUEST_EVIDENCE/HOLD remains valid.",
+  "protocol_scope_evidence": [
+    {
+      "source": {
+        "file": "transport.md",
+        "bytes": 8478,
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+        "git_blob": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md"
+      },
+      "exact_ranges": [
+        [
+          15,
+          35
+        ],
+        [
+          114,
+          132
+        ],
+        [
+          147,
+          150
+        ]
+      ],
+      "excerpt": "\n- `scope` e `key` são estáveis. Cada chave identifica um artefato; revisão não cria alias\n  conflitante. Corpo, autoridade, validade, gaps e evidência compõem sua identidade útil.\n- `layer` é número **1, 2, 3 ou 4**. `need` pertence ao enum Atlas: `entry`, `ownership`,\n  `maintenance`, `operational`, `flow`, `evidence`, `component`. Não inventar novos needs.\n- `body.path` é relativo à pasta de `native-package.json`; sem absoluto, `..` ou symlink.\n  `source_refs.path` é relativo à raiz do repositório de fonte. Não confundir essas bases.\n  Usar nomes de arquivo portáveis; a chave semântica não precisa virar literalmente o filename.\n- Guardar bytes UTF-8 exatos; calcular `byte_length` e SHA-256 sobre esses bytes, sem\n  normalizar Unicode/newlines depois da revisão. Mudança de bytes exige novo binding.\n- `validity` usa `supported` ou `blocked`; lacuna crítica conserva `blocked` até resolução.\n  Separar observação, intenção autorizada, interpretação e lacuna no corpo e na autoridade.\n- `input_keys` declara fontes, receita/contrato e membership relevantes. `source_refs`\n  conserva as fontes capturadas; nenhuma chave substitui a verificação real do input.\n- `build_dependencies` liga predecessores que afetam o resultado; `navigation` contém\n  referências de consulta. Não transformar navegação em dependência nem omitir dependência.\n- `roots` associa necessidades às chaves de entrada disponíveis no scope. Durante produção\n  pode estar incompleto; a seleção exigida deve estar completa antes de publicar/aceitar.\n- Parecer semântico é evidência preservada. Importação/binding/publicação recebem provas\n  separadas; não copiar um PASS de conteúdo como aprovação de uma transformação não vista.\n\n\nmodelo/ID real e resposta original ficam nos respectivos recibos, sem supor telemetria.\n\n## Adaptação determinística aos tipos existentes\n\n| Transporte | Objeto/obrigação real |\n| --- | --- |\n| Corpo verificado em bytes | `OwnershipBody {kind, version:1, bytes:number[]}`. |\n| Autoridade, validade, gaps, evidência | `OwnershipResult`, referenciando o hash CAS do corpo. |\n| Critérios aplicáveis | `OwnershipContract`, persistido e identificado pelo runtime. |\n| Inputs e predecessores observados | `OwnershipReceipt.inputs` e `dependencies {key,result}`. |\n| Juízos de binding válidos | `OwnershipReview` com reviewer, contract, inputs, result e provenance reais. |\n| Metadados e vínculos calculados | `OwnershipArtifact`, com hashes reais de result/receipt. |\n| Artefatos e roots do scope | `OwnershipManifest`, sem seleção parcial apresentada como completa. |\n\n`result`, `receipt`, `artifact`, `manifest` e versões observadas dos inputs são gerados\npelo runtime real. Não preenchê-los com SHA-256 de transporte nem com respostas inventadas.\n`OwnershipReview.verdict` é `pass` ou `hold`, mas não basta converter a grafia de um parecer:\na revisão precisa cobrir o contrato, inputs, resultado e transformação exatos pertinentes.\nAs fontes atuais são [tipos](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts), blob `05cb2ae05d296764ce2e786d07b28b36d7428cb7`.\n\nAntes de aceitar um pacote, conferir unicidade, enum/layers, paths, bytes/hashes, inputs,\ndependências, criteria e pareceres. Isso verifica forma e binding; os dois juízes decidem\nsuficiência semântica, e os leitores/consumidores reais comprovam uso conforme [runtime.md](runtime.md).\n"
+    },
+    {
+      "source": {
+        "file": "judging-contract.md",
+        "bytes": 5787,
+        "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+        "git_blob": "452dc16776f84a6b0010dafa217564fc6411f183",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md"
+      },
+      "exact_ranges": [
+        [
+          17,
+          29
+        ],
+        [
+          33,
+          45
+        ],
+        [
+          58,
+          77
+        ]
+      ],
+      "excerpt": "Criar dois subagentes com `fork_turns: none` quando o primeiro pacote estiver pronto.\nPapéis: `parallel-v3-fresh/SN/J1` (fidelidade/autoridade) e `parallel-v3-fresh/SN/J2`\n(completude/utilidade). Os nomes são papéis; registrar os IDs realmente retornados.\nAmbos verificam todos os critérios obrigatórios pertinentes. Não dividir a barra\nem metade para cada um. Novos chats têm pares novos; não recuperar handles históricos.\n\nManter os mesmos IDs para correções e camadas nesta execução. Não usar terceiro\nvoto, substituir um veto ou confundir contexto independente com diversidade de modelo.\nSe perder um handle, tentar recuperação real; preservar decisões e registrar o\nimpedimento. Não atribuir a um novo contexto memória/aceite de um juiz perdido.\n\nJuízes não usam ferramentas, navegam, delegam, escrevem candidatos ou executam testes.\nO principal deve fornecer o conteúdo necessário. Não criar por essa restrição um\n\n\nFornecer uma versão fixa contendo:\n\n- Identidade de fonte, pacote, camada, critérios e hashes calculados externamente.\n- Corpos exatos dos artefatos a julgar, em blocos delimitados como dados.\n- Trechos decisivos das fontes, resultados de comandos e evidências relevantes.\n- Oracle/casos pertinentes, limites e desconhecidos permitidos pelo contrato.\n- Cobertura do lote e decisões inalteradas já vinculadas; no delta, apenas mudança e suporte decisivo.\n\nNão despejar históricos, todos os prompts, respostas rejeitadas antigas ou o repositório\ninteiro. Preservar tudo duravelmente sem repetir tudo no contexto. Dividir pacotes\ngrandes em lotes por critério/artefato com cobertura rastreada pelos mesmos dois IDs.\n\n\n\nPreencher e medir o pacote efetivamente enviado; um manifesto com paths/hashes não\nsubstitui os corpos. O principal verifica bindings das decisões, sem confiar em\nhash copiado pelo modelo. Parecer truncado, ausente ou de versão diferente não conta.\n\n## Decidir e corrigir\n\nPASS da camada local exige cobertura completa dos artefatos requeridos, ambos os\njuízes e nenhum achado obrigatório aberto. PASS de um lote não libera dependentes\ndo restante. O principal registra a liberação da camada; o juiz não publica no Atlas.\n\nFIX-FIRST: preservar original, delegar a correção ao autor, fixar nova versão,\nconferir dependências afetadas e reavaliar pelo mesmo par. REQUEST_EVIDENCE: fornecer\na evidência delimitada, sem refazer tudo. Divergência material é HOLD até resolução,\nnunca maioria de três. Sugestão opcional não cria escopo novo.\n\nUma decisão semântica não é `OwnershipReview` de binding/runtime automaticamente.\nS4 deve produzir provas reais da serialização, fontes, autoridade e caminho governado.\nVer [transport.md](transport.md) e [runtime.md](runtime.md).\n\n"
+    },
+    {
+      "source": {
+        "file": "runtime-entrypoint-guide.md",
+        "bytes": 10497,
+        "sha256": "79f3a9c9cc2c547845b9d86893183124ca52d070d700ccdba5d76d3e0da24e3f",
+        "git_blob": "c9939b8b2755fda6bfc2493fe0cfb8382f94a34d",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e9d5033951ba4237f11e9ff7a9582ec5c98ff48c/modules/atlas/docs/design/genesis-native-runtime.md"
+      },
+      "exact_ranges": [
+        [
+          60,
+          120
+        ],
+        [
+          122,
+          142
+        ]
+      ],
+      "excerpt": "\nBodies retain exact bytes, including BOM, decomposed Unicode and newline form.\nSemantic metadata retains its supplied meaning: supported/blocked validity,\nauthority, gaps and evidence become `OwnershipResult` fields. Build dependencies\nbecome `{key,result}` receipt dependencies. Navigation remains navigation.\nThe raw package and original reference bytes are also retained as existing\n`OwnershipBody` objects in the same CAS and linked by the candidate.\n\nThe runtime contract contains the transport's criteria plus\n`runtime-import-binding`. The candidate includes every result, observed input\nand dependency identity, the runtime contract, roots, required keys, actual\nworking-copy identity, raw transport identity, preserved references and hashes\nof the executing adapter modules. The candidate is stored in the existing CAS;\nits kernel ID is the `candidate_id` to be judged.\n\nCommitted references are checked against the locally materialized bytes and\ntheir declared content digest. This adapter does **not** establish that a blob\nbelongs to the declared historical commit. `reference_commit_verification` is\nexplicitly `external-capture-evidence-required`. Preserve the GitHub/source\ncapture evidence for that association and supply it to the binding reviewers.\nThis permits honestly identified reconstructed copies without fabricating HEAD\nor historical Git objects.\n\n## Separate binding approval\n\nAfter preparation, the two actual independent local judges receive the exact\ncandidate, mapped objects, criteria, source-capture evidence and relevant runtime\nevidence. Their semantic decisions are not automatically binding decisions.\nThe operator supplies one `genesis-native-binding-approval/v1` record containing:\n\n| Field | Required content |\n| --- | --- |\n| `purpose` | Exactly `runtime-import-binding`. |\n| `candidate_id`, `contract` | Exact IDs from the prepared candidate. |\n| `reviewers` | Exactly two distinct actual judge IDs from this execution. |\n| `decisions` | Exactly one decision from each of those IDs. |\n\nEvery decision contains `reviewer`, `purpose`, `candidate_id`, `contract`, a\n`verdict` of `PASS`, and all criteria as `{id,verdict:\"PASS\"}`. Its `entries` must\ncontain exactly every candidate artifact as `{key,result,inputs}`, where\n`result` is the candidate's artifact result and `inputs` is its `inputs_id`.\n`request_ref` and `response_ref` preserve the original visible request and\nresponse, using the native transport reference shape.\n\nUse `decision_id_kind:\"host-message\"` only when the host actually exposed the\nmessage ID. Otherwise use `decision_id_kind:\"response-sha256\"` with\n`decision_id:\"sha256:<response_ref.sha256>\"`. The latter identifies preserved\nresponse bytes and makes no claim of host message telemetry. Both identifier\nkinds are explicitly labeled in the resulting review provenance.\n\nThe adapter validates the record and its reference bytes; it does **not**\nauthenticate reviewers or infer PASS from original prose. The operator must\nretain the actual host-returned identities and faithfully transcribe the real\ndecisions. This is the existing local-runtime trust ceiling, not a new remote\nauthentication system. Synthetic fixture reviews are only test data.\n\n`publish` reruns preparation and demands an identical candidate before it accepts\nthe binding record. Changed source, body, reference, recipe, observed HEAD,\nmetadata or adapter code requires new preparation and new exact binding.\nOriginal approval/request/response bytes are retained in the same CAS. Generated\n`OwnershipReview.provenance` labels itself as an adapter record, not original\n\n\n## Governed publication and read authority\n\nThe adapter creates receipts and a manifest using existing types, then validates\nevery transported entry through `readOwnership`. A blocked entry remains blocked\nand prevents publication, including an entry reachable only by navigation.\nIt constructs the ordinary ownership carrier using the existing grounding\nderivation and asks `composeRuntime.check` before `atlas-emit`.\n\nThe host must independently provide a real `.atlas/policy.json` that authorizes\nthe actor for the scope, the existing store-provenance prerequisites, and any\nratify authority required by the existing doors. `composeRuntime` resolves the\nactor from `ATLAS_ACTOR` or local Git identity and the token from\n`ATLAS_RATIFY_TOKEN`; this entrypoint creates or changes none of them. Those\nlocal identity claims are not cryptographically authenticated by Atlas.\nMissing authority yields the original governed refusal; a binding PASS does not\noverride it. After an actual successful emit, use the real `index` and `read`\ncommands and preserve their outputs as independent operational evidence.\n\n## Capability limits\n\n"
+    },
+    {
+      "source": {
+        "file": "completion.md",
+        "bytes": 4497,
+        "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+        "git_blob": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md"
+      },
+      "exact_ranges": [
+        [
+          5,
+          32
+        ]
+      ],
+      "excerpt": "\n## Critério de entrega local\n\nDeclarar `DELIVERY_COMPLETE` somente quando todos estes pontos tiverem evidência:\n\n1. Toda a população atribuída está classificada e suas necessidades obrigatórias atendidas; nenhuma exclusão silenciosa.\n2. Todos os artefatos L1–L4 necessários foram realmente produzidos, são úteis e têm fonte, autoria e dependências exatas.\n3. Os dois juízes persistentes cobriram o pacote final e seus critérios; correções obrigatórias foram resolvidas e reavaliadas.\n4. Código estritamente necessário de responsabilidade da fatia foi aplicado e verificado no candidato correto; proposta sozinha não basta.\n5. Importação, leitura e consumidores próprios exigidos foram executados; provas comuns reutilizadas têm vínculo válido com S4.\n6. Casos de manutenção e gates atribuídos foram cumpridos; nenhum teste/CI não executado aparece aprovado.\n7. Uso novo, reservas e limitações observáveis estão registrados; histórico desconhecido não foi zerado.\n8. Matriz final de critérios, artefatos, decisões e recibos estão completos, commitados, selados e relidos no GitHub.\n\nNão repetir a suíte comum de S4 cinco vezes. Aplicar a matriz de [campaign.md](campaign.md):\ncada domínio prova seus casos e consome as provas comuns compatíveis; ROOT prova a união.\nFalta de reader, consumidor, revisão ou gate próprio não pode ser transferida para ROOT.\n\n## Axiomas orientam; evidência decide a conclusão\n\nUma matriz de aceitação basta: critério/obrigação, estado local, evidência/juízos e\ncomplemento exclusivamente global. Preservar os 50 IDs do [registro](criteria.json),\nagrupando referências quando útil. Não criar 50 documentos ou repetir leis em cada WP.\nPASS local não fecha a união. N/A exige razão real de escopo e revisão; não significa\nque a ferramenta faltou ou que houve pouco tempo. Obrigações globais nomeiam ROOT.\n\nAceite humano, landing, ativação em produção e gates da união são etapas globais,\nnão pré-requisitos artificiais para a entrega local completa. A fonte normativa\n"
+    },
+    {
+      "source": {
+        "file": "criteria.json",
+        "bytes": 4001,
+        "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+        "git_blob": "6171f3d23d3e0263e578c04338067ecb8012016d",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json"
+      },
+      "exact_ranges": null,
+      "excerpt": "{\n  \"schema\": \"genesis-parallel-criteria/v3\",\n  \"campaign\": \"20261111-v1\",\n  \"protocol_epoch\": \"parallel-v3-fresh\",\n  \"source_revision\": \"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\n  \"normative_path\": \"modules/atlas/docs/design/genesis-ownership-plan.md\",\n  \"normative_blob_sha\": \"b45a73f17c34341097a8c8725a1df6260cd273b5\",\n  \"criterion_count\": 50,\n  \"domain_owners\": [\n    \"S1\",\n    \"S2\",\n    \"S3\",\n    \"S4\",\n    \"S5\"\n  ],\n  \"global_evidence_owner\": \"root\",\n  \"common_atlas_runtime_owner\": \"S4\",\n  \"principles_are_guidance_not_per_item_document_requirements\": true,\n  \"per_task\": \"Inherit principles; specialize applicable IDs and evidence without copying all laws.\",\n  \"completion\": \"One evidence-backed disposition matrix covers all 50 IDs; separate local obligation from global complement.\",\n  \"local_status\": [\n    \"PASS\",\n    \"FIX-FIRST\",\n    \"HOLD\",\n    \"NOT_APPLICABLE\"\n  ],\n  \"global_status\": [\n    \"DEFERRED_TO_INTEGRATION\",\n    \"PASS\",\n    \"HOLD\"\n  ],\n  \"not_applicable_rule\": \"Scope reason with review; never missing time, tool or evidence.\",\n  \"criteria\": [\n    {\n      \"id\": \"GO-A1\",\n      \"source_line\": 52\n    },\n    {\n      \"id\": \"GO-A2\",\n      \"source_line\": 53\n    },\n    {\n      \"id\": \"GO-A3\",\n      \"source_line\": 54\n    },\n    {\n      \"id\": \"GO-A4\",\n      \"source_line\": 55\n    },\n    {\n      \"id\": \"GO-A5\",\n      \"source_line\": 56\n    },\n    {\n      \"id\": \"GO-A6\",\n      \"source_line\": 57\n    },\n    {\n      \"id\": \"GO-A7\",\n      \"source_line\": 58\n    },\n    {\n      \"id\": \"GO-I1\",\n      \"source_line\": 120\n    },\n    {\n      \"id\": \"GO-I2\",\n      \"source_line\": 121\n    },\n    {\n      \"id\": \"GO-I3\",\n      \"source_line\": 122\n    },\n    {\n      \"id\": \"GO-I4\",\n      \"source_line\": 123\n    },\n    {\n      \"id\": \"GO-I5\",\n      \"source_line\": 124\n    },\n    {\n      \"id\": \"GO-I6\",\n      \"source_line\": 125\n    },\n    {\n      \"id\": \"GO-I7\",\n      \"source_line\": 126\n    },\n    {\n      \"id\": \"GO-I8\",\n      \"source_line\": 127\n    },\n    {\n      \"id\": \"AC-01\",\n      \"source_line\": 138\n    },\n    {\n      \"id\": \"AC-02\",\n      \"source_line\": 139\n    },\n    {\n      \"id\": \"AC-03\",\n      \"source_line\": 140\n    },\n    {\n      \"id\": \"AC-04\",\n      \"source_line\": 141\n    },\n    {\n      \"id\": \"AC-05\",\n      \"source_line\": 142\n    },\n    {\n      \"id\": \"AC-06\",\n      \"source_line\": 143\n    },\n    {\n      \"id\": \"AC-07\",\n      \"source_line\": 144\n    },\n    {\n      \"id\": \"AC-08\",\n      \"source_line\": 145\n    },\n    {\n      \"id\": \"AC-09\",\n      \"source_line\": 146\n    },\n    {\n      \"id\": \"AC-10\",\n      \"source_line\": 147\n    },\n    {\n      \"id\": \"CC-1\",\n      \"source_line\": 159\n    },\n    {\n      \"id\": \"CC-2\",\n      \"source_line\": 160\n    },\n    {\n      \"id\": \"CC-3\",\n      \"source_line\": 161\n    },\n    {\n      \"id\": \"CC-4\",\n      \"source_line\": 162\n    },\n    {\n      \"id\": \"CC-5\",\n      \"source_line\": 163\n    },\n    {\n      \"id\": \"CC-6\",\n      \"source_line\": 164\n    },\n    {\n      \"id\": \"CC-7\",\n      \"source_line\": 165\n    },\n    {\n      \"id\": \"SC-1\",\n      \"source_line\": 169\n    },\n    {\n      \"id\": \"SC-2\",\n      \"source_line\": 170\n    },\n    {\n      \"id\": \"SC-3\",\n      \"source_line\": 171\n    },\n    {\n      \"id\": \"SC-4\",\n      \"source_line\": 172\n    },\n    {\n      \"id\": \"SC-5\",\n      \"source_line\": 173\n    },\n    {\n      \"id\": \"QS-1\",\n      \"source_line\": 180\n    },\n    {\n      \"id\": \"QS-2\",\n      \"source_line\": 181\n    },\n    {\n      \"id\": \"QS-3\",\n      \"source_line\": 182\n    },\n    {\n      \"id\": \"QS-4\",\n      \"source_line\": 183\n    },\n    {\n      \"id\": \"QS-5\",\n      \"source_line\": 184\n    },\n    {\n      \"id\": \"QS-6\",\n      \"source_line\": 185\n    },\n    {\n      \"id\": \"DOD-1\",\n      \"source_line\": 223\n    },\n    {\n      \"id\": \"DOD-2\",\n      \"source_line\": 224\n    },\n    {\n      \"id\": \"DOD-3\",\n      \"source_line\": 225\n    },\n    {\n      \"id\": \"DOD-4\",\n      \"source_line\": 226\n    },\n    {\n      \"id\": \"DOD-5\",\n      \"source_line\": 227\n    },\n    {\n      \"id\": \"DOD-6\",\n      \"source_line\": 228\n    },\n    {\n      \"id\": \"DOD-7\",\n      \"source_line\": 229\n    }\n  ]\n}\n"
+    }
+  ]
+}

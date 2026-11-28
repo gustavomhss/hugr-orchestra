@@ -1,0 +1,1020 @@
+{
+  "schema": "s3-extracted-cas-index/v1",
+  "objects": [
+    {
+      "kernel_id_observed": "01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df",
+      "roles": [
+        "reference:24"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/01/01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df",
+        "sha256": "a9857d017f7b16d86be2c57c708045ce47067be75efb5280e3242411ba96e245",
+        "byte_length": 11815
+      },
+      "archive_member": "source/.atlas/cas/01/01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df.bin",
+        "sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493",
+        "byte_length": 3226
+      }
+    },
+    {
+      "kernel_id_observed": "04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67",
+      "roles": [
+        "reference:32"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/04/04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67",
+        "sha256": "cea5e200c446ccb16d72b3ad9e2f1bf31e2a32546b63ad1dfd2a3e69e7a67bc8",
+        "byte_length": 12388
+      },
+      "archive_member": "source/.atlas/cas/04/04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67.bin",
+        "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395",
+        "byte_length": 3401
+      }
+    },
+    {
+      "kernel_id_observed": "0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452",
+      "roles": [
+        "reference:17"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/0a/0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452",
+        "sha256": "c862e0738514ca48b2d1aab9d0dde1f453f53ed16766056380c3b878edccc64a",
+        "byte_length": 29406
+      },
+      "archive_member": "source/.atlas/cas/0a/0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452.bin",
+        "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3",
+        "byte_length": 8332
+      }
+    },
+    {
+      "kernel_id_observed": "11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+      "roles": [
+        "s3-l4-entry:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/11/11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+        "sha256": "780cd3c8bc936214988ed4ea62946cae7d9036075fa7c664fcdb820baf68761a",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/11/11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76"
+    },
+    {
+      "kernel_id_observed": "12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888",
+      "roles": [
+        "reference:21"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/12/12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888",
+        "sha256": "54de9c4302d2d4dc9c644dd0a00eeb58ec4e055446475c5b6030ed7263c40331",
+        "byte_length": 35727
+      },
+      "archive_member": "source/.atlas/cas/12/12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888.bin",
+        "sha256": "b68c8cbf2682d2c4fc230fcbc67cf13118a3198db658e0ecd336a4aec49087cb",
+        "byte_length": 10377
+      }
+    },
+    {
+      "kernel_id_observed": "13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5",
+      "roles": [
+        "s3-l1-maestro:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/13/13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5",
+        "sha256": "537c4f5249c61ee7e68b7de6cafd100d345ac2deba7d88ed6125ad34b03f21b5",
+        "byte_length": 71919
+      },
+      "archive_member": "source/.atlas/cas/13/13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5.bin",
+        "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+        "byte_length": 19752
+      }
+    },
+    {
+      "kernel_id_observed": "17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8",
+      "roles": [
+        "reference:23"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/17/17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8",
+        "sha256": "3ec877569d56365925d3b4a98f4f4a78c11d6f74f0401662fc9b8e9ec8aac6fb",
+        "byte_length": 29004
+      },
+      "archive_member": "source/.atlas/cas/17/17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8.bin",
+        "sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0",
+        "byte_length": 8154
+      }
+    },
+    {
+      "kernel_id_observed": "199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351",
+      "roles": [
+        "reference:13"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/19/199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351",
+        "sha256": "efa838036cdfd72c0bc766222e31338c4fcb290892a517b321bedb6fdb1d3811",
+        "byte_length": 9281
+      },
+      "archive_member": "source/.atlas/cas/19/199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351.bin",
+        "sha256": "57f762e9e074b81044dfb308885b366afe59c189a941d2125f0404601a15a893",
+        "byte_length": 2649
+      }
+    },
+    {
+      "kernel_id_observed": "1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+      "roles": [
+        "s3-l2-relay:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/1c/1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+        "sha256": "8f705ec65c1c26ed4d5003d54f7e9ebd6abcc34da9345937952a19eb6dfe0808",
+        "byte_length": 26512
+      },
+      "archive_member": "source/.atlas/cas/1c/1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326.bin",
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "byte_length": 7235
+      }
+    },
+    {
+      "kernel_id_observed": "1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439",
+      "roles": [
+        "s3-l4-entry:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/1e/1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439",
+        "sha256": "c566a43d90048156a592503ccebeb9a09583715db097371b8fb9932b0ede3202",
+        "byte_length": 28089
+      },
+      "archive_member": "source/.atlas/cas/1e/1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439.bin",
+        "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+        "byte_length": 7764
+      }
+    },
+    {
+      "kernel_id_observed": "29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01",
+      "roles": [
+        "reference:19"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/29/29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01",
+        "sha256": "ead9daf540f426418905513a2fdf28592afe5e77319d48eead39295398bde6a0",
+        "byte_length": 35214
+      },
+      "archive_member": "source/.atlas/cas/29/29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01.bin",
+        "sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359",
+        "byte_length": 9733
+      }
+    },
+    {
+      "kernel_id_observed": "2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+      "roles": [
+        "s3-l4-ownership:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/2d/2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+        "sha256": "336dfc7af6b6a75d01604c8447b12ee5596afda294e1e97c583e7a3c35b09003",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/2d/2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64"
+    },
+    {
+      "kernel_id_observed": "3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+      "roles": [
+        "s3-l4-maintenance:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/36/3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+        "sha256": "eb4a892d621c5e7000428509270e057e6681c900206945d3a0f646a5f9bccc6f",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/36/3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04"
+    },
+    {
+      "kernel_id_observed": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+      "roles": [
+        "s3-l1-relay:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/39/39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+        "sha256": "57994d77ebf7925812b208822ddadd809584d48db824e88797c8b7bb5d67ba92",
+        "byte_length": 5151
+      },
+      "archive_member": "source/.atlas/cas/39/39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+    },
+    {
+      "kernel_id_observed": "3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e",
+      "roles": [
+        "reference:10"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/3d/3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e",
+        "sha256": "5c03e4d3ff8030eb0a882ae0f3fb7455302f9ef965ff19f6bec3b435e392e51e",
+        "byte_length": 9006
+      },
+      "archive_member": "source/.atlas/cas/3d/3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e.bin",
+        "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7",
+        "byte_length": 2487
+      }
+    },
+    {
+      "kernel_id_observed": "3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6",
+      "roles": [
+        "reference:4"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/3e/3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6",
+        "sha256": "453b979de28b89fdb6b2930aa073f62bf35565fe094a7e9075ef6ba258726e72",
+        "byte_length": 15020
+      },
+      "archive_member": "source/.atlas/cas/3e/3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6.bin",
+        "sha256": "20b148e9540e6de0238c6699b02f12ed2cad31bb0e14941ca462bffb2d9a0bbd",
+        "byte_length": 4135
+      }
+    },
+    {
+      "kernel_id_observed": "3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9",
+      "roles": [
+        "reference:12"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/3f/3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9",
+        "sha256": "10ff8df781ccda5b9ae5252efd784446c9072ad39c0475cc2779f8380a9c446d",
+        "byte_length": 9843
+      },
+      "archive_member": "source/.atlas/cas/3f/3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9.bin",
+        "sha256": "1f60db67ea177bde0fae1f4f4ce2c30d356e527e8ca4e478218fc0c068796706",
+        "byte_length": 2807
+      }
+    },
+    {
+      "kernel_id_observed": "4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25",
+      "roles": [
+        "reference:26"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/40/4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25",
+        "sha256": "d273b4f8a4ec0112abd4baad7cf01dfa39d8741a469ad94e30d94971902789fe",
+        "byte_length": 51649
+      },
+      "archive_member": "source/.atlas/cas/40/4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25.bin",
+        "sha256": "499d298313885c3be165c1b9ef4f02f9b3fbdf21091c56d10452923f1217bb2c",
+        "byte_length": 15003
+      }
+    },
+    {
+      "kernel_id_observed": "43a67b8903ca1b050091ba95609299ab4e9cc59c3d96105a2dee655049cb8d6b",
+      "roles": [
+        "transport"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/43/43a67b8903ca1b050091ba95609299ab4e9cc59c3d96105a2dee655049cb8d6b",
+        "sha256": "ffaf9d73bb40aac0573d973d8e0d0e6957e97a8f7805a6d11cc0894e09e6d2ae",
+        "byte_length": 3978319
+      },
+      "archive_member": "source/.atlas/cas/43/43a67b8903ca1b050091ba95609299ab4e9cc59c3d96105a2dee655049cb8d6b",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/43a67b8903ca1b050091ba95609299ab4e9cc59c3d96105a2dee655049cb8d6b.bin",
+        "sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+        "byte_length": 1164616
+      }
+    },
+    {
+      "kernel_id_observed": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "roles": [
+        "s3-l2-maestro:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/44/44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+        "sha256": "401f693840fed219cfd5064a3095a3d3066bbed7c602617445a6d72f83b4fc0f",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/44/44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3"
+    },
+    {
+      "kernel_id_observed": "48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0",
+      "roles": [
+        "s3-l4-maintenance:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/48/48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0",
+        "sha256": "13831e3eef5c79efbaaa40fccb069613953dec23acac5c5ab1ae122880fdeae5",
+        "byte_length": 35352
+      },
+      "archive_member": "source/.atlas/cas/48/48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0.bin",
+        "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+        "byte_length": 9724
+      }
+    },
+    {
+      "kernel_id_observed": "48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816",
+      "roles": [
+        "reference:29"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/48/48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816",
+        "sha256": "0c28906bf5f9006eb42f1e5dc0dc774205f35754a6b86e404697cfa0ed8fa522",
+        "byte_length": 19774
+      },
+      "archive_member": "source/.atlas/cas/48/48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816.bin",
+        "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426",
+        "byte_length": 5471
+      }
+    },
+    {
+      "kernel_id_observed": "54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5",
+      "roles": [
+        "reference:33"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/54/54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5",
+        "sha256": "11443baf6990cd5b3681d0cc9eecae34eb352c398b1ac841553e8a9d7c374773",
+        "byte_length": 3775
+      },
+      "archive_member": "source/.atlas/cas/54/54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5.bin",
+        "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8",
+        "byte_length": 1025
+      }
+    },
+    {
+      "kernel_id_observed": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "roles": [
+        "s3-l2-integrations:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/5a/5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+        "sha256": "2670293a1959f8ad3439c6a3a0151da7126a81577a7b89185e21c8eabc96c520",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/5a/5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2"
+    },
+    {
+      "kernel_id_observed": "5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483",
+      "roles": [
+        "reference:31"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/5c/5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483",
+        "sha256": "37555bcb9c9a2c5540425e0b4d5ccdb7af67e9a5eb6349018874e607923d0966",
+        "byte_length": 95091
+      },
+      "archive_member": "source/.atlas/cas/5c/5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483.bin",
+        "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393",
+        "byte_length": 27266
+      }
+    },
+    {
+      "kernel_id_observed": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "roles": [
+        "s3-l2-relay:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/60/60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+        "sha256": "f9e8cebad1b0191c7102dcd5384fe9549c1cb3a814f4213b74e85ff484e61d01",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/60/60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8"
+    },
+    {
+      "kernel_id_observed": "623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb",
+      "roles": [
+        "s3-l4-ownership:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/62/623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb",
+        "sha256": "131b4c31a60127d46ffcbb6a41a2a5fdb0a13427efd0a0199c14d2d0eeffa2c0",
+        "byte_length": 25279
+      },
+      "archive_member": "source/.atlas/cas/62/623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb.bin",
+        "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+        "byte_length": 6934
+      }
+    },
+    {
+      "kernel_id_observed": "6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae",
+      "roles": [
+        "s3-l1-relay:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/6f/6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae",
+        "sha256": "d5a5587ad887292ebe9d70067e96fab53d611440f8380f370dc8d35706f2e4a6",
+        "byte_length": 87010
+      },
+      "archive_member": "source/.atlas/cas/6f/6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae.bin",
+        "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+        "byte_length": 23932
+      }
+    },
+    {
+      "kernel_id_observed": "70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1",
+      "roles": [
+        "reference:11"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/70/70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1",
+        "sha256": "723e1d8ab6d97682e681b48d5568b3195bcad18c7efd05cd6e6486256ac0ec30",
+        "byte_length": 32473
+      },
+      "archive_member": "source/.atlas/cas/70/70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1.bin",
+        "sha256": "f5d09f3d3023a7003a34b5abf9f1b6b6eafad8a4dd843b74751325a5e08f3955",
+        "byte_length": 9022
+      }
+    },
+    {
+      "kernel_id_observed": "71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e",
+      "roles": [
+        "reference:9"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/71/71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e",
+        "sha256": "64472df701fa0b24cb29939d0862e96e05fe8be1684a1e82a273e3363f388270",
+        "byte_length": 8588
+      },
+      "archive_member": "source/.atlas/cas/71/71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e.bin",
+        "sha256": "5e6ea8916baeeae4aad90a058937f337605955ec44a989ef9a0622ab3c1efc77",
+        "byte_length": 2450
+      }
+    },
+    {
+      "kernel_id_observed": "7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b",
+      "roles": [
+        "reference:14"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/73/7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b",
+        "sha256": "91b9efd070e1ef239dfd002e8dba6ff2ecb140a4bc408b71b2d4af9a0b99b556",
+        "byte_length": 38220
+      },
+      "archive_member": "source/.atlas/cas/73/7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b.bin",
+        "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b",
+        "byte_length": 10617
+      }
+    },
+    {
+      "kernel_id_observed": "739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5",
+      "roles": [
+        "reference:7"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/73/739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5",
+        "sha256": "9dc943b4aacafbb7bd119fbbceac317e9726aa9e09e2ebaa37f6182a9a9b8b42",
+        "byte_length": 32552
+      },
+      "archive_member": "source/.atlas/cas/73/739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5.bin",
+        "sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217",
+        "byte_length": 9089
+      }
+    },
+    {
+      "kernel_id_observed": "7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7",
+      "roles": [
+        "reference:8"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/7c/7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7",
+        "sha256": "14a71ae87d9e32a7581bfb71828b846d1545c4bc2b297219860e0faf1f3062e4",
+        "byte_length": 9320
+      },
+      "archive_member": "source/.atlas/cas/7c/7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7.bin",
+        "sha256": "e5a2d69f618dbc35adc3a635a57c480be497a738b0ab7306249d2364f0de38bc",
+        "byte_length": 2652
+      }
+    },
+    {
+      "kernel_id_observed": "7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e",
+      "roles": [
+        "reference:28"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/7e/7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e",
+        "sha256": "583cd3f8593515ba5e54d1f7cc3c44344b6066baee806d9dc9825728ca0c3d17",
+        "byte_length": 16845
+      },
+      "archive_member": "source/.atlas/cas/7e/7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e.bin",
+        "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1",
+        "byte_length": 4769
+      }
+    },
+    {
+      "kernel_id_observed": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+      "roles": [
+        "s3-l1-integrations:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/7f/7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+        "sha256": "d727454db6342acb2cfdcf4221d392f32176c457cc53f4275d028267028bc084",
+        "byte_length": 5338
+      },
+      "archive_member": "source/.atlas/cas/7f/7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+    },
+    {
+      "kernel_id_observed": "80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7",
+      "roles": [
+        "s3-l4-operational:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/80/80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7",
+        "sha256": "951ee649adda9e97cfe7d56c8c969f90753d013fec67339ad7ce8fd603a13c3c",
+        "byte_length": 35437
+      },
+      "archive_member": "source/.atlas/cas/80/80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7.bin",
+        "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+        "byte_length": 9757
+      }
+    },
+    {
+      "kernel_id_observed": "8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872",
+      "roles": [
+        "reference:20"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/80/8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872",
+        "sha256": "79d472862d34a288fb9596324d78d3fd71944b429cb99614cef5aa1a657d285a",
+        "byte_length": 10729
+      },
+      "archive_member": "source/.atlas/cas/80/8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872.bin",
+        "sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225",
+        "byte_length": 2975
+      }
+    },
+    {
+      "kernel_id_observed": "880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+      "roles": [
+        "s3-l3-flows:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/88/880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+        "sha256": "b4bc8783271904b622ba2ad59d8ad53a11053757206d90e5f22045a338c5c993",
+        "byte_length": 49749
+      },
+      "archive_member": "source/.atlas/cas/88/880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500.bin",
+        "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+        "byte_length": 13637
+      }
+    },
+    {
+      "kernel_id_observed": "8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+      "roles": [
+        "s3-l4-operational:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/8b/8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+        "sha256": "43e43a73489e176f541e2761cab88036ab8cfd8f675b28c75c84c4deb7875d45",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/8b/8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f"
+    },
+    {
+      "kernel_id_observed": "9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e",
+      "roles": [
+        "reference:3"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/99/9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e",
+        "sha256": "18fcb7e6b62cc884a6c0799397d65691c2f8578ba13f12a28a374ec1444b1762",
+        "byte_length": 22684
+      },
+      "archive_member": "source/.atlas/cas/99/9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e.bin",
+        "sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35",
+        "byte_length": 6363
+      }
+    },
+    {
+      "kernel_id_observed": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+      "roles": [
+        "contract"
+      ],
+      "kind": "ownership-contract",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/9a/9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+        "sha256": "7c45252674a5d6319269ac41bce2ed65646c66ad71fb7a8102a7ceb8444e8198",
+        "byte_length": 521
+      },
+      "archive_member": "source/.atlas/cas/9a/9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0"
+    },
+    {
+      "kernel_id_observed": "9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+      "roles": [
+        "s3-l2-maestro:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/9b/9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+        "sha256": "759413f231e8846b16e63e0ea5c0da7077a3c806749967abc4a59bcc17a65969",
+        "byte_length": 25574
+      },
+      "archive_member": "source/.atlas/cas/9b/9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446.bin",
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+        "byte_length": 6979
+      }
+    },
+    {
+      "kernel_id_observed": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+      "roles": [
+        "s3-l1-maestro:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/9c/9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+        "sha256": "1aa39aa033693b7027c9d34c24f3a9130fa6c0d0bb05415fc54fd7e67004e002",
+        "byte_length": 3469
+      },
+      "archive_member": "source/.atlas/cas/9c/9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+    },
+    {
+      "kernel_id_observed": "9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5",
+      "roles": [
+        "reference:2"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/9f/9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5",
+        "sha256": "d97893f1147bba90a768a5696fd424e823b4f042ad3ca2b0ec8e5d83ec7fe805",
+        "byte_length": 9484
+      },
+      "archive_member": "source/.atlas/cas/9f/9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5.bin",
+        "sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40",
+        "byte_length": 2610
+      }
+    },
+    {
+      "kernel_id_observed": "a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+      "roles": [
+        "s3-l2-integrations:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/a6/a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+        "sha256": "d240e6c7c1ae018a8b094a1e4013f63c754349519fef7ce6d4b51341a3664470",
+        "byte_length": 25494
+      },
+      "archive_member": "source/.atlas/cas/a6/a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d.bin",
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+        "byte_length": 6968
+      }
+    },
+    {
+      "kernel_id_observed": "a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e",
+      "roles": [
+        "reference:22"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/a8/a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e",
+        "sha256": "fd814c0af05bddb5bdf46b88fa134b27274b5a0d6528f677e1c2963f6140be34",
+        "byte_length": 31588
+      },
+      "archive_member": "source/.atlas/cas/a8/a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e.bin",
+        "sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035",
+        "byte_length": 8838
+      }
+    },
+    {
+      "kernel_id_observed": "abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b",
+      "roles": [
+        "reference:1"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/ab/abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b",
+        "sha256": "8ee863da42d70506dd5f9216bd5e68d73eca3acbc289bbf8b58faac41bbb3c1b",
+        "byte_length": 30765
+      },
+      "archive_member": "source/.atlas/cas/ab/abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b.bin",
+        "sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367",
+        "byte_length": 8695
+      }
+    },
+    {
+      "kernel_id_observed": "b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717",
+      "roles": [
+        "reference:5"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/b2/b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717",
+        "sha256": "469e9eb6e82969773b809f62b19b468628041ae3b4959c4e4e7c1bf5de5c9660",
+        "byte_length": 14167
+      },
+      "archive_member": "source/.atlas/cas/b2/b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717.bin",
+        "sha256": "a85a4c67e691c2da7d8e7f71d4bbd3f0e22f006f8a1c11e8d750f46d3687735c",
+        "byte_length": 3908
+      }
+    },
+    {
+      "kernel_id_observed": "b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9",
+      "roles": [
+        "reference:0"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/b5/b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9",
+        "sha256": "d6e2f95ad1997b611cbcff703ef294b385b428528176f9af6a524e7236492735",
+        "byte_length": 29789
+      },
+      "archive_member": "source/.atlas/cas/b5/b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9.bin",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+        "byte_length": 8143
+      }
+    },
+    {
+      "kernel_id_observed": "be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778",
+      "roles": [
+        "s3-l1-integrations:body"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/be/be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778",
+        "sha256": "e2d024fdf6e0eedecbd532f75dadfbe01661ebd85171c752b23c3f076c754365",
+        "byte_length": 87312
+      },
+      "archive_member": "source/.atlas/cas/be/be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778.bin",
+        "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+        "byte_length": 23985
+      }
+    },
+    {
+      "kernel_id_observed": "beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468",
+      "roles": [
+        "reference:30"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/be/beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468",
+        "sha256": "7ee9b08c35eec805086d144c2d9aa030215b871bffde105f3e6ed0d2b8848c86",
+        "byte_length": 13570
+      },
+      "archive_member": "source/.atlas/cas/be/beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468.bin",
+        "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3",
+        "byte_length": 3827
+      }
+    },
+    {
+      "kernel_id_observed": "bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e",
+      "roles": [
+        "reference:18"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/bf/bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e",
+        "sha256": "dea0baae959ffa46e0194bccf7a49d17d1c4fcfbbc4e4a18b3133ae02b823caf",
+        "byte_length": 28210
+      },
+      "archive_member": "source/.atlas/cas/bf/bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e.bin",
+        "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741",
+        "byte_length": 8015
+      }
+    },
+    {
+      "kernel_id_observed": "c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5",
+      "roles": [
+        "reference:27"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/c5/c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5",
+        "sha256": "6641527b444aaa2f931e7dcec06856092d94b57dda8949439e77efb666e43e7a",
+        "byte_length": 17125
+      },
+      "archive_member": "source/.atlas/cas/c5/c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5.bin",
+        "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08",
+        "byte_length": 4833
+      }
+    },
+    {
+      "kernel_id_observed": "d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c",
+      "roles": [
+        "reference:15"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/d5/d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c",
+        "sha256": "0cc99aa4aa12dda9c390ecd6cd7f293feede630567b24a2f7b120badfe46ca74",
+        "byte_length": 11881
+      },
+      "archive_member": "source/.atlas/cas/d5/d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c.bin",
+        "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+        "byte_length": 3252
+      }
+    },
+    {
+      "kernel_id_observed": "d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c",
+      "roles": [
+        "reference:6"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/d8/d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c",
+        "sha256": "5af1ff13b7572c383909fa3573c91fe9dd087f1e77bd3b2cab4cb101d979705e",
+        "byte_length": 11336
+      },
+      "archive_member": "source/.atlas/cas/d8/d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c.bin",
+        "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c",
+        "byte_length": 3125
+      }
+    },
+    {
+      "kernel_id_observed": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "roles": [
+        "s3-l3-flows:result"
+      ],
+      "kind": "ownership-result",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/db/dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+        "sha256": "52e1e55588bd3017b5f71a1faefe735f630827816125ee71ad7097a454310a4d",
+        "byte_length": 1538
+      },
+      "archive_member": "source/.atlas/cas/db/dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+    },
+    {
+      "kernel_id_observed": "e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e",
+      "roles": [
+        "reference:16"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/e8/e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e",
+        "sha256": "1d0f3241865c50a2904d35e807d388f94cdc225cf8397f17390c4cd76f63e1c4",
+        "byte_length": 30470
+      },
+      "archive_member": "source/.atlas/cas/e8/e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e.bin",
+        "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+        "byte_length": 8809
+      }
+    },
+    {
+      "kernel_id_observed": "e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a",
+      "roles": [
+        "reference:34"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/e8/e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a",
+        "sha256": "3b32f83c234d635fe353401a2b1e17c79cdea579a2d4be87770c74626a6ee1ba",
+        "byte_length": 24473
+      },
+      "archive_member": "source/.atlas/cas/e8/e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a.bin",
+        "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a",
+        "byte_length": 7187
+      }
+    },
+    {
+      "kernel_id_observed": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+      "roles": [
+        "candidate"
+      ],
+      "kind": "genesis-native-candidate",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/ef/efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+        "sha256": "988721b0ea8f0279da6eed6ab0dc3c664a98ac3817bb9cb2f1e206b37571384b",
+        "byte_length": 2083743
+      },
+      "archive_member": "source/.atlas/cas/ef/efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f"
+    },
+    {
+      "kernel_id_observed": "f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027",
+      "roles": [
+        "reference:25"
+      ],
+      "kind": "ownership-body",
+      "raw_cas_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/f4/f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027",
+        "sha256": "0dc216d860cf081eae2601ce84544cc3afafa28282c4d376bc0b84361849f6ee",
+        "byte_length": 5155
+      },
+      "archive_member": "source/.atlas/cas/f4/f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027",
+      "decoded_file": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027.bin",
+        "sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8",
+        "byte_length": 1391
+      }
+    }
+  ]
+}

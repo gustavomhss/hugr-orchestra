@@ -1,0 +1,34 @@
+{
+  "schema": "s3-v4-binding-disposition/v1",
+  "recorded_at": "2026-11-28T08:17:23.074224+00:00",
+  "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "contract": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "prepare": "ACTUAL_SUCCESS_RUN_46121909582",
+  "binding": "NOT_AUTHORIZED_REQUIRED_ENTRY_BUILD_FIX",
+  "publication_attempted": false,
+  "ownership_manifest": null,
+  "decisions": [
+    {
+      "file": "J1-binding-v4-request-evidence.json",
+      "reviewer": "/root/s3_j1",
+      "verdict": "REQUEST_EVIDENCE",
+      "sha256": "e8e788cc59cfee115ce25b6826bb7c1a5ae5232041c53d255c4a6b96b24d7737",
+      "byte_length": 7783
+    },
+    {
+      "file": "J1-binding-v4-final.json",
+      "reviewer": "/root/s3_j1",
+      "verdict": "PASS",
+      "sha256": "ff43531f6065bb9be13ddb3a47f6a7a892486544360b9b934233f90176d694ea",
+      "byte_length": 7683
+    },
+    {
+      "file": "J2-binding-v4-request-evidence.json",
+      "reviewer": "/root/s3_j2",
+      "verdict": "REQUEST_EVIDENCE",
+      "sha256": "fef913c627efff4e16f4fb24b8f117b1bbddb8af968ff95829c575032c723ac4",
+      "byte_length": 7858
+    }
+  ],
+  "root_followup": "Root confirmed zero body inputs/direct build edges for copied Relay and integrations H2. V5 will add both direct build dependencies and clarify the one entry paragraph, followed by same-pair semantic delta review, actual new prepare and new exact binding. No prior binding vote will be transferred."
+}

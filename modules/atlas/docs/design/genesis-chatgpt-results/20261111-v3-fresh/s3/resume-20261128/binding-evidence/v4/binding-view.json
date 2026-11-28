@@ -1,0 +1,2297 @@
+{
+  "schema": "s3-limited-binding-evidence-view/v1",
+  "author": "/root/s3_maintenance_cases",
+  "role": "FINAL_PACKAGE_V4_PREPARE_VIEW_NOT_A_BINDING",
+  "binding_decision": null,
+  "semantic_verdict": null,
+  "run_id": "46121909582",
+  "candidate_id_observed": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+  "git_commit_meaning": "Publication of files in Git only; not Atlas publication.",
+  "ownership_manifest": null,
+  "publication_attempted": false,
+  "prepared_file": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+    "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+    "byte_length": 2616437
+  },
+  "candidate_cas": {
+    "kernel_id_observed": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+    "roles": [
+      "candidate"
+    ],
+    "kind": "genesis-native-candidate",
+    "raw_cas_file": {
+      "path": "/tmp/s3-binding-evidence-46121909582/cas/ef/efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+      "sha256": "988721b0ea8f0279da6eed6ab0dc3c664a98ac3817bb9cb2f1e206b37571384b",
+      "byte_length": 2083743
+    },
+    "archive_member": "source/.atlas/cas/ef/efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f"
+  },
+  "transport_exact": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+    "sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+    "body": "43a67b8903ca1b050091ba95609299ab4e9cc59c3d96105a2dee655049cb8d6b"
+  },
+  "selected_package": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/assembly/native-package.json",
+    "sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+    "byte_length": 1164616,
+    "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+    "payload_root": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload"
+  },
+  "package_readback": {
+    "receipt": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+      "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+      "byte_length": 53595
+    },
+    "row_pointer": "/readback/12",
+    "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+    "git_blob_sha": "8eea7cc11e93ea37d5a427df1ca5630c1ee47b26",
+    "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+  },
+  "scope": "orchestra.s3.agents",
+  "session": "S3",
+  "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "repo_root_recorded": "/tmp/genesis-s3-15cc9853-0e71-4950-8813-0bfb66f82c8a/source",
+  "reference_commit_verification": "external-capture-evidence-required",
+  "implementation_exact": {
+    "adapter": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+    "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+    "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+    "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+  },
+  "implementation_source_files": {
+    "adapter": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+      "byte_length": 12432
+    },
+    "format": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "byte_length": 13356
+    },
+    "io": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "byte_length": 4162
+    },
+    "binding": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+      "byte_length": 5198
+    }
+  },
+  "contract_id_observed": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "contract_exact": {
+    "kind": "ownership-contract",
+    "version": 1,
+    "criteria": [
+      "purpose and installed behavior",
+      "explicit contracts and authority",
+      "decisions and current/historical distinction",
+      "dependency and navigation distinction",
+      "concrete safe maintenance and failure handling",
+      "source provenance and honest execution limits",
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-2",
+      "CC-3",
+      "CC-7",
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "GO-A6",
+      "GO-A7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I3",
+      "GO-I4",
+      "GO-I5",
+      "GO-I6",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ]
+  },
+  "criteria_exact": [
+    "purpose and installed behavior",
+    "explicit contracts and authority",
+    "decisions and current/historical distinction",
+    "dependency and navigation distinction",
+    "concrete safe maintenance and failure handling",
+    "source provenance and honest execution limits",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "runtime-import-binding"
+  ],
+  "roots_exact": {
+    "evidence": "s3-l1-maestro",
+    "component": "s3-l2-maestro",
+    "flow": "s3-l3-flows",
+    "entry": "s3-l4-entry",
+    "ownership": "s3-l4-ownership",
+    "maintenance": "s3-l4-maintenance",
+    "operational": "s3-l4-operational"
+  },
+  "required_artifact_keys_exact": [
+    "s3-l1-maestro",
+    "s3-l1-relay",
+    "s3-l1-integrations",
+    "s3-l2-maestro",
+    "s3-l2-relay",
+    "s3-l2-integrations",
+    "s3-l3-flows",
+    "s3-l4-entry",
+    "s3-l4-ownership",
+    "s3-l4-maintenance",
+    "s3-l4-operational"
+  ],
+  "entries": [
+    {
+      "key": "s3-l1-maestro",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l1-maestro",
+        "scope": "orchestra.s3.agents",
+        "title": "Maestro — base verificável L1",
+        "layer": 1,
+        "need": "evidence",
+        "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Inspeção estática atribuída ao produtor no baseline pinado, limitada às leituras declaradas em sources.json e coverage.json. Guias/specs/charters são contratos ou intenção atribuída; histórico mantém sua época. Inferências e gaps permanecem rotulados no corpo. Receipts de integridade e este transporte não provam runtime, implantação, revisão semântica ou aceite. O empacotador não acrescentou conhecimento de produto. Aceite semântico estático pelos dois juízes persistentes, vinculado aos hashes em semantic_review_refs. Não é aceite de binding/runtime."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Inspeção estática do produtor; sem execução de build, Session, Actions, Atlas ou consumidor instalado.",
+          "O recibo preserva HOLD work-result-unavailable na decisão V2, divergências de Memory/standalone/compatibilidade e limites de plataforma, orçamento e dispatch; não foram corrigidos neste transporte.",
+          "Classificação dos 424 membros não declara leitura individual de todos os conteúdos; a profundidade original está preservada.",
+          "Importação, versão de input por id(...) do kernel, publicação e consumo Atlas não observados; hashes de transporte não substituem versões runtime."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/sources.json\",\"sha256\":\"62fde90293198a3db6c93d8b46a069c21e96c229ca7735cc6eaac6edc6419e50\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/coverage.json\",\"sha256\":\"6955c66f704faaa7547ac1f70b69008149db2cf66d3f1bd2373be6fd86d6f4ff\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/findings.md\",\"sha256\":\"7b6a67cfd137b475baee5a632f515ef85c1095da452435eae0594bb65c53b25c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/review-evidence.md\",\"sha256\":\"4e66b263d8844d9fd06007bc7148bf06c3f2ea314812c2517f73cc916f0a7965\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/verification.json\",\"sha256\":\"5166161922639d01e9a5836ad4b5a5a3d743be3288f02c56f590362bc8a962f6\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/request-delta-001.md\",\"sha256\":\"de7c64e1d9f60d2256ea1686ef350380ad9cfed0dfdadc317f97fa2787646828\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-A.json\",\"sha256\":\"b865312ec1b1fc621379f5c8b6d70a79dcf81ef013d9de4ec8bfa590e5cfcacd\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/required-artifacts.json\",\"sha256\":\"bde4d1e5fb8849dd3f6efedd1379f6aa71c229fa23841e78c91a9785b8dd3912\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json\",\"sha256\":\"0fed339fa5e6fae09d554570081b7126adb7f464d2a6acc3fe022d75ba27b033\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/review-packets/L1-A-supplement-sources.json\",\"sha256\":\"c2bb40ceb5df0a5251cc917f13745fed5b33ac27cf5a3f97a44678bdd7b62619\"}"
+        ]
+      },
+      "inputs_id_observed": "bb033a95793ef5f062ca78b3feb9d0abd2024184b850dcc8cb5cc5cf008a778e",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/0/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 464
+      },
+      "dependencies_exact": [],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5",
+        "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+        "byte_length": 19752,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-maestro.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-maestro.md",
+          "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+          "byte_length": 19752
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/1",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "2771a4efb6ef054d647ceea8a356dc1c3a8afd89",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json",
+            "sha256": "a63ecb9f33997adf75ea63a241e98104ecd399683e2f1471621ea742a34361f4",
+            "byte_length": 32909,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json"
+          },
+          "pointer": "/inventory/1/body",
+          "body": {
+            "key": "s3-l1-maestro",
+            "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+            "bytes": 19752
+          },
+          "acceptance_source_id": "original-L1:s3-l1-maestro"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/13303c1d1cf931c19e6638a4d953c090c6f16166746be9c58a18c85bad81c2a5.bin",
+          "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+          "byte_length": 19752
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/9c/9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+        "sha256": "1aa39aa033693b7027c9d34c24f3a9130fa6c0d0bb05415fc54fd7e67004e002",
+        "byte_length": 3469
+      }
+    },
+    {
+      "key": "s3-l1-relay",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l1-relay",
+        "scope": "orchestra.s3.agents",
+        "title": "Relay — L1: superfícies, contratos e limites verificáveis",
+        "layer": 1,
+        "need": "evidence",
+        "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Inspeção estática atribuída ao produtor no baseline pinado, limitada às leituras declaradas em sources.json e coverage.json. Guias/specs/charters são contratos ou intenção atribuída; histórico mantém sua época. Inferências e gaps permanecem rotulados no corpo. Receipts de integridade e este transporte não provam runtime, implantação, revisão semântica ou aceite. O empacotador não acrescentou conhecimento de produto. Aceite semântico estático pelos dois juízes persistentes, vinculado aos hashes em semantic_review_refs. Não é aceite de binding/runtime."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Inspeção estática e metadados de corpus; nenhuma execução atual de Relay, CI, benchmark, judge/modelo ou integração instalada.",
+          "O recibo preserva divergências entre drivers, contrato atual versus comentários históricos, limites de Python/LangGraph, profiles bloqueados e insuficiência de exit codes isolados.",
+          "Goldens, fixtures e estudos mantêm classe, família e versão; 3.700 membros não equivalem a leitura individual nem juízo independente.",
+          "Importação, versão de input por id(...) do kernel, publicação e consumo Atlas não observados; hashes de transporte não substituem versões runtime."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/sources.json\",\"sha256\":\"28a7a3ff3ec4dd337098c28d3fa3e8715d296142974302559180281fbf40e513\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/coverage.json\",\"sha256\":\"44615f804cd806ade4ac0770237156992badf63459d787a8c08dfb6f55fdfbb9\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/findings.md\",\"sha256\":\"7c6af68f2ea2cbf1b98048fb34792f2bf8216d23e0e513c9c8bd728a17920550\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/review-evidence.md\",\"sha256\":\"3a34a3e008b4d7ae42b17aff556a635d88a06e0b28b755e8f4a037795339e8cb\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/verification.json\",\"sha256\":\"0cba7f4f71fc68eb37159babdb8c8684f23657c9db4b2a7d1627d6e22291b59e\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/request-delta-002.md\",\"sha256\":\"467258d894b8a86d84d4cd53d127ae192a8e566531d72a24badcfda8629df9a9\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/body-v1.md\",\"sha256\":\"660d39c4a3f140f86af31d84369e44835abab6e9b26136439d07eb702f63a528\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/response-v1.md\",\"sha256\":\"664bc26bd79ca1657f08e87b428c57d7cd59738ff30766a00b00d6e28b9137ed\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/verification-v1.json\",\"sha256\":\"220caaf004559794fda05dc88b8349405d4e6ab975236042a858a651f564c30b\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/body-delta-002.diff\",\"sha256\":\"1af9fb7b394b26265c2c66c4114a9d6f8797fef5ce5c7ca3199e48d8414c75f4\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/finding-delta-002.md\",\"sha256\":\"0c0ffeae934f471bbf05ad942da557e7e27d44c7fdea4758c166a5bc35f69bed\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/delta-validation-002.json\",\"sha256\":\"b3f99b930c85f1765e1de4e887ff0ad5b6178256dde10cccb178f318d4a19907\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/artifact-hashes-v2.json\",\"sha256\":\"6f8402e389768f1023042f4f4b1335a39fa5a501b03ba59f29f21f40d4a7e773\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/v1/response.md\",\"sha256\":\"664bc26bd79ca1657f08e87b428c57d7cd59738ff30766a00b00d6e28b9137ed\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/v1/verification.json\",\"sha256\":\"220caaf004559794fda05dc88b8349405d4e6ab975236042a858a651f564c30b\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-B.json\",\"sha256\":\"c9712b4bcc8be04ef433e3d666b7957c9968c84ee29d340f3469ff94039a71a2\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/required-artifacts.json\",\"sha256\":\"bde4d1e5fb8849dd3f6efedd1379f6aa71c229fa23841e78c91a9785b8dd3912\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json\",\"sha256\":\"0fed339fa5e6fae09d554570081b7126adb7f464d2a6acc3fe022d75ba27b033\"}"
+        ]
+      },
+      "inputs_id_observed": "6c38131a0d472293fcd7e3c9904f9699f793985ed67b442cf60a8637c63e945b",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/1/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 3722
+      },
+      "dependencies_exact": [],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae",
+        "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+        "byte_length": 23932,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-relay.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-relay.md",
+          "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+          "byte_length": 23932
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/2",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "3b9788cb4cf709f80f663364cf4ca5874b9a8c8d",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json",
+            "sha256": "a63ecb9f33997adf75ea63a241e98104ecd399683e2f1471621ea742a34361f4",
+            "byte_length": 32909,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json"
+          },
+          "pointer": "/inventory/2/body",
+          "body": {
+            "key": "s3-l1-relay",
+            "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+            "bytes": 23932
+          },
+          "acceptance_source_id": "original-L1:s3-l1-relay"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/6f7057f7e272d206a5f23ab1f8b701b98f53718af892dd10aae053cd8fe1e9ae.bin",
+          "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+          "byte_length": 23932
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/39/39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+        "sha256": "57994d77ebf7925812b208822ddadd809584d48db824e88797c8b7bb5d67ba92",
+        "byte_length": 5151
+      }
+    },
+    {
+      "key": "s3-l1-integrations",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l1-integrations",
+        "scope": "orchestra.s3.agents",
+        "title": "L1-C — Especialistas e integrações: base verificável",
+        "layer": 1,
+        "need": "evidence",
+        "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Inspeção estática atribuída ao produtor no baseline pinado, limitada às leituras declaradas em sources.json e coverage.json. Guias/specs/charters são contratos ou intenção atribuída; histórico mantém sua época. Inferências e gaps permanecem rotulados no corpo. Receipts de integridade e este transporte não provam runtime, implantação, revisão semântica ou aceite. O empacotador não acrescentou conhecimento de produto. Aceite semântico estático pelos dois juízes persistentes, vinculado aos hashes em semantic_review_refs. Não é aceite de binding/runtime."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Inspeção estática; sem binário/login/chamada real Claude, Dock/desktop/AT-SPI, Janitor, pesquisa ou Atlas observados nesta produção.",
+          "Qualificação de capability assets permanece pendente; receitas não provam engines prontos; não foi demonstrada composição ativa scanner Janitor→sink→UI.",
+          "Conflitos documentais e evidências históricas mantêm origem e limites; 429 membros não equivalem a leitura individual de todas as folhas.",
+          "Importação, versão de input por id(...) do kernel, publicação e consumo Atlas não observados; hashes de transporte não substituem versões runtime."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/sources.json\",\"sha256\":\"3e659688f4bcb86bc957c76f380d6eb3b82f589b001f2ac21d4e1fbc01be762c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/coverage.json\",\"sha256\":\"b206d7a9d970c135c3aca9a0b3531fb22c7ffc14d5a7f4d9fb06e5335ac5dc39\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/findings.md\",\"sha256\":\"c695a7f4b569c7bf5b99d775277b8813d6be8ba3649e95153e30cff2e7cfe009\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/review-evidence.md\",\"sha256\":\"3a9fa1ef571e1b80c247e3c42451b3d362949b21f9642a08b10c9db9c5ff944c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/verification.json\",\"sha256\":\"b9e5432112281877231684da77b34c7d8577556210c6b7c12266cc308bf2e83b\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/root-finding-delta-001.md\",\"sha256\":\"c8b99e0313b8c83100c65b1ae3ef5ab68ed26129280c293c45a4789709f0dc0c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/root-finding-delta-002.md\",\"sha256\":\"436c179a0541f9dce24ad879b1e01ad8a911e4bfb3eaf135966163f5a48e62c8\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/body-v1.md\",\"sha256\":\"2d2f5a1f64167d791f793e92b855c5c71facdd09e227b30a122eb22185c81ba4\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/body-v2.md\",\"sha256\":\"c348fbcdb07c7be3f3eebb4d8cb85d9ecb94b094f9e2e086f118298b8e956541\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/response-v2.md\",\"sha256\":\"3f00566952a78e6494f9fbe278751d366144afffeaf12033cec619c8402de9a7\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/response.md\",\"sha256\":\"829beb55bcc3f924dc508736ef858371157f2c466839f5cfb723c3327d45b463\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/verification.json\",\"sha256\":\"55fd9e953408bf6c2a692ff767320f005e0501b62252dc3e46bce66ae3dfa55a\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v1/findings.md\",\"sha256\":\"f65548f0fa53777fef7fd55522a37894c60e56ef1c2d58c729a31fde222fa052\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v2/response.md\",\"sha256\":\"3f00566952a78e6494f9fbe278751d366144afffeaf12033cec619c8402de9a7\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/v2/verification.json\",\"sha256\":\"47df5b1567a0f70fb4a34bbb9ce568e54a341fdca5d687204d724b0046eaa07f\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/population-C.json\",\"sha256\":\"e5e5afb5d9919cea514206ac66c1ebe1253c0c425651492d8bbdeb34a3c41a66\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/required-artifacts.json\",\"sha256\":\"bde4d1e5fb8849dd3f6efedd1379f6aa71c229fa23841e78c91a9785b8dd3912\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/L1-acceptance.json\",\"sha256\":\"0fed339fa5e6fae09d554570081b7126adb7f464d2a6acc3fe022d75ba27b033\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/review-packets/L1-A-supplement-sources.json\",\"sha256\":\"c2bb40ceb5df0a5251cc917f13745fed5b33ac27cf5a3f97a44678bdd7b62619\"}"
+        ]
+      },
+      "inputs_id_observed": "fc2d0c8b2df7071d38a1c8357d993d9ec5066a5585319fa55ecb16c9de460729",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/2/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 486
+      },
+      "dependencies_exact": [],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778",
+        "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+        "byte_length": 23985,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-integrations.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-integrations.md",
+          "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+          "byte_length": 23985
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/0",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "42800afbd5bdd0ca51c4e0eab136e9de31f7673f",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json",
+            "sha256": "a63ecb9f33997adf75ea63a241e98104ecd399683e2f1471621ea742a34361f4",
+            "byte_length": 32909,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json"
+          },
+          "pointer": "/inventory/0/body",
+          "body": {
+            "key": "s3-l1-integrations",
+            "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+            "bytes": 23985
+          },
+          "acceptance_source_id": "original-L1:s3-l1-integrations"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/be899e661c155c461b3849cde44762af1ad08b74d7011a645d321ac1a402c778.bin",
+          "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+          "byte_length": 23985
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/7f/7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+        "sha256": "d727454db6342acb2cfdcf4221d392f32176c457cc53f4275d028267028bc084",
+        "byte_length": 5338
+      }
+    },
+    {
+      "key": "s3-l2-maestro",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l2-maestro",
+        "scope": "orchestra.s3.agents",
+        "title": "Maestro — entendimento local L2: autoridade, aprovação e skills",
+        "layer": 2,
+        "need": "component",
+        "result": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/3/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 165
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446",
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+        "byte_length": 6979,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-maestro.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-maestro.md",
+          "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+          "byte_length": 6979
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/4",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "6d027986cab10b1769415da8d70b3ec0a24dadb8",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json",
+            "sha256": "32febf1e15e4f87543711bc4a8e1821cbaae328456a7460a28d29bc6269706f2",
+            "byte_length": 1880,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json"
+          },
+          "pointer": "/bodies/0",
+          "body": {
+            "key": "s3-l2-maestro",
+            "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+            "bytes": 6979
+          },
+          "acceptance_source_id": "L2-v2"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/9b1b44701b45c6cfad59962733c9f7f1c008e28f97ae0468234003718182b446.bin",
+          "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+          "byte_length": 6979
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/44/44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+        "sha256": "401f693840fed219cfd5064a3095a3d3066bbed7c602617445a6d72f83b4fc0f",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l2-relay",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l2-relay",
+        "scope": "orchestra.s3.agents",
+        "title": "Relay — entendimento local L2: execução, recuperação e evidência",
+        "layer": 2,
+        "need": "component",
+        "result": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "6c535f0963c6b598cb537ebba9639786d459110a4ff484450b9b0cbb332a9090",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/4/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 114
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        }
+      ],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326",
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "byte_length": 7235,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-relay.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-relay.md",
+          "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+          "byte_length": 7235
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/5",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "a0ac19550eef9996ffd3d06561afda2c60272a1f",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json",
+            "sha256": "32febf1e15e4f87543711bc4a8e1821cbaae328456a7460a28d29bc6269706f2",
+            "byte_length": 1880,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json"
+          },
+          "pointer": "/bodies/1",
+          "body": {
+            "key": "s3-l2-relay",
+            "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+            "bytes": 7235
+          },
+          "acceptance_source_id": "L2-v2"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/1c53776278a97e2afc53df057fa1a9d9e71ab73ed764f42eebdc69f473aec326.bin",
+          "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+          "byte_length": 7235
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/60/60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+        "sha256": "f9e8cebad1b0191c7102dcd5384fe9549c1cb3a814f4213b74e85ff484e61d01",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l2-integrations",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l2-integrations",
+        "scope": "orchestra.s3.agents",
+        "title": "Especialistas e integrações — entendimento local L2",
+        "layer": 2,
+        "need": "component",
+        "result": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/5/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 165
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d",
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+        "byte_length": 6968,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-integrations.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l2-integrations.md",
+          "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+          "byte_length": 6968
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/3",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "e797b8391ef9612a7f63325cc4c8ea647d9643ea",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json",
+            "sha256": "32febf1e15e4f87543711bc4a8e1821cbaae328456a7460a28d29bc6269706f2",
+            "byte_length": 1880,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json"
+          },
+          "pointer": "/bodies/2",
+          "body": {
+            "key": "s3-l2-integrations",
+            "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+            "bytes": 6968
+          },
+          "acceptance_source_id": "L2-v2"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/a6b60ea36aa55c3116281bd4f81451385f5e11aaa44d2af7fc2f0ead10f7846d.bin",
+          "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+          "byte_length": 6968
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/5a/5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+        "sha256": "2670293a1959f8ad3439c6a3a0151da7126a81577a7b89185e21c8eabc96c520",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l3-flows",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l3-flows",
+        "scope": "orchestra.s3.agents",
+        "title": "S3 L3 — fluxos integrados de autoridade, execução e recuperação",
+        "layer": 3,
+        "need": "flow",
+        "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+        "navigation": []
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "61082310f993aab96932fd282a7603de3ab9449da70fba5359968d802f660931",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/6/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 265
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l2-maestro",
+          "result": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3"
+        },
+        {
+          "key": "s3-l2-relay",
+          "result": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8"
+        },
+        {
+          "key": "s3-l2-integrations",
+          "result": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2"
+        }
+      ],
+      "navigation_exact": [],
+      "body": {
+        "cas_id_observed": "880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500",
+        "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+        "byte_length": 13637,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l3-flows.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l3-flows.md",
+          "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+          "byte_length": 13637
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/6",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "0e4b6dc79d81e893f26dd6c42ba49b34de1100fa",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json",
+            "sha256": "55470ea43518c9ede4a9c79ac6704177ba05f452361d197770d9dcdeb8eaec98",
+            "byte_length": 1677,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json"
+          },
+          "pointer": "/bodies/0",
+          "body": {
+            "key": "s3-l3-flows",
+            "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+            "bytes": 13637
+          },
+          "acceptance_source_id": "L3-adoption-v1"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/880238d312f79ba704b00abd125c04fa8eff32814ec1192ef1187077cec6b500.bin",
+          "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+          "byte_length": 13637
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/db/dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+        "sha256": "52e1e55588bd3017b5f71a1faefe735f630827816125ee71ad7097a454310a4d",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l4-entry",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l4-entry",
+        "scope": "orchestra.s3.agents",
+        "title": "S3 L4 — entrada mínima para Maestro, Relay, especialistas e integrações",
+        "layer": 4,
+        "need": "entry",
+        "result": "11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+        "navigation": [
+          "s3-l1-relay",
+          "s3-l1-integrations",
+          "s3-l2-maestro",
+          "s3-l2-relay",
+          "s3-l2-integrations",
+          "s3-l4-ownership",
+          "s3-l4-maintenance",
+          "s3-l4-operational"
+        ]
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "bbaebd5f1d2b709010852687c4cd3821f0258d921979eec9a69df9de5e25046b",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/7/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 265
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        }
+      ],
+      "navigation_exact": [
+        "s3-l1-relay",
+        "s3-l1-integrations",
+        "s3-l2-maestro",
+        "s3-l2-relay",
+        "s3-l2-integrations",
+        "s3-l4-ownership",
+        "s3-l4-maintenance",
+        "s3-l4-operational"
+      ],
+      "body": {
+        "cas_id_observed": "1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439",
+        "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+        "byte_length": 7764,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-entry.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-entry.md",
+          "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+          "byte_length": 7764
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/7",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "92fedc6075648ea674155efc958532cd525b3d2c",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+            "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+            "byte_length": 2394,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+          },
+          "pointer": "/bodies/0",
+          "body": {
+            "key": "s3-l4-entry",
+            "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+            "bytes": 7764
+          },
+          "acceptance_source_id": "L4-adoption-v4"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/1e4f0ecde60b77f03cc8f4890307d5a2f71aedb12037d65f0e96a228e77f9439.bin",
+          "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+          "byte_length": 7764
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/11/11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+        "sha256": "780cd3c8bc936214988ed4ea62946cae7d9036075fa7c664fcdb820baf68761a",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l4-ownership",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l4-ownership",
+        "scope": "orchestra.s3.agents",
+        "title": "S3 L4 — ownership e fronteiras de mudança",
+        "layer": 4,
+        "need": "ownership",
+        "result": "2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+        "navigation": [
+          "s3-l1-relay",
+          "s3-l2-maestro",
+          "s3-l2-relay",
+          "s3-l2-integrations",
+          "s3-l4-entry",
+          "s3-l4-maintenance",
+          "s3-l4-operational"
+        ]
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "524c307597583e2221d660bb9452cc3aa0e8a68ef04410716d4a547a018f67ed",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/8/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 265
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ],
+      "navigation_exact": [
+        "s3-l1-relay",
+        "s3-l2-maestro",
+        "s3-l2-relay",
+        "s3-l2-integrations",
+        "s3-l4-entry",
+        "s3-l4-maintenance",
+        "s3-l4-operational"
+      ],
+      "body": {
+        "cas_id_observed": "623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb",
+        "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+        "byte_length": 6934,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-ownership.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-ownership.md",
+          "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+          "byte_length": 6934
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/10",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "98b635f058224fec5f616d224d2b157ada1c30e7",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+            "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+            "byte_length": 2394,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+          },
+          "pointer": "/bodies/1",
+          "body": {
+            "key": "s3-l4-ownership",
+            "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+            "bytes": 6934
+          },
+          "acceptance_source_id": "L4-adoption-v4"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/623d42c5a660ba140fa3416b2c0d36daa49e8be9227a7b6e60e810ddceaa3dbb.bin",
+          "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+          "byte_length": 6934
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/2d/2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+        "sha256": "336dfc7af6b6a75d01604c8447b12ee5596afda294e1e97c583e7a3c35b09003",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l4-maintenance",
+        "scope": "orchestra.s3.agents",
+        "title": "S3 L4 — receitas de manutenção segura",
+        "layer": 4,
+        "need": "maintenance",
+        "result": "3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+        "navigation": [
+          "s3-l2-maestro",
+          "s3-l2-relay",
+          "s3-l2-integrations",
+          "s3-l4-entry",
+          "s3-l4-ownership",
+          "s3-l4-operational"
+        ]
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "46fddf1e89de844be890b0d390f203d8404a57e3e28b6a3b9b30c62180b711ce",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/9/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 265
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ],
+      "navigation_exact": [
+        "s3-l2-maestro",
+        "s3-l2-relay",
+        "s3-l2-integrations",
+        "s3-l4-entry",
+        "s3-l4-ownership",
+        "s3-l4-operational"
+      ],
+      "body": {
+        "cas_id_observed": "48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0",
+        "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+        "byte_length": 9724,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-maintenance.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-maintenance.md",
+          "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+          "byte_length": 9724
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/8",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "7b63b8cda5594c77d9abc114c1d2ea6b9b3be4d5",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+            "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+            "byte_length": 2394,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+          },
+          "pointer": "/bodies/2",
+          "body": {
+            "key": "s3-l4-maintenance",
+            "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+            "bytes": 9724
+          },
+          "acceptance_source_id": "L4-adoption-v4"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/48901c5165912d743f6832a4728cc977cfbe199caf29b224e3bedc1523a8bcf0.bin",
+          "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+          "byte_length": 9724
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/36/3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+        "sha256": "eb4a892d621c5e7000428509270e057e6681c900206945d3a0f646a5f9bccc6f",
+        "byte_length": 1538
+      }
+    },
+    {
+      "key": "s3-l4-operational",
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s3-l4-operational",
+        "scope": "orchestra.s3.agents",
+        "title": "S3 L4 — diagnóstico e operação sem adivinhação destrutiva",
+        "layer": 4,
+        "need": "operational",
+        "result": "8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+        "navigation": [
+          "s3-l2-maestro",
+          "s3-l2-relay",
+          "s3-l2-integrations",
+          "s3-l4-entry",
+          "s3-l4-ownership",
+          "s3-l4-maintenance"
+        ]
+      },
+      "artifact_storage": "Embedded candidate value without receipt; no published artifact ID asserted.",
+      "result_id_observed": "8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+      "result_exact": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7",
+        "authority": {
+          "scope": "orchestra.s3.agents",
+          "basis": "Alternative body from concurrent recovery e51ef44b, selected by exact bytes. Original raw historical producer request/response were not recovered. New adoption/rematerialization, when supplied, is a distinct execution; it does not recover the original bdac971f package or inherit its upper-layer acceptances. Static source scope remains the pinned baseline. Runtime binding/publication and current installed behavior require separate evidence."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Historical upper-layer prompt/response and original-package identity remain unavailable.",
+          "No runtime binding, publication, index/read, consumer or maintenance result is claimed by this assembly."
+        ],
+        "evidence": [
+          "{\"commit\":\"19b909ef3bf27e0332f24fc30e3a5c471ea37d78\",\"path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/evidence/concurrent-branch-reconciliation.json\",\"sha256\":\"e19e6de45ee7216cc648eccba1b723eb620445b5d9e93cdef7c8b705aff0f676\"}",
+          "{\"historical_body_sha256\":\"4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81\",\"historical_raw_producer_prompt_response\":\"NOT_RECOVERED\",\"new_adoption_receipts\":\"SUPPLIED\",\"original_execution\":\"bdac971f-e4ee-40e5-ad9b-30d659303bab\",\"selected_body_sha256\":\"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1\",\"selected_lineage\":\"concurrent-recovery-e51ef44b\"}"
+        ]
+      },
+      "inputs_id_observed": "328642439e801c3d989d80d7c77ed9e3f4be030bb9a2e34ba7060e711c33e426",
+      "inputs_exact_reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/entries/10/inputs",
+        "omitted_from_limited_view": true,
+        "item_count": 265
+      },
+      "dependencies_exact": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ],
+      "navigation_exact": [
+        "s3-l2-maestro",
+        "s3-l2-relay",
+        "s3-l2-integrations",
+        "s3-l4-entry",
+        "s3-l4-ownership",
+        "s3-l4-maintenance"
+      ],
+      "body": {
+        "cas_id_observed": "80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7",
+        "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+        "byte_length": 9757,
+        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-operational.md",
+        "selected_local_file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l4-operational.md",
+          "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+          "byte_length": 9757
+        },
+        "body_text_omitted": true,
+        "readback": {
+          "receipt": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+            "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+            "byte_length": 53595
+          },
+          "row_pointer": "/readback/9",
+          "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+          "git_blob_sha": "5f2c2065d8cb652bef4b1e51aa9ca2b923198c47",
+          "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+        },
+        "release_or_custody": {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+            "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+            "byte_length": 2394,
+            "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+          },
+          "pointer": "/bodies/3",
+          "body": {
+            "key": "s3-l4-operational",
+            "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+            "bytes": 9757
+          },
+          "acceptance_source_id": "L4-adoption-v4"
+        },
+        "exact_omitted_text_reference": {
+          "path": "/tmp/s3-binding-evidence-46121909582/decoded/80432cbc44db3de7792c3ecf56de131aab01c01c05498d610e651ccb271356f7.bin",
+          "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+          "byte_length": 9757
+        }
+      },
+      "all_result_fields_included_losslessly": true,
+      "machine_equalities": [
+        "artifact metadata",
+        "full result value",
+        "body bytes",
+        "input key/order/version mapping",
+        "dependency key/result/order",
+        "navigation",
+        "release or L1 custody body identity"
+      ],
+      "result_raw_cas": {
+        "path": "/tmp/s3-binding-evidence-46121909582/cas/8b/8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+        "sha256": "43e43a73489e176f541e2761cab88036ab8cfd8f675b28c75c84c4deb7875d45",
+        "byte_length": 1538
+      }
+    }
+  ],
+  "candidate_references": [
+    {
+      "reference": {
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "path": ".orchestra/skills/execute-genesis/SKILL.md",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+      },
+      "body": "b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9",
+      "decoded_sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "decoded_byte_length": 8143,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/0",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/b5521107209f035fee13c859a304eed0c68e6519f4426c5822e30795b6a72ef9.bin",
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+        "byte_length": 8143
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/oracles/ownership-cases.json",
+        "sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367"
+      },
+      "body": "abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b",
+      "decoded_sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367",
+      "decoded_byte_length": 8695,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/1",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/abf81ce881876ae356fd4608c7357415c29d09e926b25234bc67aeb2dc6fa64b.bin",
+        "sha256": "7d9805098495228197b1a047d0c5d0d18a20e6094ac5044585b54d763e833367",
+        "byte_length": 8695
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/request.md",
+        "sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40"
+      },
+      "body": "9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5",
+      "decoded_sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40",
+      "decoded_byte_length": 2610,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/2",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/9ff384829de7572014b4432d70a46cfb8c44725560870130e90942d7490db6b5.bin",
+        "sha256": "b862cccb8e4a6c9c1130a9ce2b2b1750800d646f54a41d9927cbb52a32015c40",
+        "byte_length": 2610
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-A/response.md",
+        "sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35"
+      },
+      "body": "9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e",
+      "decoded_sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35",
+      "decoded_byte_length": 6363,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/3",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/9960e05f73ee1f8c43ba05d97a3821fa309fa299ddbbd5ffd449f1452c240e3e.bin",
+        "sha256": "5a9517b94319f023e20f22ae525688c57d95370948c13c13759605d5c8b57e35",
+        "byte_length": 6363
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J1-L1-A-v1-final.md",
+        "sha256": "20b148e9540e6de0238c6699b02f12ed2cad31bb0e14941ca462bffb2d9a0bbd"
+      },
+      "body": "3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6",
+      "decoded_sha256": "20b148e9540e6de0238c6699b02f12ed2cad31bb0e14941ca462bffb2d9a0bbd",
+      "decoded_byte_length": 4135,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/4",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3e205071e2bc40329c7045a49d27d4012dba2bd9cce9e41cdc365f013ffe3ad6.bin",
+        "sha256": "20b148e9540e6de0238c6699b02f12ed2cad31bb0e14941ca462bffb2d9a0bbd",
+        "byte_length": 4135
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J2-L1-A-v1-final.md",
+        "sha256": "a85a4c67e691c2da7d8e7f71d4bbd3f0e22f006f8a1c11e8d750f46d3687735c"
+      },
+      "body": "b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717",
+      "decoded_sha256": "a85a4c67e691c2da7d8e7f71d4bbd3f0e22f006f8a1c11e8d750f46d3687735c",
+      "decoded_byte_length": 3908,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/5",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/b249e480756c489adbd656a93e4364f143111e00e1b0e754135dab220f803717.bin",
+        "sha256": "a85a4c67e691c2da7d8e7f71d4bbd3f0e22f006f8a1c11e8d750f46d3687735c",
+        "byte_length": 3908
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/request.md",
+        "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c"
+      },
+      "body": "d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c",
+      "decoded_sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c",
+      "decoded_byte_length": 3125,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/6",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/d84ee49695e6db412712bc5ce64c161fb08879b135813e15859bd2e9ca58493c.bin",
+        "sha256": "7d57f73c2c12d7c639430467cb2be4a4c321cb21b659ee570774bb8a998aec6c",
+        "byte_length": 3125
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-B/response.md",
+        "sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217"
+      },
+      "body": "739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5",
+      "decoded_sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217",
+      "decoded_byte_length": 9089,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/7",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/739dfae830012f48743b8aa8d8d99dd6ce9210cdac6ac8b72076d286501222f5.bin",
+        "sha256": "55a6cab9be9f004483f5e5c3f9c01b15fac0dab13380ff62b1e275cfaa22c217",
+        "byte_length": 9089
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J1-L1-B-v2.json",
+        "sha256": "e5a2d69f618dbc35adc3a635a57c480be497a738b0ab7306249d2364f0de38bc"
+      },
+      "body": "7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7",
+      "decoded_sha256": "e5a2d69f618dbc35adc3a635a57c480be497a738b0ab7306249d2364f0de38bc",
+      "decoded_byte_length": 2652,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/8",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7c9a57fd31b52c4b9883472fc6b90832741e5c096354858123dfc306a35ec3a7.bin",
+        "sha256": "e5a2d69f618dbc35adc3a635a57c480be497a738b0ab7306249d2364f0de38bc",
+        "byte_length": 2652
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J2-L1-B-v2.json",
+        "sha256": "5e6ea8916baeeae4aad90a058937f337605955ec44a989ef9a0622ab3c1efc77"
+      },
+      "body": "71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e",
+      "decoded_sha256": "5e6ea8916baeeae4aad90a058937f337605955ec44a989ef9a0622ab3c1efc77",
+      "decoded_byte_length": 2450,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/9",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/71816ccf98e0268c5b796be93645ecb68253be596a44f7b2a47517161df1c49e.bin",
+        "sha256": "5e6ea8916baeeae4aad90a058937f337605955ec44a989ef9a0622ab3c1efc77",
+        "byte_length": 2450
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/request.md",
+        "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7"
+      },
+      "body": "3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e",
+      "decoded_sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7",
+      "decoded_byte_length": 2487,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/10",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3d5d7390304440078ada2218c22221d2b288e8bd25ac4477ea20b1777481541e.bin",
+        "sha256": "c167f9e4c04fa559f1e6e4271c002a7e03548ad2fc0b7f03faf08ea67bdea7b7",
+        "byte_length": 2487
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/receipts/L1-C/response.md",
+        "sha256": "f5d09f3d3023a7003a34b5abf9f1b6b6eafad8a4dd843b74751325a5e08f3955"
+      },
+      "body": "70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1",
+      "decoded_sha256": "f5d09f3d3023a7003a34b5abf9f1b6b6eafad8a4dd843b74751325a5e08f3955",
+      "decoded_byte_length": 9022,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/11",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/70b57556a562d9279228b8c7287feac6ea56484271d3a05fdbbecda6a5469cd1.bin",
+        "sha256": "f5d09f3d3023a7003a34b5abf9f1b6b6eafad8a4dd843b74751325a5e08f3955",
+        "byte_length": 9022
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J1-L1-C-v3.json",
+        "sha256": "1f60db67ea177bde0fae1f4f4ce2c30d356e527e8ca4e478218fc0c068796706"
+      },
+      "body": "3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9",
+      "decoded_sha256": "1f60db67ea177bde0fae1f4f4ce2c30d356e527e8ca4e478218fc0c068796706",
+      "decoded_byte_length": 2807,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/12",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/3f32c6b9d3fcc0f708890cf2485b77483fd4a645b04b24028c6b8594d5790ad9.bin",
+        "sha256": "1f60db67ea177bde0fae1f4f4ce2c30d356e527e8ca4e478218fc0c068796706",
+        "byte_length": 2807
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/judgments/J2-L1-C-v3.json",
+        "sha256": "57f762e9e074b81044dfb308885b366afe59c189a941d2125f0404601a15a893"
+      },
+      "body": "199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351",
+      "decoded_sha256": "57f762e9e074b81044dfb308885b366afe59c189a941d2125f0404601a15a893",
+      "decoded_byte_length": 2649,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/13",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/199880323ad070080aa3809cc0d5a5f7161871b56c9a5e7e384495992c7a1351.bin",
+        "sha256": "57f762e9e074b81044dfb308885b366afe59c189a941d2125f0404601a15a893",
+        "byte_length": 2649
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/recipe.md",
+        "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b"
+      },
+      "body": "7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b",
+      "decoded_sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b",
+      "decoded_byte_length": 10617,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/14",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7358779997606a2eec12d1da1d7cd39b1c4513d91aee8b7553c0761ac174170b.bin",
+        "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b",
+        "byte_length": 10617
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/request.md",
+        "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1"
+      },
+      "body": "d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c",
+      "decoded_sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+      "decoded_byte_length": 3252,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/15",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/d589645c5167d9b25a2938b781249f80d9446700ec53b4688a6795b16bd87f6c.bin",
+        "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+        "byte_length": 3252
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L2-v2/response.json",
+        "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25"
+      },
+      "body": "e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e",
+      "decoded_sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+      "decoded_byte_length": 8809,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/16",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/e826f635463e6520bf807ca0e341b8f345062a2ee5f1f83e4a974d5fc2224b9e.bin",
+        "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+        "byte_length": 8809
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L2-v2.json",
+        "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3"
+      },
+      "body": "0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452",
+      "decoded_sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3",
+      "decoded_byte_length": 8332,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/17",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/0a33ba577e9b5984f6300220d9afc4d009b24bf6560f812f04762ae678191452.bin",
+        "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3",
+        "byte_length": 8332
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L2-v2.json",
+        "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741"
+      },
+      "body": "bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e",
+      "decoded_sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741",
+      "decoded_byte_length": 8015,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/18",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/bf18ad66099fc9ec8129a0d6ea0d5c9905e2ce2de51995637328d0c1dc4c021e.bin",
+        "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741",
+        "byte_length": 8015
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/recipe.md",
+        "sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359"
+      },
+      "body": "29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01",
+      "decoded_sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359",
+      "decoded_byte_length": 9733,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/19",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/29c3e7091972657ec9ed656972ccc595553256738d21566bd3bf4a2735ea6d01.bin",
+        "sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359",
+        "byte_length": 9733
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/request.md",
+        "sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225"
+      },
+      "body": "8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872",
+      "decoded_sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225",
+      "decoded_byte_length": 2975,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/20",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/8050f562e0c5360909d660d6464b312f313a0dd987b425fdac223c25d653e872.bin",
+        "sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225",
+        "byte_length": 2975
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L3-adoption-v1/response.json",
+        "sha256": "b68c8cbf2682d2c4fc230fcbc67cf13118a3198db658e0ecd336a4aec49087cb"
+      },
+      "body": "12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888",
+      "decoded_sha256": "b68c8cbf2682d2c4fc230fcbc67cf13118a3198db658e0ecd336a4aec49087cb",
+      "decoded_byte_length": 10377,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/21",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/12739decadffbc792526dbbc14805b1a8bf19659ed05ab1525af5dbea5fe8888.bin",
+        "sha256": "b68c8cbf2682d2c4fc230fcbc67cf13118a3198db658e0ecd336a4aec49087cb",
+        "byte_length": 10377
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L3-adoption-v1.json",
+        "sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035"
+      },
+      "body": "a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e",
+      "decoded_sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035",
+      "decoded_byte_length": 8838,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/22",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/a83bd33ae1cdd4a827db26596061065183920e4e0ba69ab90551d8a7d850b25e.bin",
+        "sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035",
+        "byte_length": 8838
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L3-adoption-v1.json",
+        "sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0"
+      },
+      "body": "17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8",
+      "decoded_sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0",
+      "decoded_byte_length": 8154,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/23",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/17c44b7070873acf3ba1cefc9ed04d05f44fa67c187c8847081f0779640a4ae8.bin",
+        "sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0",
+        "byte_length": 8154
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe-v4.md",
+        "sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493"
+      },
+      "body": "01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df",
+      "decoded_sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493",
+      "decoded_byte_length": 3226,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/24",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/01410561e8ba4941d3c1d16f3863467e22a32e1c1217411c4ee935d4fb7196df.bin",
+        "sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493",
+        "byte_length": 3226
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/request-v4.md",
+        "sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8"
+      },
+      "body": "f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027",
+      "decoded_sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8",
+      "decoded_byte_length": 1391,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/25",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/f425c7d39ddb72db94042b0b5a80cc2939427f1000a4571c642caab5147ef027.bin",
+        "sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8",
+        "byte_length": 1391
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/response-v4.json",
+        "sha256": "499d298313885c3be165c1b9ef4f02f9b3fbdf21091c56d10452923f1217bb2c"
+      },
+      "body": "4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25",
+      "decoded_sha256": "499d298313885c3be165c1b9ef4f02f9b3fbdf21091c56d10452923f1217bb2c",
+      "decoded_byte_length": 15003,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/26",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/4009d7da5c2c7a0796c9566d3d2fab5eef5c8b06ca8c197dd3b73ba6189c9d25.bin",
+        "sha256": "499d298313885c3be165c1b9ef4f02f9b3fbdf21091c56d10452923f1217bb2c",
+        "byte_length": 15003
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+        "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08"
+      },
+      "body": "c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5",
+      "decoded_sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08",
+      "decoded_byte_length": 4833,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/27",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/c5851705664f8b17a7cb33c62f8582a2520b44bcee2fcde46c06d0a3e9052cc5.bin",
+        "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08",
+        "byte_length": 4833
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+        "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1"
+      },
+      "body": "7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e",
+      "decoded_sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1",
+      "decoded_byte_length": 4769,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/28",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/7e2e9f865d0db4b6552f76aca8d240d95abb7ab243636ba198db4974bba1370e.bin",
+        "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1",
+        "byte_length": 4769
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe.md",
+        "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+      },
+      "body": "48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816",
+      "decoded_sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426",
+      "decoded_byte_length": 5471,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/29",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/48f60ce4818a99ec0df437d1fa44c533d0b48c4d7cf4547a04a185fc40530816.bin",
+        "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426",
+        "byte_length": 5471
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/request.md",
+        "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
+      },
+      "body": "beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468",
+      "decoded_sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3",
+      "decoded_byte_length": 3827,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/30",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/beae86db4a7bfb7f9e2b3cb95efabc70605caa34eab72459a8122e8912b1c468.bin",
+        "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3",
+        "byte_length": 3827
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/response.json",
+        "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+      },
+      "body": "5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483",
+      "decoded_sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393",
+      "decoded_byte_length": 27266,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/31",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/5c7dbb7e526e8f8c46662041acd44dba69a9f49537e6a30905fba8481afc9483.bin",
+        "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393",
+        "byte_length": 27266
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe-v3.md",
+        "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395"
+      },
+      "body": "04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67",
+      "decoded_sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395",
+      "decoded_byte_length": 3401,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/32",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/04f8600e639afb2e03659f72d37ef215789e5ea0bd5269900030720148b04e67.bin",
+        "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395",
+        "byte_length": 3401
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/correction-v3-request.md",
+        "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8"
+      },
+      "body": "54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5",
+      "decoded_sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8",
+      "decoded_byte_length": 1025,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/33",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/54242eb3d9363595102d7813ab540c12328956811d42f2fad13aacd1fa8188d5.bin",
+        "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8",
+        "byte_length": 1025
+      }
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/correction-v3-response.json",
+        "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a"
+      },
+      "body": "e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a",
+      "decoded_sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a",
+      "decoded_byte_length": 7187,
+      "text_omitted": true,
+      "exact_candidate_pointer": "/references/34",
+      "exact_omitted_text_reference": {
+        "path": "/tmp/s3-binding-evidence-46121909582/decoded/e85709408ecc2131833694d21cc41c2dded2f3fd342bbd8b601746151a7c578a.bin",
+        "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a",
+        "byte_length": 7187
+      }
+    }
+  ],
+  "bulk_omissions": [
+    {
+      "name": "complete_prepared",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": ""
+      }
+    },
+    {
+      "name": "observations",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+          "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+          "byte_length": 2616437
+        },
+        "json_pointer": "/candidate/observations",
+        "omitted_from_limited_view": true,
+        "item_count": 4646
+      }
+    },
+    {
+      "name": "all_entry_input_vectors",
+      "per_entry_references": [
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/0/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 464
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/1/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 3722
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/2/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 486
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/3/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 165
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/4/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 114
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/5/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 165
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/6/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/7/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/8/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/9/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        },
+        {
+          "file": {
+            "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+            "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+            "byte_length": 2616437
+          },
+          "json_pointer": "/candidate/entries/10/inputs",
+          "omitted_from_limited_view": true,
+          "item_count": 265
+        }
+      ],
+      "total_items_with_repetition": 6441
+    },
+    {
+      "name": "observed_input_lock_files",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/input-lock.observed.json",
+          "sha256": "5957f3e6358f5c60fc865c8264406c817935e95b4072876757cef7a4687002d5",
+          "byte_length": 1989942
+        },
+        "json_pointer": "/files",
+        "item_count": 4639
+      }
+    },
+    {
+      "name": "materialization_membership_vectors",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/materialization.json",
+          "sha256": "5e558b90b4b0ca6c949e12124af753b997201ce0b44427c6e509b1eddf14c417",
+          "byte_length": 5513382
+        },
+        "json_pointer": "/memberships",
+        "item_count": 45
+      }
+    },
+    {
+      "name": "full_state_file_inventory",
+      "reference": {
+        "file": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/state.json",
+          "sha256": "7968f84ac77f2e0e90515274f1d909a610e4da4f37f73b5c7f178dc41fa98f3a",
+          "byte_length": 2865680
+        },
+        "json_pointer": "/files",
+        "item_count": 14577
+      }
+    },
+    {
+      "name": "body_and_reference_prose",
+      "reference": "cas-index.json contains exact raw CAS and decoded file identities; per-body/per-reference decoded locators are in binding-view.json."
+    }
+  ],
+  "limitations": [
+    "No semantic assessment, judge vote, runtime binding, approval, publication or consumer execution is produced by this verifier.",
+    "Kernel IDs and inputs_id are observed prepare values. Canonical source was captured at the runtime pin; Python blake3 is unavailable. No substitute digest or kernel ID recomputation was performed.",
+    "CAS raw SHA-256 and decoded body SHA-256 are file integrity checks, distinct from kernel BLAKE3 canonical identity.",
+    "All extensive input/observation/membership vectors and body/reference prose are omitted from the limited view and linked by exact file SHA, byte length and JSON Pointer or decoded CAS file.",
+    "No assertion that judges read the 2.6 MB prepared document, omitted vectors, body prose, producer requests, oracle prose or review prose follows from this view.",
+    "Membership path lists were checked as sorted, unique and present in the archived materialization. Original raw git ls-files stdout is absent: enumeration_sha256 and membership kernel versions were preserved, not independently recomputed.",
+    "Git readback receipts are previously captured evidence. This program performs no network access and does not establish fresh remote state.",
+    "Prepare evidence is tied to this exact package and candidate; a later prepare or changed package requires a fresh view and independent binding decisions."
+  ]
+}

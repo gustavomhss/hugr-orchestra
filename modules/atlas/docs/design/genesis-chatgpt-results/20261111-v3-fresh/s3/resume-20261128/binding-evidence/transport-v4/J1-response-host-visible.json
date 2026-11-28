@@ -1,0 +1,135 @@
+{
+  "reviewer": "/root/s3_j1",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "contract": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "verdict": "REQUEST_EVIDENCE",
+  "criteria": [
+    {"id": "purpose and installed behavior", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "explicit contracts and authority", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "decisions and current/historical distinction", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "dependency and navigation distinction", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "concrete safe maintenance and failure handling", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "source provenance and honest execution limits", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-1", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-2", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-3", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-4", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-5", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "QS-6", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "CC-1", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "CC-2", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "CC-3", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "CC-7", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A1", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A2", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A3", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A4", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A5", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A6", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-A7", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I1", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I2", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I3", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I4", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I5", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I6", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I7", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "GO-I8", "verdict": "REQUEST_EVIDENCE"},
+    {"id": "runtime-import-binding", "verdict": "REQUEST_EVIDENCE"}
+  ],
+  "entries": [
+    {
+      "key": "s3-l1-maestro",
+      "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+      "inputs": "bb033a95793ef5f062ca78b3feb9d0abd2024184b850dcc8cb5cc5cf008a778e"
+    },
+    {
+      "key": "s3-l1-relay",
+      "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+      "inputs": "6c38131a0d472293fcd7e3c9904f9699f793985ed67b442cf60a8637c63e945b"
+    },
+    {
+      "key": "s3-l1-integrations",
+      "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+      "inputs": "fc2d0c8b2df7071d38a1c8357d993d9ec5066a5585319fa55ecb16c9de460729"
+    },
+    {
+      "key": "s3-l2-maestro",
+      "result": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "inputs": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e"
+    },
+    {
+      "key": "s3-l2-relay",
+      "result": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "inputs": "6c535f0963c6b598cb537ebba9639786d459110a4ff484450b9b0cbb332a9090"
+    },
+    {
+      "key": "s3-l2-integrations",
+      "result": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "inputs": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e"
+    },
+    {
+      "key": "s3-l3-flows",
+      "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "inputs": "61082310f993aab96932fd282a7603de3ab9449da70fba5359968d802f660931"
+    },
+    {
+      "key": "s3-l4-entry",
+      "result": "11b2357b0c2cfbf8139f01b6f7d00f2cddbe0c7fb342bf0652ebaba5238ffc76",
+      "inputs": "bbaebd5f1d2b709010852687c4cd3821f0258d921979eec9a69df9de5e25046b"
+    },
+    {
+      "key": "s3-l4-ownership",
+      "result": "2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+      "inputs": "524c307597583e2221d660bb9452cc3aa0e8a68ef04410716d4a547a018f67ed"
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "result": "3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+      "inputs": "46fddf1e89de844be890b0d390f203d8404a57e3e28b6a3b9b30c62180b711ce"
+    },
+    {
+      "key": "s3-l4-operational",
+      "result": "8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+      "inputs": "328642439e801c3d989d80d7c77ed9e3f4be030bb9a2e34ba7060e711c33e426"
+    }
+  ],
+  "findings": [],
+  "evidence_requests": [
+    {
+      "id": "BIND-RESULT-METADATA",
+      "source": "binding-view.json, SHA256 dc4ead301744b76936431ddd6f095d0743d42794b13252f55a62fbb39e32fd74",
+      "fields": [
+        "/entries/0/result_exact",
+        "/entries/1/result_exact",
+        "/entries/2/result_exact",
+        "/entries/3/result_exact",
+        "/entries/4/result_exact",
+        "/entries/5/result_exact",
+        "/entries/6/result_exact",
+        "/entries/7/result_exact",
+        "/entries/8/result_exact",
+        "/entries/9/result_exact",
+        "/entries/10/result_exact"
+      ],
+      "requested": "Fornecer os onze objetos result_exact integrais, incluindo authority, validity, gaps, evidence e os valores/referências de producer, oracle e reviewer omitidos desta vista.",
+      "reason": "Os aceites anteriores cobrem os corpos apresentados e seus limites. Os campos omitidos integram os resultados agora vinculados e podem ampliar autoridade, validade ou alegações de execução. A igualdade mecânica com um pacote selecionado não permite avaliar semanticamente campos desse pacote que não recebi."
+    },
+    {
+      "id": "BIND-CONTRACT-CRITERIA",
+      "source": "Contrato 9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0; raw CAS SHA256 7c45252674a5d6319269ac41bce2ed65646c66ad71fb7a8102a7ceb8444e8198",
+      "requested": "Fornecer o objeto integral decodificado do contrato e as definições pinadas dos critérios QS-1–QS-6, CC-1/CC-2/CC-3/CC-7, GO-A1–GO-A7 e GO-I1–GO-I8. Se o objeto contiver apenas IDs, fornecer os trechos normativos correspondentes e a regra que delimita sua avaliação no propósito runtime-import-binding.",
+      "reason": "Recebi os 32 nomes, mas não as definições dos critérios numerados. Não posso atribuir PASS a todos nem determinar quais condições são verificadas nesta transformação e quais permanecem obrigações posteriores apenas pelos identificadores."
+    }
+  ],
+  "limitations": [
+    "Esta decisão solicita evidência para o novo binding; não revoga os aceites semânticos anteriores de L2-v2, L3-adoption-v1 ou L4-adoption-v4 nem reavalia os L1 históricos aceitos.",
+    "Os 32 critérios permanecem sem voto conclusivo de binding enquanto os dois conjuntos solicitados não forem apresentados. Não foi identificado nesta vista um defeito conclusivo do candidato.",
+    "Os onze pares result/inputs foram transcritos da vista fornecida. Não recomputei IDs de kernel, BLAKE3 ou SHA256 e não confundo essas identidades.",
+    "Recebi os atestados de custódia, igualdade e execução do prepare no Actions 46121909582; não li raw CAS, preparado integral, inventários completos ou os campos explicitamente omitidos.",
+    "Não solicito execução de consumidores, manutenção ou publicação para suprir estes pedidos: ambos pedem somente conteúdo estático já identificado e preservado.",
+    "Prepare, typecheck e guards não substituem o julgamento semântico dos resultados vinculados. Publication_attempted=false permanece preservado.",
+    "Não usei ferramentas, arquivos, navegador, testes, edição ou delegação. Não emito binding, publicação, aceite de consumidores, cumprimento global de GO/CC/QS ou aceite histórico ausente."
+  ]
+}

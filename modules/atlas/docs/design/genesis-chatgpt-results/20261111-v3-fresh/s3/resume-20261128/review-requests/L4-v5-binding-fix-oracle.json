@@ -1,0 +1,22 @@
+{
+  "schema": "s3-fixed-delta-oracle/v1",
+  "unit": "L4-entry-v5-catalogue-build-binding",
+  "frozen_before_producer": true,
+  "author": "/root",
+  "prior_entry_sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+  "need": "Copied H2 catalogue must invalidate when either source L1 result changes even if intervening L2/L3 results remain identical.",
+  "required": [
+    "Retain all 18 exact copied H2 titles and other entry semantics.",
+    "Clarify that ordinary links are navigation while the copied catalogue consumes L1 Relay and L1 integrations as direct build predecessors.",
+    "Package build_dependencies for entry contains s3-l3-flows,s3-l1-maestro,s3-l1-relay,s3-l1-integrations exactly once each.",
+    "Keep navigation targets; do not convert all navigation edges into build dependencies.",
+    "Other three L4 bodies remain byte-identical to v4.",
+    "Same pair must review changed entry/graph; old v4 runtime binding cannot authorize the new candidate."
+  ],
+  "critical_mistakes": [
+    "Claiming transitive L3 lineage protects copied H2 when its result remains identical.",
+    "Adding only navigation or file inputs that do not track new L1 result identity.",
+    "Changing unrelated artifact bodies or disguising the v4 candidate as already authorized."
+  ],
+  "expected_graph_effect": "Only entry gains the two direct edges; existing M1 affected closure still includes the same seven artifacts. No runtime test or case acceptance is claimed by this oracle."
+}

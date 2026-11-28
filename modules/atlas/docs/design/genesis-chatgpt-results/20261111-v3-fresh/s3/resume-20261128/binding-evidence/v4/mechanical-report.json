@@ -1,0 +1,263 @@
+{
+  "schema": "s3-prepare-mechanical-report/v1",
+  "author": "/root/s3_maintenance_cases",
+  "status": "MECHANICAL_COMPARISONS_COMPLETED",
+  "view_role": "FINAL_PACKAGE_V4_PREPARE_VIEW_NOT_A_BINDING",
+  "semantic_verdict": null,
+  "binding_decision": null,
+  "product_executed": false,
+  "runtime_executed": false,
+  "tests_executed": false,
+  "remote_writes": false,
+  "config": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4-config.json",
+    "sha256": "de72a95876b753fb44e806d89284c575469a9c078c59a1c3f66f9de3cdb1656a",
+    "byte_length": 8256
+  },
+  "verifier": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/verify_prepare.py",
+    "sha256": "fede1ba80d0966aa6eb9dfcb2004fc33db1de9c41f84c3b0951ded60cd617a7d",
+    "byte_length": 36909
+  },
+  "candidate_id_observed": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+  "package_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+  "zip": {
+    "path": "/tmp/genesis-s3-evidence-15cc9853/46121909582/state-artifact.zip",
+    "sha256": "ac0f282d5b7338793199c2447d66036f428cea7b6e5862a740344abae55100a6",
+    "byte_length": 73854914
+  },
+  "inner_tar": {
+    "member": "state.tar.gz",
+    "sha256": "9494e7471b31ac90f558ea943a2597aac9af4ec7b844f118f4d6af30f4092024",
+    "byte_length": 71369306
+  },
+  "counts": {
+    "entries": 11,
+    "criteria": 32,
+    "candidate_references": 35,
+    "cas_present": 60,
+    "cas_selected_extracted": 60,
+    "cas_not_selected": 0,
+    "decoded_body_objects": 47,
+    "observations": 4646,
+    "file_observations": 4601,
+    "membership_observations": 45,
+    "input_items_with_repetition": 6441,
+    "observed_lock_files": 4639,
+    "state_inventory_files": 14577,
+    "archived_regular_source_files": 14576,
+    "archived_symlinks_not_extracted": 1
+  },
+  "successful_comparisons": {
+    "pinned_local_file": 26,
+    "unique_readback_paths": 1,
+    "readback_identity": 1,
+    "prepared_schema": 1,
+    "candidate_id_receipt_agreement": 1,
+    "unpublished_state": 1,
+    "prepare_receipt_operation": 1,
+    "run_identity": 1,
+    "revision_receipts": 2,
+    "candidate_source_revision": 1,
+    "package_sha_agreement": 1,
+    "stdout_prepared_json_equal": 1,
+    "package_path": 1,
+    "entry_count": 1,
+    "roots_required_keys": 1,
+    "scope_session": 1,
+    "implementation_file_sha": 4,
+    "zip_sha": 1,
+    "zip_unique_members": 1,
+    "zip_local_exact_bytes": 10,
+    "inner_tar_sha_length": 1,
+    "tar_unique_members": 14579,
+    "tar_safe_member_name": 14579,
+    "tar_source_prefix": 14577,
+    "tar_supported_member_type": 14576,
+    "cas_path_shape": 60,
+    "symlink_stays_inside_source": 1,
+    "tar_snapshot_regular": 2,
+    "tar_snapshot_exact_bytes": 2,
+    "symlink_target_present": 1,
+    "state_inventory_exact_path_set": 1,
+    "state_inventory_sha_length": 14576,
+    "state_inventory_symlink_target_sha": 1,
+    "candidate_payload_paths_present": 1,
+    "archive_selected_package_exact_bytes": 1,
+    "input_lock_sha_length_blob": 4639,
+    "materialization_observed_lock_equal": 1,
+    "lock_measurement_timing_receipt": 1,
+    "candidate_cas_prepared_lossless_json_equal": 1,
+    "contract_exact_criteria": 1,
+    "body_cas_byte_array": 47,
+    "transport_cas_package_exact_bytes": 1,
+    "selected_readback_path_present": 16,
+    "selected_readback_blob_match": 16,
+    "candidate_reference_order_and_set": 1,
+    "reference_cas_declared_archive_bytes": 35,
+    "unique_observations": 1,
+    "file_observation_raw_sha": 4601,
+    "known_observation_key": 45,
+    "membership_key_set": 1,
+    "membership_paths_sorted_unique_present": 45,
+    "unique_release_body": 8,
+    "entry_key_order_unique": 11,
+    "embedded_artifact_exact_metadata_no_receipt": 11,
+    "result_package_lossless_fields": 11,
+    "body_cas_archive_selected_exact_bytes": 11,
+    "body_release_or_l1_custody_identity": 11,
+    "entry_inputs_exact_order_observations": 11,
+    "dependencies_exact_order_prior_results": 11,
+    "source_ref_sha_blob": 2030,
+    "observations_exact_union_of_inputs": 1,
+    "required_entries_complete": 1,
+    "equal_input_dependency_payload_same_observed_id": 11,
+    "all_referenced_cas_present": 1
+  },
+  "prepare_summary_exact": {
+    "schema": "genesis-s3-operation-receipt/v1",
+    "operation": "prepare",
+    "started_at": "2026-11-28T07:36:49.592325+00:00",
+    "status": "OPERATION_RETURNED_SUCCESS",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "plan": {
+      "path": "/home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/run-plan.json",
+      "byte_length": 2959,
+      "sha256": "9fc31da2ac8ee7006b968ff76920f2146e1448c31ee39a16a83f65d384aa2bca"
+    },
+    "run_id": "46121909582",
+    "run_attempt": "1",
+    "harness_sha": "0e5b73c41ec7acb4d7a218a58de0c298b836a5a4",
+    "consumer_verdict": "NOT_JUDGED",
+    "ownership_manifest": null,
+    "ended_at": "2026-11-28T07:37:36.734398+00:00"
+  },
+  "kernel_id_independently_verified": false,
+  "python_blake3_available": false,
+  "kernel_source_files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/canonical.ts",
+      "sha256": "116724d1e1ccb8f302a835ec4cdf413696c52ba850b1d62cedad438798386396",
+      "byte_length": 6777
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/encoder.ts",
+      "sha256": "41768be202300c795b1fbfc505816653d0a05ee6ba62c5a9f62af21874d7abf8",
+      "byte_length": 1643
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/store.ts",
+      "sha256": "2bf749b158effca8358fb752369b9183aad75e551d211251849f59859632fb25",
+      "byte_length": 2205
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/index.ts",
+      "sha256": "3c7732fbde486507f78910c1e94ffaf89d809b5bc02291da2b5b863fd5844ce3",
+      "byte_length": 1540
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/connector-captures.json",
+      "sha256": "d152f3ef98b9fb56a569192af19f50580bd3c384d17e1c15a603eba43ca3fc2f",
+      "byte_length": 13996
+    }
+  ],
+  "source_publication_is_not_atlas_publication": true,
+  "symlinks_preserved_as_metadata_only": {
+    "packages/app-shell/src/custom-elements.d.ts": {
+      "linkname": "../../ui/src/custom-elements.d.ts",
+      "resolved_archive_path": "packages/ui/src/custom-elements.d.ts"
+    }
+  },
+  "release_identity_sources": [
+    {
+      "file": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json",
+        "sha256": "32febf1e15e4f87543711bc4a8e1821cbaae328456a7460a28d29bc6269706f2",
+        "byte_length": 1880,
+        "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json"
+      },
+      "readback": {
+        "receipt": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+          "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+          "byte_length": 53595
+        },
+        "row_pointer": "/readback/139",
+        "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+        "git_blob_sha": "5e24f808807ca8efd44241e9e4367d9d091f19bd",
+        "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+      },
+      "scope": "Existing release body identities only; no new semantic judgment."
+    },
+    {
+      "file": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json",
+        "sha256": "55470ea43518c9ede4a9c79ac6704177ba05f452361d197770d9dcdeb8eaec98",
+        "byte_length": 1677,
+        "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json"
+      },
+      "readback": {
+        "receipt": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+          "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+          "byte_length": 53595
+        },
+        "row_pointer": "/readback/140",
+        "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+        "git_blob_sha": "77466df2a52f1442bd2f13ed3299ea00e7cc7046",
+        "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+      },
+      "scope": "Existing release body identities only; no new semantic judgment."
+    },
+    {
+      "file": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+        "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+        "byte_length": 2394,
+        "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+      },
+      "readback": {
+        "receipt": {
+          "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+          "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+          "byte_length": 53595
+        },
+        "row_pointer": "/readback/142",
+        "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+        "git_blob_sha": "a3042797b7c699a28920e66426914250b34d3293",
+        "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+      },
+      "scope": "Existing release body identities only; no new semantic judgment."
+    }
+  ],
+  "l1_custody_readback": {
+    "receipt": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+      "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+      "byte_length": 53595
+    },
+    "row_pointer": "/readback/15",
+    "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+    "git_blob_sha": "77458f480c87b17f1ce2d8f3aceea521ed2d7487",
+    "meaning": "Recorded connector readback identity compared to measured local bytes; no new network read."
+  },
+  "limitations": [
+    "No semantic assessment, judge vote, runtime binding, approval, publication or consumer execution is produced by this verifier.",
+    "Kernel IDs and inputs_id are observed prepare values. Canonical source was captured at the runtime pin; Python blake3 is unavailable. No substitute digest or kernel ID recomputation was performed.",
+    "CAS raw SHA-256 and decoded body SHA-256 are file integrity checks, distinct from kernel BLAKE3 canonical identity.",
+    "All extensive input/observation/membership vectors and body/reference prose are omitted from the limited view and linked by exact file SHA, byte length and JSON Pointer or decoded CAS file.",
+    "No assertion that judges read the 2.6 MB prepared document, omitted vectors, body prose, producer requests, oracle prose or review prose follows from this view.",
+    "Membership path lists were checked as sorted, unique and present in the archived materialization. Original raw git ls-files stdout is absent: enumeration_sha256 and membership kernel versions were preserved, not independently recomputed.",
+    "Git readback receipts are previously captured evidence. This program performs no network access and does not establish fresh remote state.",
+    "Prepare evidence is tied to this exact package and candidate; a later prepare or changed package requires a fresh view and independent binding decisions."
+  ],
+  "outputs": [
+    "binding-view.json",
+    "cas-index.json",
+    "omissions.json",
+    "handoff.md",
+    "dispatch-summary.json"
+  ],
+  "verifier_development_note": "The first v4 audit incorrectly treated a symlink inventory identity as its target-file bytes. The verifier was corrected to compare SHA256 of the UTF-8 link target string, matching runner inventory(). Preserved initial failure is a verifier hypothesis error, not product failure; see ../verifier-corrections.json."
+}

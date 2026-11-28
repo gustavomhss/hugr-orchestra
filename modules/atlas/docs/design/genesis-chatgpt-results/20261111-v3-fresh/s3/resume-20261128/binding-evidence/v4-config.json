@@ -1,0 +1,169 @@
+{
+  "schema": "s3-prepare-mechanical-config/v1",
+  "author": "/root/s3_maintenance_cases",
+  "version": "v4",
+  "view_role": "FINAL_PACKAGE_V4_PREPARE_VIEW_NOT_A_BINDING",
+  "workspace": "/workspace/scratch/0666cc914bd1",
+  "run_id": "46121909582",
+  "state_dir": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state",
+  "archive": {
+    "path": "/tmp/genesis-s3-evidence-15cc9853/46121909582/state-artifact.zip",
+    "sha256": "ac0f282d5b7338793199c2447d66036f428cea7b6e5862a740344abae55100a6",
+    "tar_member": "state.tar.gz",
+    "tar_receipt": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/state-archive.receipt.json",
+      "sha256": "014f998a6d0bf66911a59a494e8647863fb6f7600706e3152ea9cd026d345211",
+      "byte_length": 172
+    }
+  },
+  "expected": {
+    "candidate_id": "efc5e131f6969566606b834e1c63a8082511c6e330f90a17d04d3f6f4c2e420f",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "package_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+    "git_payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+    "artifact_count": 11,
+    "criteria_count": 32
+  },
+  "package": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/assembly/native-package.json",
+    "sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+    "byte_length": 1164616,
+    "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+    "payload_root": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload"
+  },
+  "readback": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+    "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+    "byte_length": 53595
+  },
+  "releases": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json",
+      "sha256": "32febf1e15e4f87543711bc4a8e1821cbaae328456a7460a28d29bc6269706f2",
+      "byte_length": 1880,
+      "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L2-v2.json"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json",
+      "sha256": "55470ea43518c9ede4a9c79ac6704177ba05f452361d197770d9dcdeb8eaec98",
+      "byte_length": 1677,
+      "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L3-adoption-v1.json"
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+      "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+      "byte_length": 2394,
+      "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json"
+    }
+  ],
+  "custody": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json",
+    "sha256": "a63ecb9f33997adf75ea63a241e98104ecd399683e2f1471621ea742a34361f4",
+    "byte_length": 32909,
+    "archive_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/custody-verification.json"
+  },
+  "state_files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/baseline-state-separation.json",
+      "sha256": "03d65860e3a146154a6b3b6fc5d327044772f07c4808a02ad8a27049b15471b9",
+      "byte_length": 1010
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/input-lock.observed.json",
+      "sha256": "5957f3e6358f5c60fc865c8264406c817935e95b4072876757cef7a4687002d5",
+      "byte_length": 1989942
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/materialization.json",
+      "sha256": "5e558b90b4b0ca6c949e12124af753b997201ce0b44427c6e509b1eddf14c417",
+      "byte_length": 5513382
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepare.receipt.json",
+      "sha256": "ed17c90ed335f2a48138a3657f680a2aef1a5fa1b2da9b62f3f2420163c291c1",
+      "byte_length": 1041
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepare.stderr.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepare.stdout.json",
+      "sha256": "9f1bcef3fe28616127c76340cdbabc20627830813b08b64561031710c6a7f74f",
+      "byte_length": 2083878
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/prepared.json",
+      "sha256": "b697ad137ef6ea8f0e26aeff0bf098014c59dec35873a4f0a60e7c5262a6751b",
+      "byte_length": 2616437
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/state-archive.receipt.json",
+      "sha256": "014f998a6d0bf66911a59a494e8647863fb6f7600706e3152ea9cd026d345211",
+      "byte_length": 172
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/state.json",
+      "sha256": "7968f84ac77f2e0e90515274f1d909a610e4da4f37f73b5c7f178dc41fa98f3a",
+      "byte_length": 2865680
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-ci/46121909582/state/summary.json",
+      "sha256": "0fb4f04466b35248b989d92a7376d2a8db0208f787c9c2ab3b486e4521623093",
+      "byte_length": 822
+    }
+  ],
+  "implementation_sources": {
+    "adapter": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+      "byte_length": 12432
+    },
+    "format": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "byte_length": 13356
+    },
+    "io": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "byte_length": 4162
+    },
+    "binding": {
+      "path": "/workspace/scratch/0666cc914bd1/s3-runtime-runner/source/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+      "byte_length": 5198
+    }
+  },
+  "kernel_sources": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/canonical.ts",
+      "sha256": "116724d1e1ccb8f302a835ec4cdf413696c52ba850b1d62cedad438798386396",
+      "byte_length": 6777
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/encoder.ts",
+      "sha256": "41768be202300c795b1fbfc505816653d0a05ee6ba62c5a9f62af21874d7abf8",
+      "byte_length": 1643
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/store.ts",
+      "sha256": "2bf749b158effca8358fb752369b9183aad75e551d211251849f59859632fb25",
+      "byte_length": 2205
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/index.ts",
+      "sha256": "3c7732fbde486507f78910c1e94ffaf89d809b5bc02291da2b5b863fd5844ce3",
+      "byte_length": 1540
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-binding-kernel-source/connector-captures.json",
+      "sha256": "d152f3ef98b9fb56a569192af19f50580bd3c384d17e1c15a603eba43ca3fc2f",
+      "byte_length": 13996
+    }
+  ],
+  "output_dir": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/v4",
+  "bulk_dir": "/tmp/s3-binding-evidence-46121909582"
+}

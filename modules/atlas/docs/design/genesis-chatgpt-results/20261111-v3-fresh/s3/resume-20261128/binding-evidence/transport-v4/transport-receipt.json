@@ -1,0 +1,56 @@
+{
+  "schema": "s3-binding-request-transport/v1",
+  "messenger": "/root/s3_maintenance_cases",
+  "authority": "Explicit /root task: literal transport only to existing /root/s3_j1 and /root/s3_j2; no judgment or new agent.",
+  "source_file": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/request-exact.txt",
+    "sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+    "byte_length": 26028
+  },
+  "source_pin_verified": true,
+  "transport_mode": "Manual literal transcription of the full displayed UTF-8 source into collaboration.followup_task.message; one terminal LF retained.",
+  "host_payload_echo_available": false,
+  "automatic_call_byte_equality_proof": "NOT_EXPOSED_BY_HOST",
+  "host_message_id": null,
+  "manual_transcription_divergence_observed": false,
+  "events": [
+    {
+      "target": "/root/s3_j1",
+      "tool": "collaboration.followup_task",
+      "recorded_at": "2026-11-28T07:48:43.157790+00:00",
+      "tool_return": "empty response, no error exposed",
+      "observed_after_call": "Existing /root/s3_j1 listed running by collaboration.list_agents",
+      "sent_text_as_transcribed_file": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J1-sent-text-as-transcribed.txt",
+      "text_file_sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "text_file_byte_length": 26028,
+      "host_payload_sha256": null,
+      "semantic_verdict_by_messenger": null
+    },
+    {
+      "target": "/root/s3_j2",
+      "tool": "collaboration.followup_task",
+      "recorded_at": "2026-11-28T07:53:54.198228+00:00",
+      "tool_return": "collab tool failed: agent thread limit reached",
+      "delivery_status": "REJECTED_NOT_DELIVERED",
+      "attempted_text_as_transcribed_file": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J2-attempted-text-not-delivered.txt",
+      "text_file_sha256": "3eaf82a138f1aa9c7cda8e92e9be0e8d93c7ed86bb13416dde43f10bcc9902d7",
+      "text_file_byte_length": 26028,
+      "host_payload_sha256": null,
+      "semantic_verdict_by_messenger": null
+    }
+  ],
+  "next_target": "/root/s3_j2",
+  "next_target_state": "HANDED_BACK_TO_ROOT_AFTER_THREAD_LIMIT",
+  "decisions_shared_between_judges": false,
+  "response_custody": "Original judge responses remain for /root to preserve and judge; messenger does not synthesize or share decisions.",
+  "j1_response_preserved": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-binding-evidence/transport-v4/J1-response-host-visible.json",
+    "sha256": "e8e788cc59cfee115ce25b6826bb7c1a5ae5232041c53d255c4a6b96b24d7737",
+    "byte_length": 7783,
+    "source": "Complete visible completed response returned by collaboration.list_agents; manually transcribed UTF-8 with one terminal LF.",
+    "host_message_id": null,
+    "automated_equality_to_host": "NOT_EXPOSED_BY_HOST",
+    "content_not_shared_with_j2": true
+  },
+  "closed_by": "Explicit /root instruction: stop now, no resend, no new agents; ROOT will invoke same J2 handle after slot release."
+}
