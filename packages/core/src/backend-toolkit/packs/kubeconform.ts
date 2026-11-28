@@ -1,4 +1,7 @@
 import type { Pack } from "../manifest"
+import type { TargetId } from "../target"
+import { BackendToolkitNoticeSources } from "../notice-sources"
+import sources from "./kubeconform.notices.json"
 
 const VERSION = "0.8.0"
 
@@ -7,6 +10,14 @@ export default {
   version: VERSION,
   license: "Apache-2.0",
   upstream: "yannh/kubeconform",
+  binaryIntegrity: {
+    "darwin-arm64": "sha256-hYzrWEkVwlYmIJAZXtoleSmRSQUMXGqXiNCYUHaDIxM=",
+    "darwin-x64": "sha256-ITj8UaCxXv6Cf0nB3tjrY9oEnVmGSudKk4RxX5q2+U0=",
+    "linux-arm64": "sha256-fnexBLOuaWOJ+Rlxxg/VjHLx89whjxOd9nobBwlZwBI=",
+    "linux-x64": "sha256-RXcis26Y1728kVJeWUlR711+o6KdotE7myii+4pQl7c=",
+    "win32-x64": "sha256-ZCv46g1hSox10r0BLrYEKpBYn/hGxp8Ehjr6RGsw8sE=",
+  },
+  notices: BackendToolkitNoticeSources.from(sources),
   // Measured with script/toolkit-floors.ts (F5.4): the downloaded binary; `{}` is a static binary or one with no requirement above the Node 22 floor.
   floor: {
     "darwin-arm64": { macos: "12.0" },
@@ -69,4 +80,4 @@ export default {
     input: "Kubernetes manifests the change wrote, with the schemas the packet supplies",
     skills: ["backend-check"],
   },
-} as const satisfies Pack
+} as const satisfies Pack & { readonly binaryIntegrity: Readonly<Record<TargetId, `sha256-${string}`>> }

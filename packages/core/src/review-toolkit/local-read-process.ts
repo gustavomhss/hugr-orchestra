@@ -37,7 +37,7 @@ export function run(input: Input, execute: typeof ResearchProcess.run = Research
       env: { PATH: "/usr/bin:/bin", HOME: home, USERPROFILE: home, APPDATA: home, LOCALAPPDATA: home,
         XDG_CONFIG_HOME: home, XDG_CACHE_HOME: home, TMPDIR: home, TMP: home, TEMP: home,
         LANG: "C.UTF-8", LC_ALL: "C.UTF-8", NO_COLOR: "1", TERM: "dumb", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1" },
-    })).pipe(
+    }), { acquire: false }).pipe(
       Effect.provideService(ToolSafety.NativeContext, { directory: input.root }),
       Effect.provideService(ToolSafety.RuntimeProfile, { requireSandbox: true, writeRoots: [],
         sandbox: { enabled: true, scratch: true, readRoots: [input.root, input.executable, home], unconfinedFallback: false } }),

@@ -64,13 +64,13 @@ export const status = Effect.fn("ToolSafetySandbox.status")(function* () {
 export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   command: ChildProcess.Command,
   /** Native host only, after the shell's permission approval; prehooks must leave this absent. */
-  options?: { readonly prepareParents?: boolean },
+  options?: { readonly prepareParents?: boolean; readonly acquire?: boolean },
 ): Effect.fn.Return<ChildProcess.Command, ToolSafety.Denied, FSUtil.Service | Scope.Scope> {
   const profile = yield* ToolSafety.RuntimeProfile
   if (command._tag !== "StandardCommand") {
     if (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.allowedUnixSockets?.length || profile?.sandbox?.allowedLoopbackEndpoints?.length)
       return yield* new ToolSafety.Denied({ reason: "sandbox-pipeline-unbound" })
-    return ChildProcess.pipeTo(yield* wrap(command.left), yield* wrap(command.right), command.options)
+    return ChildProcess.pipeTo(yield* wrap(command.left, options), yield* wrap(command.right, options), command.options)
   }
   const env = environment(command.options.extendEnv === false
     ? command.options.env ?? {}
@@ -114,17 +114,17 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-domain-policy-unenforceable" })
   if (grants.length && profile?.sandbox?.allowedDomains?.length)
     return yield* new ToolSafety.Denied({ reason: "sandbox-unix-socket-domain-policy-unenforceable" })
-  const discovered = grants.length || endpointGrants.length ? undefined : yield* pick(true, false, command).pipe(
-    // A first Linux runtime acquisition runs in the background. Confined reads never run unconfined, so they wait for it.
+  const discovered = grants.length || endpointGrants.length ? undefined : yield* pick(options?.acquire !== false, false, command).pipe(
+    // Confined reads may wait for default acquisition; an explicit opt-out never joins another caller's preparation.
     Effect.repeat({
-      while: (picked) => reads !== undefined && picked.kind === "none" && picked.reason === "sandbox-runtime-acquiring",
+      while: (picked) => options?.acquire !== false && reads !== undefined && picked.kind === "none" && picked.reason === "sandbox-runtime-acquiring",
       schedule: Schedule.spaced("1 second"),
       times: 180,
     }),
   )
   if (discovered?.kind === "none") {
     if (reads) return yield* new ToolSafety.Denied({ reason: `shell-read-sandbox-unavailable: ${discovered.reason}` })
-    if (!profile?.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
+    if (options?.acquire === false || !profile?.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
       reason: process.platform === "darwin" || process.platform === "linux"
         ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable",
     })
@@ -170,7 +170,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
   // Exact grants use our outbound-only seatbelt policy, even if SRT is installed on the Mac. Linux endpoints use srt's
   // own strict-allowlist proxy, only from the pinned, hash-verified runtime (an `srt` on PATH is unverified and may
   // lack seccomp, which would leave Unix sockets open); without a ready pinned srt they refuse below and never run unconfined.
-  const sandbox = discovered ?? (process.platform !== "darwin" ? yield* pick(true, endpointGrants.length > 0, command) : yield* available(yield* Seatbelt).pipe(
+  const sandbox = discovered ?? (process.platform !== "darwin" ? yield* pick(options?.acquire !== false, endpointGrants.length > 0, command) : yield* available(yield* Seatbelt).pipe(
     Effect.map((binary) => binary
       ? { kind: "seatbelt" as const, binary }
       : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }),
@@ -255,7 +255,7 @@ export const wrap = Effect.fn("ToolSafetySandbox.wrap")(function* (
     }).pipe(Effect.result)
     // A policy the ACLs cannot express is an unavailable sandbox for this command, never for an exact endpoint.
     if (launched._tag === "Failure") {
-      if (endpoints.length || !profile?.sandbox?.unconfinedFallback) return yield* launched.failure
+      if (options?.acquire === false || endpoints.length || !profile?.sandbox?.unconfinedFallback) return yield* launched.failure
       yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: launched.failure.reason } })
       return ordinary
     }
