@@ -165,7 +165,15 @@ export const fromCatalogModel = (
       plan
         ? produce(model, (draft) => {
             draft.api.url = Siwc.resource
-            draft.request.body.store = false
+            // Only keep overrides supported by the ChatGPT plan Responses route.
+            draft.request.body = {
+              ...Object.fromEntries(
+                Object.entries(draft.request.body).filter(([key]) =>
+                  ["include", "prompt_cache_key", "reasoning", "text"].includes(key),
+                ),
+              ),
+              store: false,
+            }
           })
         : credential?.type === "key" && credential.metadata !== undefined
           ? produce(model, (draft) => {
@@ -176,7 +184,7 @@ export const fromCatalogModel = (
     const key = apiKey(resolved, credential)
     if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
       const providerOptions = plan
-        ? { ...options.providerOptions, openai: { ...options.providerOptions.openai, store: false } }
+        ? { ...options.providerOptions, openai: { ...options.providerOptions.openai, chatGPTPlan: true, store: false } }
         : options.providerOptions
       return yield* Effect.succeed(
         withDefaults(resolved, OpenAIResponses.route, options.generation, providerOptions)

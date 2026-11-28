@@ -69,6 +69,40 @@ describe("OpenAI Responses route", () => {
     }),
   )
 
+  it.effect("encodes stateless ChatGPT plan requests with namespaced local tools", () =>
+    Effect.gen(function* () {
+      const input = LLM.request({
+        model,
+        system: "Keep the existing permissions.",
+        messages: [
+          Message.user("Read a file."),
+          Message.assistant([ToolCallPart.make({ id: "call_1", name: "read", input: { path: "index.md" } })]),
+          Message.tool({ id: "call_1", name: "read", result: { type: "text", value: "contents" } }),
+        ],
+        generation: { maxTokens: 20, temperature: 0, topP: 0.5 },
+        providerOptions: { openai: { chatGPTPlan: true, store: false, reasoningEffort: "xhigh", serviceTier: "priority" } },
+        tools: [{ name: "read", description: "Read a file", inputSchema: { type: "object" } }],
+        toolChoice: "read",
+      })
+      const prepared = yield* LLMClient.prepare<OpenAIResponses.OpenAIResponsesBody>(input)
+      expect(prepared.body).toMatchObject({
+        instructions: "Keep the existing permissions.",
+        store: false,
+        stream: true,
+        reasoning: { effort: "xhigh" },
+        tools: [{ type: "namespace", name: "orchestra", tools: [{ type: "function", name: "read" }] }],
+        tool_choice: { type: "function", namespace: "orchestra", name: "read" },
+        input: [
+          { role: "user" },
+          { type: "function_call", namespace: "orchestra", name: "read", call_id: "call_1" },
+          { type: "function_call_output", call_id: "call_1", output: "contents" },
+        ],
+      })
+      for (const key of ["max_output_tokens", "temperature", "top_p", "service_tier"])
+        expect(prepared.body).not.toHaveProperty(key)
+    }),
+  )
+
   it.effect("omits unsupported semantic service tiers", () =>
     Effect.gen(function* () {
       const prepared = yield* LLMClient.prepare(
@@ -1439,6 +1473,20 @@ describe("OpenAI Responses route", () => {
       )
 
       expect(response.events).toEqual([{ type: "provider-error", message: "OpenAI Responses stream error" }])
+    }),
+  )
+
+  it.effect("retains details from an SSE error object", () =>
+    Effect.gen(function* () {
+      const response = yield* LLMClient.generate(request).pipe(
+        Effect.provide(fixedResponse(sseEvents({
+          type: "error",
+          error: { code: "unsupported_capability", message: "Tool shape unavailable", param: "tools" },
+        }))),
+      )
+      expect(response.events).toEqual([
+        { type: "provider-error", message: "unsupported_capability: Tool shape unavailable" },
+      ])
     }),
   )
 

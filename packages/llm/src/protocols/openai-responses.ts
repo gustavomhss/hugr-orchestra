@@ -27,6 +27,7 @@ import { ToolSchemaProjection } from "./utils/tool-schema"
 import { ToolStream } from "./utils/tool-stream"
 
 const ADAPTER = "openai-responses"
+const PLAN_TOOL_NAMESPACE = "orchestra"
 export const DEFAULT_BASE_URL = "https://api.openai.com/v1"
 export const PATH = "/responses"
 
@@ -86,6 +87,7 @@ const OpenAIResponsesInputItem = Schema.Union([
     type: Schema.tag("function_call"),
     call_id: Schema.String,
     name: Schema.String,
+    namespace: Schema.optional(Schema.String),
     arguments: Schema.String,
   }),
   Schema.Struct({
@@ -106,18 +108,26 @@ type OpenAIResponsesReasoningInput = {
 }
 type OpenAIResponsesReasoningReplay = Omit<OpenAIResponsesReasoningInput, "id">
 
-const OpenAIResponsesTool = Schema.Struct({
+const OpenAIResponsesFunction = Schema.Struct({
   type: Schema.tag("function"),
   name: Schema.String,
   description: Schema.String,
   parameters: JsonObject,
   strict: Schema.optional(Schema.Boolean),
 })
-type OpenAIResponsesTool = Schema.Schema.Type<typeof OpenAIResponsesTool>
+const OpenAIResponsesTool = Schema.Union([
+  OpenAIResponsesFunction,
+  Schema.Struct({
+    type: Schema.tag("namespace"),
+    name: Schema.String,
+    description: Schema.String,
+    tools: Schema.Array(OpenAIResponsesFunction),
+  }),
+])
 
 const OpenAIResponsesToolChoice = Schema.Union([
   Schema.Literals(["auto", "none", "required"]),
-  Schema.Struct({ type: Schema.tag("function"), name: Schema.String }),
+  Schema.Struct({ type: Schema.tag("function"), name: Schema.String, namespace: Schema.optional(Schema.String) }),
 ])
 
 // Fields shared between the HTTP body and the WebSocket `response.create`
@@ -227,6 +237,7 @@ const OpenAIResponsesEvent = Schema.Struct({
   code: Schema.optional(Schema.String),
   message: Schema.optional(Schema.String),
   param: Schema.optional(Schema.String),
+  error: optionalNull(OpenAIResponsesErrorPayload),
 })
 type OpenAIResponsesEvent = Schema.Schema.Type<typeof OpenAIResponsesEvent>
 
@@ -254,7 +265,7 @@ const invalid = ProviderShared.invalidRequest
 // =============================================================================
 // Request Lowering
 // =============================================================================
-const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema): OpenAIResponsesTool => ({
+const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema): typeof OpenAIResponsesFunction.Type => ({
   type: "function",
   name: tool.name,
   description: tool.description,
@@ -263,18 +274,19 @@ const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema): OpenAIRespons
   strict: false,
 })
 
-const lowerToolChoice = (toolChoice: NonNullable<LLMRequest["toolChoice"]>) =>
+const lowerToolChoice = (toolChoice: NonNullable<LLMRequest["toolChoice"]>, namespace?: string) =>
   ProviderShared.matchToolChoice("OpenAI Responses", toolChoice, {
     auto: () => "auto" as const,
     none: () => "none" as const,
     required: () => "required" as const,
-    tool: (name) => ({ type: "function" as const, name }),
+    tool: (name) => ({ type: "function" as const, name, ...(namespace ? { namespace } : {}) }),
   })
 
-const lowerToolCall = (part: ToolCallPart): OpenAIResponsesInputItem => ({
+const lowerToolCall = (part: ToolCallPart, namespace?: string): OpenAIResponsesInputItem => ({
   type: "function_call",
   call_id: part.id,
   name: part.name,
+  ...(namespace ? { namespace } : {}),
   arguments: ProviderShared.encodeJson(part.input),
 })
 
@@ -342,8 +354,9 @@ const lowerToolResultOutput = Effect.fn("OpenAIResponses.lowerToolResultOutput")
 })
 
 const lowerMessages = Effect.fn("OpenAIResponses.lowerMessages")(function* (request: LLMRequest) {
+  const plan = OpenAIOptions.chatGPTPlan(request)
   const system: OpenAIResponsesInputItem[] =
-    request.system.length === 0 ? [] : [{ role: "system", content: ProviderShared.joinText(request.system) }]
+    plan || request.system.length === 0 ? [] : [{ role: "system", content: ProviderShared.joinText(request.system) }]
   const input: OpenAIResponsesInputItem[] = [...system]
   const store = OpenAIOptions.store(request)
 
@@ -408,7 +421,7 @@ const lowerMessages = Effect.fn("OpenAIResponses.lowerMessages")(function* (requ
         if (part.type === "tool-call") {
           flushText()
           if (part.providerExecuted === true) continue
-          input.push(lowerToolCall(part))
+          input.push(lowerToolCall(part, plan ? PLAN_TOOL_NAMESPACE : undefined))
           continue
         }
         if (part.type === "tool-result" && part.providerExecuted === true) {
@@ -460,8 +473,12 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
   const summary = OpenAIOptions.reasoningSummary(request)
   const include = OpenAIOptions.include(request)
   const text = ResponseFormat.openAIText(request)
-  const instructions = OpenAIOptions.instructions(request)
-  const serviceTier = OpenAIOptions.serviceTier(request)
+  const configured = OpenAIOptions.instructions(request)
+  const plan = OpenAIOptions.chatGPTPlan(request)
+  const instructions = plan
+    ? [configured, ProviderShared.joinText(request.system)].filter(Boolean).join("\n\n")
+    : configured
+  const serviceTier = plan ? undefined : OpenAIOptions.serviceTier(request)
   return {
     ...(instructions ? { instructions } : {}),
     ...(store !== undefined ? { store } : {}),
@@ -474,19 +491,26 @@ const lowerOptions = Effect.fn("OpenAIResponses.lowerOptions")(function* (reques
 })
 
 const fromRequest = Effect.fn("OpenAIResponses.fromRequest")(function* (request: LLMRequest) {
-  const generation = request.generation
+  // ChatGPT plan inference uses stateless Responses with namespaced local tools.
+  const plan = OpenAIOptions.chatGPTPlan(request)
+  const generation = plan ? undefined : request.generation
   const options = yield* lowerOptions(request)
   const toolSchemaCompatibility = request.model.compatibility?.toolSchema
+  const tools = request.tools.map((tool) =>
+    lowerTool(tool, ToolSchemaProjection.modelCompatibility(tool.inputSchema, toolSchemaCompatibility)),
+  )
   return {
     model: request.model.id,
     input: yield* lowerMessages(request),
     tools:
-      request.tools.length === 0
+      tools.length === 0
         ? undefined
-        : request.tools.map((tool) =>
-            lowerTool(tool, ToolSchemaProjection.modelCompatibility(tool.inputSchema, toolSchemaCompatibility)),
-          ),
-    tool_choice: request.toolChoice ? yield* lowerToolChoice(request.toolChoice) : undefined,
+        : plan
+          ? [{ type: "namespace" as const, name: PLAN_TOOL_NAMESPACE, description: "Orchestra tools", tools }]
+          : tools,
+    tool_choice: request.toolChoice
+      ? yield* lowerToolChoice(request.toolChoice, plan ? PLAN_TOOL_NAMESPACE : undefined)
+      : undefined,
     stream: true as const,
     max_output_tokens: generation?.maxTokens,
     temperature: generation?.temperature,
@@ -890,7 +914,7 @@ const onResponseFinish = (state: ParserState, event: OpenAIResponsesEvent): Step
 // the bare message — production rate limits and context-length failures used
 // to be indistinguishable from generic stream drops.
 const providerErrorMessage = (event: OpenAIResponsesEvent, fallback: string): string => {
-  const nested = event.response?.error ?? undefined
+  const nested = event.response?.error ?? event.error
   const message = event.message || nested?.message || undefined
   const code = event.code || nested?.code || undefined
   if (message && code) return `${code}: ${message}`
@@ -898,7 +922,7 @@ const providerErrorMessage = (event: OpenAIResponsesEvent, fallback: string): st
 }
 
 const providerError = (event: OpenAIResponsesEvent, fallback: string) => {
-  const code = event.code || event.response?.error?.code || undefined
+  const code = event.code || event.response?.error?.code || event.error?.code || undefined
   const message = providerErrorMessage(event, fallback)
   return LLMEvent.providerError({
     message,

@@ -45,6 +45,8 @@ const isTextVerbosity = (value: unknown): value is TextVerbosityValue =>
 
 const options = (request: LLMRequest) => request.providerOptions?.openai
 
+export const chatGPTPlan = (request: LLMRequest) => options(request)?.chatGPTPlan === true
+
 export const store = (request: LLMRequest): boolean | undefined => {
   const value = options(request)?.store
   return typeof value === "boolean" ? value : undefined
