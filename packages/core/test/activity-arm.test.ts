@@ -50,8 +50,9 @@ test("previews exact eligible object targets in request order and confirms one d
       })
       if (!preview) throw new Error("expected preview")
       const receipt = yield* arms.confirm({ previewID: preview.previewID })
+      if (!receipt) throw new Error("expected durable receipt")
       expect(receipt).toMatchObject({ action: "arm-quarantine", targets: preview.targets })
-      expect(receipt?.approvalID).toBeTruthy()
+      expect(receipt.approvalID).toBeTruthy()
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
       expect(yield* ActivityArmLedger.list(database)).toEqual([{ receipt, changed: false }])
     }),

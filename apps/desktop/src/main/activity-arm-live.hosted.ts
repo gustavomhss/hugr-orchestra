@@ -14,6 +14,10 @@ import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-chann
 import { registerActivityArmIpc } from "./activity-arm-ipc"
 import { startOwnedServe } from "./owned-serve"
 
+type ArmHandler = (
+  event: IpcMainInvokeEvent, url: string, input: ActivityArm.Request,
+) => Promise<ActivityArm.Receipt | undefined>
+
 test("the owned source CLI persists only an explicit native arm of the exact current selection", async () => {
   expectSpawn(import.meta.path)
   const root = await mkdtemp(join(tmpdir(), "activity-arm-cli-"))
@@ -86,9 +90,9 @@ test("the owned source CLI persists only an explicit native arm of the exact cur
     const frame = { url: "oc://renderer/" }
     const sender = Object.assign(new EventEmitter(), { id: 1, mainFrame: frame, isDestroyed: () => false })
     const window = { webContents: sender, isDestroyed: () => false }
-    const handlers = new Map<string, (event: IpcMainInvokeEvent, url: string, input: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>>()
+    const handlers = new Map<string, ArmHandler>()
     registerActivityArmIpc({
-      ipcMain: { handle: (name: string, handler: typeof handlers extends Map<string, infer Callback> ? Callback : never) => handlers.set(name, handler) },
+      ipcMain: { handle: (name: string, handler: ArmHandler) => handlers.set(name, handler) },
       BrowserWindow: { fromWebContents: () => window },
       dialog: { showMessageBox: (_parent: unknown, options: MessageBoxOptions) => {
         prompt.options = options
@@ -108,6 +112,7 @@ test("the owned source CLI persists only an explicit native arm of the exact cur
     expect((await fetchPlan()).approvals).toEqual([])
     prompt.response = 1
     const receipt = await handler(event, owned.url, request)
+    if (!receipt) throw new Error("native confirmation did not record a receipt")
     expect(receipt).toMatchObject({ action: "arm-quarantine", targets: plan.ready })
     expect((await fetchPlan()).approvals).toEqual([{ receipt, changed: false }])
     expect((await fetchPlan()).ready).toEqual([])
