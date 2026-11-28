@@ -195,7 +195,17 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     sample.bytes = 600
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    sample.identity = ""
+    for (const bytes of [700, 800, 900]) {
+      await Bun.sleep(2)
+      sample.bytes = bytes
+      await monitor.inspect(id)
+    }
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.identity = "tree-b"
+    await Bun.sleep(2)
+    await monitor.inspect(id)
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.members = [{ pid: child.pid + 1, parentPid: null, name: "other" }]
     await Bun.sleep(2)
     await monitor.inspect(id)
