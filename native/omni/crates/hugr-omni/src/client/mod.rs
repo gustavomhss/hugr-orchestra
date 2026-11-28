@@ -107,17 +107,30 @@ pub(crate) fn spawn(spec: &Spec) -> Result<Spawned, Error> {
     let rt = runtime()?;
     let sup = if spec.member_isolation {
         if !matches!(spec.mode, crate::spawn::Mode::Pipe) {
-            return Err(Error::supervisor_not_started("isolated PTY", &std::io::Error::other("PTY is unsupported")));
+            return Err(Error::supervisor_not_started(
+                "isolated PTY",
+                &std::io::Error::other("PTY is unsupported"),
+            ));
         }
         #[cfg(target_os = "linux")]
-        { ISOLATED.get(|num| sys::connect_isolated(rt, num))? }
+        {
+            ISOLATED.get(|num| sys::connect_isolated(rt, num))?
+        }
         #[cfg(not(target_os = "linux"))]
-        { return Err(Error::supervisor_not_started("isolated supervisor", &std::io::Error::other("Linux only"))); }
+        {
+            return Err(Error::supervisor_not_started(
+                "isolated supervisor",
+                &std::io::Error::other("Linux only"),
+            ));
+        }
     } else {
         CURRENT.get(|num| sys::launch(rt, num))?
     };
     if spec.member_isolation && !sup.member_freeze() {
-        return Err(Error::supervisor_not_started("isolated supervisor", &std::io::Error::other("member freeze capability missing")));
+        return Err(Error::supervisor_not_started(
+            "isolated supervisor",
+            &std::io::Error::other("member freeze capability missing"),
+        ));
     }
     spawn_on(&sup, spec)
 }

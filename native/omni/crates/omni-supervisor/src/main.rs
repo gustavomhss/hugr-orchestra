@@ -51,13 +51,21 @@ fn parse(mut it: impl Iterator<Item = String>) -> Result<Args, String> {
         if !cfg!(target_os = "linux") || host_pid.is_some() || pipe.is_some() || isolated_peer_uid == Some(0) {
             return Err("invalid isolated peer configuration".into());
         }
-        return Ok(Args { host_pid: 0, pipe: None, isolated_peer_uid });
+        return Ok(Args {
+            host_pid: 0,
+            pipe: None,
+            isolated_peer_uid,
+        });
     }
     let host_pid = host_pid.ok_or("missing --host-pid")?;
     if cfg!(windows) && pipe.is_none() {
         return Err("missing --pipe".into());
     }
-    Ok(Args { host_pid, pipe, isolated_peer_uid })
+    Ok(Args {
+        host_pid,
+        pipe,
+        isolated_peer_uid,
+    })
 }
 
 fn main() -> ExitCode {

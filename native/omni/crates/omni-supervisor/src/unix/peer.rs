@@ -6,10 +6,19 @@ pub(super) fn authenticate(uid: u32) -> std::io::Result<(libc::ucred, OwnedFd)> 
     use std::os::fd::FromRawFd;
     // SAFETY: geteuid and getsockopt use a valid fd and writable credential storage.
     unsafe {
-        if libc::geteuid() != 0 { return Err(std::io::Error::other("isolated supervisor must be root")); }
+        if libc::geteuid() != 0 {
+            return Err(std::io::Error::other("isolated supervisor must be root"));
+        }
         let mut peer: libc::ucred = std::mem::zeroed();
         let mut len = std::mem::size_of::<libc::ucred>() as libc::socklen_t;
-        if libc::getsockopt(0, libc::SOL_SOCKET, libc::SO_PEERCRED, (&raw mut peer).cast(), &raw mut len) != 0 {
+        if libc::getsockopt(
+            0,
+            libc::SOL_SOCKET,
+            libc::SO_PEERCRED,
+            (&raw mut peer).cast(),
+            &raw mut len,
+        ) != 0
+        {
             return Err(std::io::Error::last_os_error());
         }
         if len as usize != std::mem::size_of::<libc::ucred>() || peer.uid != uid || peer.uid == 0 || peer.pid <= 0 {

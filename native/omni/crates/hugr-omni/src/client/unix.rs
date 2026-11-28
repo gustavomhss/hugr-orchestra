@@ -57,7 +57,12 @@ impl Chan {
             Ok((UnixStream::from_std(host)?, rt))
         })();
         match setup {
-            Ok((sock, rt)) => Ok(Chan { sock, sup, rt, remote: false }),
+            Ok((sock, rt)) => Ok(Chan {
+                sock,
+                sup,
+                rt,
+                remote: false,
+            }),
             Err(e) => {
                 // It never served: do not leave it running (its keeper then reaps it).
                 if let Some(sup) = &sup {
@@ -343,18 +348,36 @@ pub(super) fn recv(sock: BorrowedFd<'_>, buf: &mut [u8], fds: &mut VecDeque<Owne
 pub(super) fn connect_isolated(rt: &Runtime, num: u64) -> Result<Arc<Gen>, Error> {
     // SAFETY: geteuid has no preconditions.
     let uid = unsafe { libc::geteuid() };
-    if uid == 0 { return Err(Error::supervisor_not_started("isolated supervisor", &io::Error::other("desktop peer must not be root"))); }
+    if uid == 0 {
+        return Err(Error::supervisor_not_started(
+            "isolated supervisor",
+            &io::Error::other("desktop peer must not be root"),
+        ));
+    }
     let host = StdStream::connect(format!("/run/orchestra/omni/{uid}.sock"))
         .map_err(|e| Error::supervisor_not_started("isolated supervisor socket", &e))?;
     // SAFETY: getsockopt writes to the initialized credential buffer for this connected socket.
     let peer = unsafe {
         let mut peer: libc::ucred = std::mem::zeroed();
         let mut len = std::mem::size_of::<libc::ucred>() as libc::socklen_t;
-        if libc::getsockopt(host.as_raw_fd(), libc::SOL_SOCKET, libc::SO_PEERCRED, (&raw mut peer).cast(), &raw mut len) != 0 {
-            return Err(Error::supervisor_not_started("isolated supervisor identity", &io::Error::last_os_error()));
+        if libc::getsockopt(
+            host.as_raw_fd(),
+            libc::SOL_SOCKET,
+            libc::SO_PEERCRED,
+            (&raw mut peer).cast(),
+            &raw mut len,
+        ) != 0
+        {
+            return Err(Error::supervisor_not_started(
+                "isolated supervisor identity",
+                &io::Error::last_os_error(),
+            ));
         }
         if len as usize != std::mem::size_of::<libc::ucred>() || peer.uid != 0 {
-            return Err(Error::supervisor_not_started("isolated supervisor identity", &io::Error::other("peer is not root")));
+            return Err(Error::supervisor_not_started(
+                "isolated supervisor identity",
+                &io::Error::other("peer is not root"),
+            ));
         }
         peer
     };

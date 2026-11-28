@@ -37,8 +37,14 @@ impl HostWatch {
 
     #[cfg(target_os = "linux")]
     pub(super) fn remote(event: OwnedFd) -> io::Result<HostWatch> {
-        if pidfd_ready(&event)? { return Err(io::Error::other("peer already exited")); }
-        Ok(HostWatch { host: 0, event: Some(event), remote: true })
+        if pidfd_ready(&event)? {
+            return Err(io::Error::other("peer already exited"));
+        }
+        Ok(HostWatch {
+            host: 0,
+            event: Some(event),
+            remote: true,
+        })
     }
 
     pub(super) fn event_fd(&self) -> Option<RawFd> {

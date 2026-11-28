@@ -65,7 +65,9 @@ pub fn spawn(
 
 /// Capability marker for the fail-closed isolated spawn option.
 #[napi]
-pub fn supports_member_isolation() -> bool { true }
+pub fn supports_member_isolation() -> bool {
+    true
+}
 
 /// The native half of a JS `Child`.
 #[napi]

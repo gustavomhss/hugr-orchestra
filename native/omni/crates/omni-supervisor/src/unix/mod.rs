@@ -16,10 +16,10 @@ mod footprint;
 mod fork;
 #[cfg(target_os = "linux")]
 mod isolated;
-#[cfg(target_os = "linux")]
-mod peer;
 mod member_control;
 mod observe;
+#[cfg(target_os = "linux")]
+mod peer;
 mod procs;
 mod replies;
 mod setup;
@@ -96,7 +96,11 @@ impl Sup {
         let chan = Chan::new(take_channel()?)?;
         let (sigchld, sigchld_w) = signals()?;
         #[cfg(target_os = "linux")]
-        let host = peer.as_ref().map_or(i32::try_from(args.host_pid).map_err(std::io::Error::other)?, |p| p.0.pid);
+        let host = peer
+            .as_ref()
+            .map_or(i32::try_from(args.host_pid).map_err(std::io::Error::other)?, |p| {
+                p.0.pid
+            });
         #[cfg(not(target_os = "linux"))]
         let host = i32::try_from(args.host_pid).map_err(std::io::Error::other)?;
         #[cfg(target_os = "linux")]
@@ -111,7 +115,9 @@ impl Sup {
         let isolation = isolated::Isolation::load()?;
         #[cfg(target_os = "linux")]
         if let Some((peer, _)) = peer {
-            let isolation = isolation.as_ref().ok_or_else(|| std::io::Error::other("missing isolation provisioning"))?;
+            let isolation = isolation
+                .as_ref()
+                .ok_or_else(|| std::io::Error::other("missing isolation provisioning"))?;
             if !isolation.distinct_from(peer.uid, peer.gid)? {
                 return Err(std::io::Error::other("isolation identity overlaps desktop peer"));
             }

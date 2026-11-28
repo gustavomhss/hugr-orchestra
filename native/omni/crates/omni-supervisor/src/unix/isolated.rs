@@ -315,7 +315,15 @@ impl Isolation {
                             7 => super::spawn::exec_code(errno),
                             _ => omni_proto::FailCode::Io,
                         };
-                        Err(super::spawn::Fail::new(code, errno, format!("isolated child stage {}: {}", report[0], io::Error::from_raw_os_error(errno))))
+                        Err(super::spawn::Fail::new(
+                            code,
+                            errno,
+                            format!(
+                                "isolated child stage {}: {}",
+                                report[0],
+                                io::Error::from_raw_os_error(errno)
+                            ),
+                        ))
                     }
                     Ok(_) => Err(fail(
                         "isolated child report",
