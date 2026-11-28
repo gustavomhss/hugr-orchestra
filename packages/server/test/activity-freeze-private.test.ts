@@ -96,6 +96,25 @@ test.skipIf(process.platform !== "linux" || process.env.HUGR_OMNI_ISOLATION_CI !
         const resumed = await post(reopened, ActivityPrivateChannel.freezeConfirmPath, { previewID: resume.value.previewID })
         expect(resumed).toMatchObject({ status: 200, value: { member, markID: suspended.value.markID, action: "resume", phase: "resumed" } })
         expect(await queued).toBe("after resume")
+
+        process.kill(child.pid, "SIGSTOP")
+        const deadline = Date.now() + 2_000
+        while (!/^State:\s+T\b/m.test(await Bun.file(`/proc/${child.pid}/status`).text())) {
+          if (Date.now() >= deadline) throw new Error("the fixture did not enter an external signal stop")
+          await Bun.sleep(10)
+        }
+        const suspendAgain = await post(reopened, ActivityPrivateChannel.freezePreviewPath, { recordID, action: "suspend" })
+        const second = await post(reopened, ActivityPrivateChannel.freezeConfirmPath, { previewID: suspendAgain.value.previewID })
+        expect(second).toMatchObject({ status: 200, value: { phase: "suspended" } })
+        expect(second.value.markID).not.toBe(suspended.value.markID)
+        const externallyPaused = targetLines.next().then((item) => item.value?.text)
+        await child.write("after external continue\n")
+        const resumeAgain = await post(reopened, ActivityPrivateChannel.freezePreviewPath, { recordID, action: "resume" })
+        expect(await post(reopened, ActivityPrivateChannel.freezeConfirmPath, { previewID: resumeAgain.value.previewID }))
+          .toMatchObject({ status: 200, value: { phase: "resumed", markID: second.value.markID } })
+        expect(await Promise.race([externallyPaused, Bun.sleep(150).then(() => "still stopped")])).toBe("still stopped")
+        process.kill(child.pid, "SIGCONT")
+        expect(await externallyPaused).toBe("after external continue")
       })
     }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
   },

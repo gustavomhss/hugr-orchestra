@@ -1,6 +1,9 @@
 import { expect, mock, test } from "bun:test"
 import { Orchestra } from "@orchestra/client"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
+import type { Platform } from "@/context/platform"
+import type { ServerConnection } from "@/context/server"
 import type { Locale } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
 import { createComponent, createContext, useContext, type Accessor } from "solid-js"
@@ -15,6 +18,10 @@ mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activit
     if (!sdk) throw new Error("Activity tree SDK missing")
     return sdk
   },
+}))
+const serverContext = createContext<ServerConnection.Any>()
+mock.module(Bun.resolveSync("@/context/server", import.meta.dir) + "?activity-tree-telemetry", () => ({
+  useServer: () => ({ current: useContext(serverContext) }),
 }))
 const { ActivityTrees }: typeof import("@/orchestra/chapters/activity/trees") = await load(
   "@/orchestra/chapters/activity/trees",
@@ -59,7 +66,7 @@ async function until(description: string, ready: () => boolean) {
   expect(ready(), description).toBe(true)
 }
 
-function mount(locale: Locale) {
+function mount(locale: Locale, platform?: Platform) {
   const attributes = ["lang", "dir"].map((name) => [name, document.documentElement.getAttribute(name)] as const)
   const storage = ["orchestra.global.dat:language", "language.v1"].map((key) => [key, localStorage.getItem(key)] as const)
   const cookie = document.cookie.split("; ").find((value) => value.startsWith("oc_locale="))
@@ -78,10 +85,11 @@ function mount(locale: Locale) {
     },
     { preconnect: fetch.preconnect },
   )
-  const sdk = () => ({ ready: Promise.resolve(), orchestra: Orchestra.make({ baseUrl: "http://activity.test", fetch: transport }) })
+  const client = { ready: Promise.resolve(), orchestra: Orchestra.make({ baseUrl: "http://activity.test", fetch: transport }) }
+  const sdk = () => client
   const dispose = render(
     () => createComponent(PlatformProvider, {
-      value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
+      value: platform ?? { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
       get children() {
         return createComponent(LanguageProvider, {
           locale,
@@ -89,7 +97,12 @@ function mount(locale: Locale) {
             useLanguage().setLocale(locale)
             return createComponent(sdkContext.Provider, {
               value: sdk,
-              get children() { return createComponent(ActivityTrees, { query: "" }) },
+              get children() {
+                return createComponent(serverContext.Provider, {
+                  value: platform ? { type: "sidecar", variant: "base", http: { url: "http://activity.test" } } : undefined,
+                  get children() { return createComponent(ActivityTrees, { query: "" }) },
+                })
+              },
             })
           },
         })
@@ -249,3 +262,57 @@ for (const labels of cases) {
     }
   })
 }
+
+test("the selected Linux member offers suspend and resume after the manual read", async () => {
+  const reads: string[] = []
+  const actions: ActivityFreeze.Request[] = []
+  const member = "123:456"
+  const markID = crypto.randomUUID()
+  const phase: { next: ActivityFreeze.State["next"] } = { next: "suspend" }
+  const app = mount("en", {
+    platform: "desktop",
+    os: "linux",
+    openExternal() {},
+    restart: async () => {},
+    notify: async () => {},
+    readActivityFreeze: async (url, input) => {
+      expect(url).toBe("http://activity.test")
+      reads.push(input.recordID)
+      return { recordID: input.recordID, treeID: "supervisor-1", member, next: phase.next }
+    },
+    freezeActivityMember: async (url, request) => {
+      expect(url).toBe("http://activity.test")
+      actions.push(request)
+      phase.next = request.action === "suspend" ? "resume" : "suspend"
+      return {
+        previewID: crypto.randomUUID(), target: { targetID: request.recordID, generation: "7" },
+        treeID: "supervisor-1", member, action: request.action, markID,
+        phase: request.action === "suspend" ? "suspended" : "resumed",
+      }
+    },
+  })
+  const button = (scope: ParentNode, name: string) => [...scope.querySelectorAll("button")].find((item) => text(item) === name)
+  try {
+    ;(await app.call(0, "/api/activity")).respond(base)
+    await until("tree rows", () => app.host.querySelectorAll("details").length === 2)
+    const [selected, sibling] = app.host.querySelectorAll<HTMLDetailsElement>("tbody details")
+    selected!.querySelector("summary")!.click()
+    expect(reads).toEqual([])
+    expect(button(selected!, "Suspend member…")).toBeUndefined()
+    button(selected!, "Read members")!.click()
+    ;(await app.call(1, `/api/activity/${encodeURIComponent(recordID)}/inspection`)).respond(inspected)
+    await until("selected member ready", () => !!button(selected!, "Suspend member…"))
+    expect(reads).toEqual([recordID])
+    expect(button(sibling!, "Suspend member…")).toBeUndefined()
+    expect(actions).toEqual([])
+    button(selected!, "Suspend member…")!.click()
+    await until("resume available", () => !!button(selected!, "Resume member…"))
+    expect(text(selected!)).toContain("Member suspended by Orchestra.")
+    expect(text(sibling!)).not.toContain("Member suspended")
+    button(selected!, "Resume member…")!.click()
+    await until("resume receipt", () => text(selected!).includes("Orchestra suspension removed."))
+    expect(actions).toEqual([{ recordID, action: "suspend" }, { recordID, action: "resume" }])
+  } finally {
+    app.dispose()
+  }
+})
