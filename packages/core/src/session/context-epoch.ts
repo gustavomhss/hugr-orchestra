@@ -177,7 +177,10 @@ const exists = Effect.fn("SessionContextEpoch.exists")(function* (db: DatabaseSe
   )
 })
 
-const find = Effect.fn("SessionContextEpoch.find")(function* (db: DatabaseService, sessionID: SessionSchema.ID) {
+const find = Effect.fn("SessionContextEpoch.find")(function* (
+  db: Pick<DatabaseService, "select">,
+  sessionID: SessionSchema.ID,
+) {
   return yield* db
     .select()
     .from(SessionContextEpochTable)
