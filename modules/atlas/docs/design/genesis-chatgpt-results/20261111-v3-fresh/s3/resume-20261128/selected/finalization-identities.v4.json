@@ -1,0 +1,95 @@
+{
+  "schema": "s3-v4-finalization-identities/v1",
+  "runtime_status": "NOT_RUN",
+  "remote_status": "NOT_WRITTEN",
+  "original_copies_unchanged": true,
+  "files": [
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/README.md",
+      "sha256": "a7214d737711a5e3999e0db235a967f5433c0c2fe9e2fcb255b7bfc8bc7a7ab3",
+      "git_blob_sha": "f928aebac868c17bac866f7f4a3f939a1624f527",
+      "byte_length": 5478
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/bindings.selected.json",
+      "sha256": "4caed3bd24520e589b85b85a9e6fcf2fbbd48e1b709994ca651197dbf1a2134c",
+      "git_blob_sha": "deb75d99537df85e0ba27227e24aefbeefb8c572",
+      "byte_length": 76173
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/build_input_lock.py",
+      "sha256": "76beaa95f0eb8c49f089fe7c4ab01634a7b10a27543b7bad5f7ac4cf139c7d12",
+      "git_blob_sha": "c062073d882bc8f60b7e108efd93727b2e96cb15",
+      "byte_length": 24590
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/build_selected_payload.py",
+      "sha256": "0c991bf6cf3712775ac1004817dafa0fb3cfc4485f00b0ce784c2fcebbd191f0",
+      "git_blob_sha": "4f034d63ea5e6cf0fca37c757434e886becbafc4",
+      "byte_length": 23255
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/builder-copy-provenance.json",
+      "sha256": "7940c44cfd31523e876be1ee7fd743921dbbabfde36fd7adf5aad398b1b295cf",
+      "git_blob_sha": "8ae08fab19483c457ea4a275514c09a81e0c9d0a",
+      "byte_length": 1063
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/gate-report.json",
+      "sha256": "ba232dfe4328634cb2027a03512d1d68c6c9457a70b1142cb48fe5a38e00abcb",
+      "git_blob_sha": "e03467c1a37880ae01158b0db74d9acb4a13c477",
+      "byte_length": 6497
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/input-lock.json",
+      "sha256": "ada53fd4d9712a09c37d9b29f8d1c00d813b9089bd5afb4ff4213ed1807b8704",
+      "git_blob_sha": "fe2677462beceb36223fd2de443e95fd49fe5807",
+      "byte_length": 1673102
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/input-lock.preflight.json",
+      "sha256": "26d28d2e0f6dceef8cd94f9401d7a9a9467b72eb08e08ed6c80f9f7b83e4525e",
+      "git_blob_sha": "16dfe38e6ca172f7b0c4ae907a93cba22bb29e6a",
+      "byte_length": 1396
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/old-strict-captures.json",
+      "sha256": "ad8985efbad57bd7c133910e4fd989edf3c5e7e13352a3e83505f8f9af866e0f",
+      "git_blob_sha": "3362b8a915045d72918bd7ddac2eb2678e21582d",
+      "byte_length": 35821
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/payload-files.json",
+      "sha256": "b512c6dd0c92b514626bc1ac72370f0f20f356434c57b4576889e00afa0ed7fb",
+      "git_blob_sha": "4ef132ca84f34c332d62c667a371c2c168b46cbb",
+      "byte_length": 138404
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+      "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+      "git_blob_sha": "d16f8aeefa50faa90b6d40631c5563345dae72f2",
+      "byte_length": 53595
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/selected-assembly.json",
+      "sha256": "c4364eea597825279e2afb21b1fe0e2501850b09cbfc13fbb31e9c889acb1120",
+      "git_blob_sha": "43cf31c997f2d50aa67fea25eb4968b746ced12a",
+      "byte_length": 20905
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/selected-reference-matrix.json",
+      "sha256": "27c451c2e8640514fa9a1c109c035ede9b5e5e4dab702cd8e0ed0347c923f389",
+      "git_blob_sha": "cae5046c9d78ff577a28a191983ec573f48ea417",
+      "byte_length": 2551966
+    },
+    {
+      "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/v3-lineage-archive.json",
+      "sha256": "ff4627fb7007038913256a5c4860e0ec507493a956bf502026bccd8ff9e958bc",
+      "git_blob_sha": "16ee188bae88e23ec32872b024e3c05e458e4959",
+      "byte_length": 8508
+    }
+  ],
+  "payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+  "payload_tree": "f1fa81f0b2790a50bf55940ac68630c8c0031345",
+  "input_lock_state": "FINAL_WITH_REAL_PAYLOAD_PIN_AND_READBACK"
+}

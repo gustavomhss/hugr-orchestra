@@ -1,0 +1,33 @@
+{
+  "schema": "s3-selected-input-lock-preflight/v1",
+  "status": "IDENTITIES_READY",
+  "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+  "package_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+  "package_git_blob_sha": "8eea7cc11e93ea37d5a427df1ca5630c1ee47b26",
+  "package_byte_length": 1164616,
+  "payload_commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+  "payload_commit_state": "ROOT_COMMIT_WITH_EXACT_READBACK",
+  "payload_readback": {
+    "path": "/workspace/scratch/0666cc914bd1/s3-selected-finalization/v4/readback-selected.json",
+    "sha256": "0ba06eda7c9b9e7426c75b2496ff0451879ac906ab5cb7a4b4d9077dac0d4a83",
+    "git_blob_sha": "d16f8aeefa50faa90b6d40631c5563345dae72f2",
+    "byte_length": 53595,
+    "head": "6c28b6da92a45d6c26490389b4813b8ba4849065",
+    "tree": "f1fa81f0b2790a50bf55940ac68630c8c0031345",
+    "verified_file_count": 176
+  },
+  "file_input_count": 4601,
+  "members_count": 45,
+  "input_key_count": 4646,
+  "strict_path_count": 309,
+  "exact_required_path_count": 4639,
+  "resolved_path_count": 4639,
+  "known_sha256_count": 321,
+  "baseline_only_sha256_to_measure_count": 4318,
+  "membership_materialization_file_count": 21,
+  "membership_only_file_count": 16,
+  "unresolved": [],
+  "conflicts": [],
+  "runtime_status": "NOT_RUN",
+  "remote_status": "NOT_WRITTEN"
+}
