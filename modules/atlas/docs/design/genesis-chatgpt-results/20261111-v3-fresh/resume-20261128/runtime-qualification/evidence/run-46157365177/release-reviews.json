@@ -1,0 +1,24 @@
+{
+  "purpose": "Independent runtime correction review, narrow native-prepare release and regression control",
+  "runtime_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "run_id": 46157365177,
+  "criteria": [
+    "Declared existing dependency and lockfile, preserving runtime hashing version and implementation",
+    "Exact hosted installed-byte drift control and output boundaries",
+    "Release restricted to observed operation and separately pinned historical evidence"
+  ],
+  "decisions": [
+    {
+      "agent_id": "/root/runtime_release_j1",
+      "model": "gpt-6-luna",
+      "verdict": "PASS",
+      "response": "PASS — J1 runtime correction only. 1. Root cause corrected: kernel declares the existing Noble dependency; version and algorithm remain unchanged. 2. Hosted run 46157365177 supports installed-byte drift refusal at the tested fixture entry points; this does not establish S2 domain approval. 3. Release may advertise only the narrow native prepare and test control, with historical proofs pinned. No domain binding, publication, consumer, or integration approval."
+    },
+    {
+      "agent_id": "/root/runtime_release_j2",
+      "model": "gpt-6.1-terra",
+      "verdict": "PASS",
+      "response": "PASS — narrow runtime correction and release claims only. 1. The kernel now declares its existing Noble dependency; the version and algorithm remain unchanged, and the installed identity traversal can include it. 2. Hosted run 46157365177 supports byte-drift refusal at the stated fixture entry points; the prior negative control and byte restoration strengthen that evidence. This does not establish S2 domain approval. 3. Release may advertise the narrow native prepare and test control, with the historical proofs pinned. Domain binding, publication, consumer behavior, and integration remain outside this review. Required gaps for this scope: none identified in the supplied packet."
+    }
+  ]
+}

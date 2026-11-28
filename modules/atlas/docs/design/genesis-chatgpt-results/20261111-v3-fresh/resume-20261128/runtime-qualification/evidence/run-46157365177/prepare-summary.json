@@ -1,0 +1,230 @@
+{
+  "schema": "genesis-s4-runtime-qualification/v1",
+  "started_at": "2026-11-28T14:59:39.899462+00:00",
+  "verdict": "PASS_PREPARE_QUALIFICATION",
+  "packages": [
+    {
+      "id": "S1-03",
+      "verdict": "PASS",
+      "candidate_id": "11cf8b0608eb9455967e45bc2bce6c8522caeef4db9f90e43d6f191ac214d271",
+      "candidate_file": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s1-03/prepared.json",
+        "byte_length": 464043,
+        "sha256": "88e5adc0542c5a3d0feeeb7970664b7f412df715a2e6addcf793434e1ac57a0a"
+      },
+      "artifact_count": 12,
+      "observation_count": 694,
+      "large_inputs": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+          "git_mode": "100644",
+          "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+          "byte_length": 726892,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "85a43929319cad4297441b21dff28d6a8fedda7928725475d93cc0de21389127",
+          "kernel_version": "46e3641775472d0bbc176e7c243b8894ef68083236137c3bea9629a53b454f05"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md",
+          "commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+          "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3",
+          "git_mode": "100644",
+          "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+          "byte_length": 953016,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "76ad27bda4cfbc117de8f951a3a946671860eca53c635d3b05920f6154e79f8f",
+          "kernel_version": "887ea79dbd83b3df81125fbf42ad69248c758fe6ce06867871e431d9ce18b8ab"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md",
+          "commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+          "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46",
+          "git_mode": "100644",
+          "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+          "byte_length": 338932,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "45ef0265c43a2198621071284046d57f7c36380753487218128666426f86c057",
+          "kernel_version": "ae4abda42c49058c1f2de5b1eba3f4a689f826015fdc4f3b20665010019d08b6"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md",
+          "commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+          "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f",
+          "git_mode": "100644",
+          "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+          "byte_length": 375497,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "6408c06cf43b50142b3fd1d6c79ed2842fbd77cc2722551c7feb96afe334ba45",
+          "kernel_version": "7bea4aca4006d3e64083ef78be8832075d6b9f0d252da133bf1d234a97576c76"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md",
+          "commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+          "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89",
+          "git_mode": "100644",
+          "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+          "byte_length": 404469,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "1f9e7d43f4c70299ac8fdfc3886115bec25f2e3dd0474a8566fbb7317c0347f0",
+          "kernel_version": "16c53a10318bfa9d8d3f32eeff3fe5ae1e46764c579fd0daacfcabd4fb2def5b"
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+          "git_mode": "100644",
+          "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+          "byte_length": 266885,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "3510cb7e81e0bb0c1abe0472ef94b1635556c0948d57521774d28fb54b712fe3",
+          "kernel_version": "2e8885960a6bd5ccfee4a7728a3e07c799a6d17d6a4dceb18f1d2565bff94f60"
+        }
+      ],
+      "kernel_identity_verification": "Original @atlas/kernel independently rehashes candidate, each entry inputs/dependencies and complete file bytes. Transport SHA256, Git blob SHA1 and kernel IDs remain distinct.",
+      "kernel_check_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s1-03/kernel-identities.receipt.json",
+        "byte_length": 2032,
+        "sha256": "624844a16d0084efdd79426c327f106d37367180f697ffbda2cc03e53ec67c2a"
+      },
+      "operation_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s1-03/receipt.json",
+        "byte_length": 1886,
+        "sha256": "ff47ce01581f92d2e27b070666180e71ad78ffad7aed57a67ec91426506238bc"
+      },
+      "cas_inventory_sha256": "c5dafc1f552c64e5586bb54960944f6a72d845176ea086d53c1de83a23e9b9ed"
+    },
+    {
+      "id": "S2",
+      "verdict": "PASS",
+      "candidate_id": "3c0ff60a407975de2a12cedce528894e3d3fde866ed6b75e863146e22254f6a6",
+      "candidate_file": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s2/prepared.json",
+        "byte_length": 344758,
+        "sha256": "e1fb7f1d47cd8b476271437d545f41b68dd9704badc0a33189313676479e93b3"
+      },
+      "artifact_count": 13,
+      "observation_count": 626,
+      "large_inputs": [
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+          "commit": "d1e635ed5e316b8d5d59650432268e3e81d8aff0",
+          "git_blob_sha": "535980195218391fbcf5c4e496924761ac6ff1e9",
+          "git_mode": "100644",
+          "sha256": "3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6",
+          "byte_length": 369462,
+          "roles": [
+            "input"
+          ],
+          "tail64_sha256": "09e74a94fa0d3231830e3613a96a286b7904819c3eeac55f677325bc015ba848",
+          "kernel_version": "68d7a53c369a1e868d03c2f765890d841ac199aabec8fb822829c263e4801c37"
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json",
+          "commit": "d1e635ed5e316b8d5d59650432268e3e81d8aff0",
+          "git_blob_sha": "b1e127272bb7f2da70382e7f1791baecc31bff89",
+          "git_mode": "100644",
+          "sha256": "371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9",
+          "byte_length": 390775,
+          "roles": [
+            "input"
+          ],
+          "tail64_sha256": "928276e30fa57471568c3641a2ad3d4df7d1654d19a7cd7d9a40dd8815e3817e",
+          "kernel_version": "a532afa1c5f5ca06812b9f87fcd4ce10b51cde8b646781b1c7cae3c4e33d8ef4"
+        },
+        {
+          "path": "schema/tui.json",
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "git_blob_sha": "9250e2ec0c6e433ade0d5a172e8156087022f217",
+          "git_mode": "100644",
+          "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+          "byte_length": 1131057,
+          "roles": [
+            "source_ref",
+            "input"
+          ],
+          "tail64_sha256": "9adae45b6b517508539ae2678d6dfab5de99d64a8294d0f50c3aafd1c8f6f772",
+          "kernel_version": "435cd77e9f673be1a17d0d63d0534fd1c655d49e9c916138930cd9f5ab16e18a"
+        }
+      ],
+      "kernel_identity_verification": "Original @atlas/kernel independently rehashes candidate, each entry inputs/dependencies and complete file bytes. Transport SHA256, Git blob SHA1 and kernel IDs remain distinct.",
+      "kernel_check_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s2/kernel-identities.receipt.json",
+        "byte_length": 2023,
+        "sha256": "5cd39dc62e39340d79a65f4e21160f757305ea48de2f2f1b9f9cf50889639bdf"
+      },
+      "operation_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s2/receipt.json",
+        "byte_length": 1844,
+        "sha256": "552e9e61e7e37a04a2e3a8fe7cb646fa0a2fda22c6c40c2f2337361623ac9ac8"
+      },
+      "cas_inventory_sha256": "2f2ef05c7ce8fd4819ba9cad27231482e8cee9a1df481a62e88991bdf16ddaeb"
+    }
+  ],
+  "runtime_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "runtime_tree": "77b84e9358c80ae14b98be329ebf2407dfd83fa4",
+  "harness_revision": "e7972ee6075cd839327c4b559ba0f5ca03b418f0",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "input_lock": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/input-lock.json",
+    "byte_length": 620761,
+    "sha256": "372ebfaed873d4baa03df58590327dc0b12ffdb62095c4e4e8f2f2dbd4f0b272"
+  },
+  "workflow_run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46157365177",
+  "run_attempt": "1",
+  "job": "prepare",
+  "versions": {
+    "bun": "1.3.14+0d9b296af",
+    "node": "v24.22.3",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]"
+  },
+  "limits": {
+    "ownership_input_bytes": 2097152,
+    "native_transport_bytes": 8388608
+  },
+  "historical_common_gate_before_noble_binding": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+  "fresh_scope": "Full S1-03 and S2 native prepares under the Noble-bound kernel, exact input materialization, and real EACCES refusal",
+  "binding": "NOT_ATTEMPTED",
+  "publication": "NOT_ATTEMPTED",
+  "independent_runtime_acceptance": "SEPARATE",
+  "real_permission_refusal": {
+    "verdict": "PASS",
+    "uid": 1001,
+    "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md",
+    "read_probe": "PermissionError",
+    "exit_code": 1,
+    "error": {
+      "kind": "error",
+      "error": "EACCES: permission denied, open '/home/runner/work/_temp/genesis-runtime-46157365177-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md'"
+    },
+    "candidate_created": false,
+    "restored_mode": "0o644",
+    "positive_roots_unchanged": true,
+    "operation_receipt": {
+      "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s2-permission-refusal/receipt.json",
+      "byte_length": 1732,
+      "sha256": "32e1cf63d4d996ca680b57272abd21352078d957a758529edfd3f6d47a3228a2"
+    }
+  },
+  "ended_at": "2026-11-28T14:59:52.545293+00:00"
+}
