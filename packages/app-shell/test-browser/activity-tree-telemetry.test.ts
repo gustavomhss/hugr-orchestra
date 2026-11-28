@@ -124,8 +124,8 @@ function mount(locale: Locale) {
 
 const text = (element: Element) => element.textContent?.trim() ?? ""
 const cases = [
-  { locale: "en", cpu: "Host CPU · non-idle time", unread: "unread", hypothesis: "Hypothesis: insufficient", reachability: "Reachability: unread", read: "Read members", refresh: "Refresh", window: "Window 2.0 s", pressure: "Machine memory pressure is unread." },
-  { locale: "br", cpu: "CPU da máquina · tempo não ocioso", unread: "não lido", hypothesis: "Hipótese: insuficiente", reachability: "Alcançabilidade: não lido", read: "Ler membros", refresh: "Atualizar", window: "Janela 2.0 s", pressure: "Pressão de memória da máquina não foi lida." },
+  { locale: "en", age: "Age", cpu: "Host CPU · non-idle time", unread: "unread", hypothesis: "Hypothesis: insufficient", reachability: "Reachability: unread", read: "Read members", refresh: "Refresh", window: "Window 2.0 s", pressure: "Machine memory pressure is unread." },
+  { locale: "br", age: "Idade", cpu: "CPU da máquina · tempo não ocioso", unread: "não lido", hypothesis: "Hipótese: insuficiente", reachability: "Alcançabilidade: não lido", read: "Ler membros", refresh: "Atualizar", window: "Janela 2.0 s", pressure: "Pressão de memória da máquina não foi lida." },
 ] as const
 
 for (const labels of cases) {
@@ -179,7 +179,9 @@ for (const labels of cases) {
       ;(await app.call(before, `/api/activity/${encodeURIComponent(recordID)}/inspection`)).respond(inspected)
       await until("member reading", () => text(details[0]!).includes("fixture-member"))
       expect(text(details[0]!)).toContain("omni.processes")
-      expect(text(rows()[0]!)).toMatch(/\b2 s\b/)
+      const ageColumn = [...app.host.querySelectorAll("thead th")].map(text).indexOf(labels.age)
+      expect(ageColumn).toBeGreaterThanOrEqual(0)
+      expect(text(rows()[0]!.querySelectorAll("td")[ageColumn]!)).toBe("2 s")
       expect(footprint()).toBe(labels.unread)
       expect(text(app.host)).toContain(labels.pressure)
       expect(text(details[0]!)).toContain(labels.hypothesis)
