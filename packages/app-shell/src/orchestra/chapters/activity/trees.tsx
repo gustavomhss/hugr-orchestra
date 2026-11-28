@@ -164,6 +164,8 @@ export function ActivityTrees(props: { query: string }) {
                           >
                             {language.t("orchestra.monitor.inspect")}
                           </button>
+                          <p class="mx-note">{language.t("orchestra.monitor.hypothesisInsufficient")}</p>
+                          <p class="mx-note">{language.t("orchestra.monitor.reachabilityUnread")}</p>
                           <Show when={row.source}>
                             <p class="mx-note">{row.source}</p>
                           </Show>
