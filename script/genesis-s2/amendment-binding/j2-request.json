@@ -1,17 +1,17 @@
 {
-  "kind": "operator archive of requested corrected S2 review",
+  "kind": "operator archive of requested final S2 review",
   "reviewer": "/root/s2_admission_j2",
   "response_alias": "/root/s2_admission_j2",
-  "run_id": 46175330335,
-  "artifact_id": 15275825097,
-  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
-  "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
-  "vector_sha256": "4d975a1b14225760eef860d1df696233767fbeff4fc9a5e285db998dfebe7552",
+  "run_id": 46177202438,
+  "artifact_id": 15275937523,
+  "candidate_id": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
+  "target_sha256": "4732ef6747521ac00ed927c3e3ee66b18eb0f6d2f629055365c5307f07d3b0d9",
+  "vector_sha256": "9c0e77612f3cc57d042888133bcf8a28860ecb92de3a9abd0c967b7d3c5797e0",
   "criteria": [
     "ADMIT-EXACT-TRANSFORM",
     "ADMIT-SOURCE-BINDINGS",
     "ADMIT-SEMANTIC-SCOPE",
     "ADMIT-ISOLATED-PLAN"
   ],
-  "scope": "All 13 corrected isolated target entries only. Four consumer retries to follow."
+  "scope": "All 13 final isolated target entries only. Only C1 and C4 retries to follow."
 }

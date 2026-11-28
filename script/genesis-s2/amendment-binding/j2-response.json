@@ -1,27 +1,27 @@
 {
   "reviewer": "/root/s2_admission_j2",
   "purpose": "isolated-evaluation-admission",
-  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
-  "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
-  "vector_sha256": "4d975a1b14225760eef860d1df696233767fbeff4fc9a5e285db998dfebe7552",
+  "candidate_id": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
+  "target_sha256": "4732ef6747521ac00ed927c3e3ee66b18eb0f6d2f629055365c5307f07d3b0d9",
+  "vector_sha256": "9c0e77612f3cc57d042888133bcf8a28860ecb92de3a9abd0c967b7d3c5797e0",
   "verdict": "PASS",
   "criteria": {
     "ADMIT-EXACT-TRANSFORM": {
       "decision": "PASS",
-      "rationale": "O vetor cobre 13 entradas, com três resultados alterados e dez retidos. O resumo hospedado registra correspondência dos callbacks e resultados observados; duas entradas afetadas foram puladas por inputs e resultados inalterados."
+      "rationale": "O vetor cobre 13 entradas; duas mudanças frente à primeira correção são identificadas. O resumo hospedado registra correspondência dos callbacks e resultados observados."
     },
     "ADMIT-SOURCE-BINDINGS": {
       "decision": "PASS",
-      "rationale": "O candidato preparado vincula revisão de origem, implementação, referências, escopo e raiz; os resumos identificam o candidato e alvo exatos. O hash do vetor foi conferido."
+      "rationale": "O vetor vincula candidato, alvo, geração, plano, baseline e inputs; os resumos identificam o mesmo candidato. O hash do vetor foi conferido."
     },
     "ADMIT-SEMANTIC-SCOPE": {
       "decision": "PASS",
-      "rationale": "Os três resultados alterados têm decisões semânticas específicas e os descendentes retidos têm revisão de retenção indicada. A compatibilidade dos corpos servidos anteriormente é evidência estática, sem transferência automática de votos ou prova de acessibilidade atual."
+      "rationale": "Os resultados alterados têm pareceres semânticos específicos e os descendentes retidos têm revisão de retenção indicada. A comparação de 18 trechos preserva evidência anterior de forma estática, sem transferir votos ou provar acessibilidade atual."
     },
     "ADMIT-ISOLATED-PLAN": {
       "decision": "PASS",
-      "rationale": "O vetor identifica fase de avaliação, plano, obrigação, raiz corrigida e escopo orchestra.interfaces; a finalidade informada é a avaliação isolada das quatro novas tentativas."
+      "rationale": "O vetor fixa fase de avaliação, plano, obrigação, raiz e escopo orchestra.interfaces, com C1 e C4 como casos-alvo."
     }
   },
-  "reason": "Esta é uma decisão individual sobre os pré-requisitos para o candidato exato; não afirma que a dupla necessária exista nem que ADMIT ocorreu. Não recalculei o hash do checkpoint nem refiz todas as comparações de bytes. Os quatro retries e suas decisões permanecem pendentes; não há aceite de produto, publicação operacional ou fechamento S2."
+  "reason": "Decisão individual sobre pré-requisitos do candidato exato; não afirma que a dupla necessária exista ou que ADMIT tenha ocorrido. Não recalculei o hash do checkpoint nem refiz todas as comparações de bytes. As novas tentativas C1 e C4, aceite de produto e publicação operacional permanecem fora deste parecer."
 }
