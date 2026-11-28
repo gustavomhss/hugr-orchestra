@@ -219,9 +219,10 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     })
     if (data.identity.inputHash !== expected.inputHash)
       return yield* failure("engagement-request-conflict", "request ID already owns a different accepted input")
+    const legacy = data.schema === "review-engagement-state-v1"
     if (!same(data.identity, expected) || ReviewEngagementReportV2.digest(data.input) !== expected.inputHash ||
       data.input.requestID !== expected.requestID || data.input.profile === "compliance" || data.input.fixReview !== undefined ||
-      !same(normalizeModel(row.model), data.model ?? null) ||
+      !same(normalizeModel(row.model, legacy), normalizeModel(data.model, legacy)) ||
       data.budget.deadlineAt - data.budget.startedAt !== data.input.timeBoxMinutes * 60_000 ||
       !Number.isSafeInteger(data.budget.startedAt) || !Number.isSafeInteger(data.budget.deadlineAt) ||
       new Set(data.children.map((child) => child.id)).size !== data.children.length ||
@@ -277,9 +278,10 @@ function matchesResult(record: Common, result: ReviewEngagementReportV2.Stored) 
     ? Effect.void : Effect.fail(invalid("terminal result does not match durable admission"))
 }
 
-function normalizeModel(model: SessionSchema.Info["model"] | Row["model"]): typeof Model.Type | null {
+function normalizeModel(model: SessionSchema.Info["model"] | Row["model"], legacy = false): typeof Model.Type | null {
   if (!model) return null
-  return { id: model.id, providerID: model.providerID, variant: model.variant ?? "default" }
+  const variant = legacy ? model.variant ?? "default" : model.variant
+  return { id: model.id, providerID: model.providerID, ...(variant === undefined ? {} : { variant }) }
 }
 
 function validateCapture(input: ReviewEngagementPolicyV2.Input, source: ReviewEngagementEvidenceV2.Prepared) {
