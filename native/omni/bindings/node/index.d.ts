@@ -129,6 +129,10 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   stop(options?: { graceMs?: number }): Promise<Exit>;
   /** The live processes `stop()` would end right now; `[]` once the tree is gone. */
   processes(): Promise<ProcessInfo[]>;
+  /** Identity tokens for selective process control, supported by the Windows supervisor. */
+  controlMembers(): Promise<string[]>;
+  /** Stops selected identities; a timeout leaves the effect unknown. */
+  stopSelected(members: readonly string[]): Promise<boolean[]>;
   /** A membership sample whose deadline does not terminate the supervisor. */
   observeProcesses(): Promise<ProcessInfo[]>;
   observeTree?(): Promise<{ members: ProcessInfo[]; physicalFootprintBytes?: number; footprintIdentity?: string }>;
