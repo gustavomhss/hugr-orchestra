@@ -215,7 +215,8 @@ export function make() {
             if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
               return selected.map(() => "unknown" as const)
             const result = await native.stopSelected!(selected)
-            if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
+            // The approved stop can settle the root before its native receipt reaches us.
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || child.treeId !== identity)
               return selected.map(() => "unknown" as const)
             return result
           },
