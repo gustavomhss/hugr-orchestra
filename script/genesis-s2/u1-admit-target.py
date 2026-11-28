@@ -279,6 +279,9 @@ def main():
     pattern = rf'\b(?:{seconds}[ -]?(?:seconds?|s)|{seconds}[ ,_]?000\s*(?:ms|milliseconds?))\b'
     require(re.search(pattern, read['body'], re.IGNORECASE) is not None, 'current section does not report required timeout')
     require(lock['callbacks'] == inventory(callback_root), 'callback occurred after finalization')
+    write(out / 'summary.json', encoded({'status': 'TARGET_ADMITTED_AND_CURRENT_READ', 'target': args.target, 'candidate_id': prepared['candidate_id'],
+          'generation': target['targetGeneration'], 'private_manifest': lock['private_manifest'], 'admitted_manifest': manifest,
+          'reviewed_result': seal['expected_result'], 'section': SECTION, 'callback_state_unchanged': True, 'seal_sha256': sha(seal_raw)}))
     if args.target == 'M2':
         before_reuse = inventory(root)
         reuse_request = out / 'restored-identical-reuse-request.json'
@@ -308,7 +311,8 @@ def main():
                 'target_generation': sha(('s2-u1-control:' + prepared['candidate_id'] + ':' + tag).encode()),
                 'checkpoint_dir': str(checkpoint), **changes}))
             control = invoke(tag, ['bun', str(driver), str(control_path)], expected=1)
-            require(control['kind'] == 'hold' and control['reason'] == reason and evidence in control['evidence'], tag + ' refusal mismatch')
+            require(control['kind'] == 'hold' and control['reason'] == reason and evidence in control['evidence'],
+                    f"{tag} refusal mismatch: {control.get('reason')} {control.get('evidence')}")
             events = [json.loads(line) for line in (checkpoint / 'callbacks.jsonl').read_text().splitlines()]
             callbacks = [event for event in events if event['event'].startswith('callback-')]
             expected = [] if callback_snapshot is None else [('callback-enter', callback_snapshot), ('callback-return', callback_snapshot)]
@@ -321,8 +325,10 @@ def main():
         write(source_path, original_source)
         edge_recipes = [{**recipe, 'required': []} if recipe['key'] == 's2.l2.desktop-web' else recipe for recipe in request['recipes']]
         edge = expect_hold('missing-required-edge', {'recipes': edge_recipes}, 'ownership-dependency-changed', 's2.l2.desktop-web')
-        recipe = next(r for r in request['recipes'] if r['key'] == 's2.l1.desktop-web')
-        require(recipe['recipe_input_key'].startswith('file:'), 'recipe version control requires a file')
+        recipe = next(r for r in request['recipes'] if r['key'] == 's2.l2.desktop-web')
+        require(recipe['recipe_input_key'].startswith('file:')
+                and [r['key'] for r in request['recipes'] if recipe['recipe_input_key'] in r['declared_inputs']] == [recipe['key']],
+                'recipe version control requires one exclusively declared file')
         recipe_path = controls_root / recipe['recipe_input_key'][5:]
         recipe_path.write_bytes(recipe_path.read_bytes() + b'\n<!-- Isolated S2-U1 recipe-version control. -->\n')
         version = expect_hold('old-recipe-version', {}, 'ownership-input-changed', 'recipe')
@@ -361,9 +367,6 @@ def main():
         require(inventory(root) == before_reuse, 'negative control changed the admitted M2 root')
         write(out / 'negative-controls-summary.json', encoded({'status': 'FROZEN_NEGATIVE_CONTROLS_OBSERVED',
             'controls': [missing, edge, version, varied, blocked]}))
-    write(out / 'summary.json', encoded({'status': 'TARGET_ADMITTED_AND_CURRENT_READ', 'target': args.target, 'candidate_id': prepared['candidate_id'],
-          'generation': target['targetGeneration'], 'private_manifest': lock['private_manifest'], 'admitted_manifest': manifest,
-          'reviewed_result': seal['expected_result'], 'section': SECTION, 'callback_state_unchanged': True, 'seal_sha256': sha(seal_raw)}))
 
 
 if __name__ == '__main__':

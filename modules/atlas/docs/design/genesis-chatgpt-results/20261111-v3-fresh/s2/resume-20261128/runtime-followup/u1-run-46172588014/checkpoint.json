@@ -1,0 +1,62 @@
+{
+  "schema": "genesis-s2-u1-m2-observed-with-partial-controls/v1",
+  "run_id": 46172588014,
+  "run_head": "59a5e0823f8fcbdd67ee65b867b4f3e45db3fdc7",
+  "artifact_id": 15274532419,
+  "artifact_zip_sha256": "874de87ec6826f4d6c66419636aa92a9f2fb7395c11b214fcd260cd73184369a",
+  "m2": {
+    "candidate": "5ec27ad30e271c7da130a0cb355d71a17322c0fb97b83c9a0593b061e8db0d88",
+    "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+    "manifest": "ec540efee6f4e23199665ec01dfbedd85c90e8b5bc399d5b4e1554b0d5a2cfc9",
+    "read_result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+    "read_timeout_seconds": 120,
+    "emitted": true,
+    "restored_identical_callbacks": 0
+  },
+  "controls": [
+    {
+      "tag": "missing-source",
+      "reason": "ownership-input-unavailable",
+      "evidence": [
+        "s2.l1.desktop-web",
+        "file:apps/desktop/src/main/owned-serve.ts"
+      ],
+      "sha256": "e2d85b76b230addad0b449a2effa4ec0023820682e70c46d45f0f718abe014dd"
+    },
+    {
+      "tag": "missing-required-edge",
+      "reason": "ownership-dependency-changed",
+      "evidence": [
+        "s2.l2.desktop-web"
+      ],
+      "sha256": "baa851dc5f2fe8118af6aaed6ca655e2e98ed57094be1cc5495b9e8f1595891a"
+    },
+    {
+      "tag": "old-recipe-version",
+      "reason": "ownership-input-changed",
+      "evidence": [
+        "s2.l1.desktop-web",
+        "recipe"
+      ],
+      "sha256": "a8bb74f7b653e268bba339d1ca4c835357cf621a5cb419208a5ea9479b180f67"
+    },
+    {
+      "tag": "declared-recipe-result-variation",
+      "reason": "ownership-input-changed",
+      "evidence": [
+        "s2.l1.design-tui",
+        "recipe"
+      ],
+      "sha256": "baea169ad9cca2de38c759ff4c7de056521d264ccf196b537dad5717154e3075"
+    }
+  ],
+  "control_run_state": "3_EXPECTED_REFUSALS_1_FIXTURE_REFUSAL_1_NOT_RUN",
+  "control_fixture_issue": "L1 desktop-web and L1 design-tui share their recipe input file. Updating only one recipe spec after that file changed caused the expected stale-version rejection for the other recipe before either semantic control.",
+  "file_sha256": {
+    "read-current.stdout": "b455444af2d05e7cda58ee5fbda22f4d30ce0060b43e4d091696ca93c3e696c7",
+    "admit-target.stdout": "c6f2ed45e33556efaaa9fae092de1e633970454469a4609278fc09037c980126",
+    "restored-identical-summary.json": "6611c407beeae54ee8451bbe26e4a19f82f0742b86637eaf84cde27ae0700047",
+    "resume-lock.json": "8e36401feacab7297406a0444563968cee5fcc0baf63e23b1d3014c4e01d34e0",
+    "declared-recipe-result-variation.stdout": "baea169ad9cca2de38c759ff4c7de056521d264ccf196b537dad5717154e3075"
+  }
+}
