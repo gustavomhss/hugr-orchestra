@@ -1,5 +1,6 @@
 use super::{
-    IoStatus, NtSetInformationFile, Owned, acquire_root, identity, open_with_share, parents, parse, require_regular_single_link, status,
+    IoStatus, NtSetInformationFile, Owned, acquire_root, identity, open_with_share, parents, parse,
+    require_regular_single_link, status,
 };
 
 struct ReservedFile {

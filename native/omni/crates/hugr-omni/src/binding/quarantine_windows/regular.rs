@@ -14,4 +14,3 @@ pub(super) fn require_regular_single_link(handle: Handle) -> Result<(), String> 
     }
     Ok(())
 }
-

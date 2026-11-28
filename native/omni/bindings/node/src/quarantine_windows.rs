@@ -57,8 +57,16 @@ impl Task for QuarantineExclusiveTask {
 }
 
 #[napi]
-pub fn quarantine_rename_exclusive(source: String, destination: String, expected: String) -> AsyncTask<QuarantineExclusiveTask> {
-    AsyncTask::new(QuarantineExclusiveTask { source, destination, expected })
+pub fn quarantine_rename_exclusive(
+    source: String,
+    destination: String,
+    expected: String,
+) -> AsyncTask<QuarantineExclusiveTask> {
+    AsyncTask::new(QuarantineExclusiveTask {
+        source,
+        destination,
+        expected,
+    })
 }
 
 pub struct QuarantineInspectTask {

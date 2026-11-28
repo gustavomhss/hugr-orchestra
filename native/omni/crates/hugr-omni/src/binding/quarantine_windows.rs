@@ -181,7 +181,6 @@ fn open_with_share(
     Ok(Some(result))
 }
 
-
 fn parse(path: &str) -> Result<(String, Vec<String>), String> {
     let value = path.replace('/', "\\");
     let bytes = value.as_bytes();
@@ -270,7 +269,13 @@ pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Resu
     }
 }
 
-fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>, exclusive: bool, entered: &mut bool) -> Result<String, String> {
+fn operate_inner(
+    source: &str,
+    destination: Option<&str>,
+    expected: Option<&str>,
+    exclusive: bool,
+    entered: &mut bool,
+) -> Result<String, String> {
     let (drive, source_parts) = parse(source)?;
     let (dest_drive, dest_parts) = match destination {
         Some(path) => {
@@ -293,7 +298,8 @@ fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>
         false,
         0,
         if exclusive { 0 } else { 3 },
-    )?.ok_or("missing source")?;
+    )?
+    .ok_or("missing source")?;
     if exclusive {
         require_regular_single_link(source_handle.0)?;
     }
