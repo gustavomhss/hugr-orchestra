@@ -24,10 +24,12 @@ export const Source = Schema.Struct({
     mode: Schema.Literals(["100644", "100755"]), size: NonNegativeInt })),
   notExamined: Schema.Array(Schema.Struct({ path: Schema.NonEmptyString, reason: Schema.Literals(["symlink", "submodule"]) })),
 })
+export type Source = typeof Source.Type
 export const Citation = Schema.Struct({
   uri: Schema.NonEmptyString, path: Schema.NonEmptyString, oid: Oid,
   startLine: PositiveInt, endLine: PositiveInt, text: Schema.NonEmptyString, sha256: Digest,
 })
+export type Citation = typeof Citation.Type
 export const Result = Schema.Struct({
   schema: Schema.Literal("review-engagement-result-v1"), requestID: Schema.NonEmptyString,
   inputHash: Digest, sessionID: SessionSchema.ID,

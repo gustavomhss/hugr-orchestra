@@ -79,6 +79,8 @@ export type Interface = {
 }
 type Sql = Pick<Database.Interface["db"], "select" | "update">
 type Row = typeof SessionTable.$inferSelect
+type Placement = Pick<Row, "project_id" | "directory"> & { readonly workspace_id: string | null }
+type AdmissionRow = Placement & Pick<Row, "id" | "parent_id" | "agent" | "model" | "metadata">
 
 const same = (left: unknown, right: unknown) => ReviewEngagementReportV2.canonical(left) === ReviewEngagementReportV2.canonical(right)
 const failure = (reason: string, detail: string) => new Tool.Failure({ message: `${reason}: ${detail}`, metadata: { reason } })
@@ -107,9 +109,9 @@ export function readPriorAuthority(value: unknown): Effect.Effect<Terminal, Tool
     const expected = identity({ id: data.identity.parentID, projectID: data.identity.projectID,
       location: data.identity.location } as SessionSchema.Info, data.input)
     if (!same(expected, data.identity)) return yield* invalid("prior authority namespace is inconsistent")
-    const row = { id: data.identity.leadID, parent_id: data.identity.parentID, agent: "lucy",
+    const row: AdmissionRow = { id: data.identity.leadID, parent_id: data.identity.parentID, agent: "lucy",
       project_id: data.identity.projectID, directory: data.identity.location.directory,
-      workspace_id: data.identity.location.workspaceID ?? null, model: data.model ?? null, metadata: { [KEY]: value } } as Row
+      workspace_id: data.identity.location.workspaceID ?? null, model: data.model ?? null, metadata: { [KEY]: value } }
     const record = yield* decode(row, data.identity)
     if (!record || record.state !== "terminal" || record.terminal.value.status !== "completed")
       return yield* invalid("prior authority is not a completed ordinary record")
@@ -418,11 +420,12 @@ export function make(database: Database.Interface): Interface {
       const record = yield* ownedFix(tx, ticket)
       if (record.state === "terminal") return record
       if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
-      if (!record.fix.prior) return yield* invalid("fix source cannot be captured before the prior is bound")
+      const prior = record.fix.prior
+      if (!prior) return yield* invalid("fix source cannot be captured before the prior is bound")
       yield* Effect.try({ try: () => {
         Schema.decodeUnknownSync(ReviewEngagementReportV2.Source)(source, strict)
         validateCapture(record.input, source)
-        if (!same(source.files.map((file) => file.path), record.fix.prior.requiredFiles))
+        if (!same(source.files.map((file) => file.path), prior.requiredFiles))
           throw new Error("fix source differs from the exact bound file projection")
       }, catch: (error) => invalid(String(error)) })
       if (record.source) {
@@ -485,7 +488,7 @@ function metadataObject(value: unknown) {
     (Object.getPrototypeOf(value) === Object.prototype || Object.getPrototypeOf(value) === null)
 }
 
-function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined, Tool.Failure> {
+function decode(row: AdmissionRow, expected: Identity): Effect.Effect<Record | undefined, Tool.Failure> {
   return Effect.gen(function* () {
     if (!placed(row, expected) || row.id !== expected.leadID || row.parent_id !== expected.parentID || row.agent !== "lucy")
       return yield* invalid("lead Session identity mismatch")
@@ -633,7 +636,7 @@ function validateCapture(input: ReviewEngagementPolicyV2.Input, source: ReviewEn
     prefixes.some((prefix) => !paths.some((file) => covers(prefix, file)))) throw new Error("capture differs from accepted input")
 }
 
-function placed(row: Row, id: Identity) {
+function placed(row: Placement, id: Identity) {
   return row.project_id === id.projectID && row.directory === id.location.directory &&
     (row.workspace_id ?? undefined) === id.location.workspaceID
 }
@@ -695,10 +698,10 @@ function write(db: Sql, record: Record, previous?: Running) {
 
 function writeFix(db: Sql, record: FixRecord, previous?: FixRunning) {
   return Effect.gen(function* () {
-    const { state, ...rest } = record
-    const data = state === "terminal"
-      ? (() => { const { terminal, ...value } = rest; return { ...value, state, output: terminal.text } })()
-      : { ...rest, state }
+    const data = record.state === "terminal" ? (() => {
+      const { terminal, ...value } = record
+      return { ...value, output: terminal.text }
+    })() : record
     const changed = yield* db.update(SessionTable).set({
       metadata: sql`json_set(coalesce(${SessionTable.metadata}, '{}'), ${`$.${KEY}`}, json(${JSON.stringify(data)}))`,
       time_updated: sql`${SessionTable.time_updated}`,

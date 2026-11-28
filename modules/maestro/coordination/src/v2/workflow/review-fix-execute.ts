@@ -116,7 +116,7 @@ function buildOutput(input: Input, results: ReadonlyMap<string, { readonly exami
   }
   const questions = dispositions.flatMap((item) => item.disposition === "question"
     ? [{ findingID: item.findingID, question: item.reason }] : [])
-  const notExamined = dispositions.flatMap((item) => item.disposition === "not-examined"
+  const notExamined: Array<ReviewFixSchemaV2.FixResult["notExamined"][number]> = dispositions.flatMap((item) => item.disposition === "not-examined"
     ? [{ item: item.findingID, reason: item.reason }] : [])
   if (input.previous.binding.profile === "artifact") notExamined.push({ item: "artifact:behavioral-eval", reason: "owner-permission" })
   return { dispositions, citations: [...citations.values()], questions, notExamined,
@@ -146,8 +146,9 @@ function reason(value: string): NotExaminedReason {
 function observe(input: Input, item: ReviewFixPriorV2.Selected): Effect.Effect<ReviewFixSchemaV2.ToolObservation | string, Tool.Failure> {
   const analysis = input.snapshot.operations.find((operation) => operation.kind === "analysis" &&
     operation.operationID === input.snapshot.finalAnalysisOperationID)
-  if (!analysis || !item.native) return Effect.succeed("runtime-unavailable")
+  const native = item.native
+  if (analysis?.kind !== "analysis" || !native) return Effect.succeed("runtime-unavailable")
   return Effect.try({ try: () => ReviewFixRetestV2.observe({ inputHash: input.inputHash, findingID: item.finding.id,
-    priorProof: item.native.proof, priorRecipe: item.native.recipe, analysis, hostProofs: input.snapshot.hostProofs,
+    priorProof: native.proof, priorRecipe: native.recipe, analysis, hostProofs: input.snapshot.hostProofs,
     bodies: input.snapshot.bodies }), catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
 }

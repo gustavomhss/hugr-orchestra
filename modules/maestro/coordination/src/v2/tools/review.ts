@@ -222,7 +222,7 @@ export function tools(input: {
           if ("kind" in params) {
             if (params.kind === "engagement") {
               const { ReviewEngagementRequestV2 } = yield* Effect.promise(() => import("./review-engagement"))
-              const engagement: ReviewEngagementRequestV2.Input = {
+              const engagement: import("./review-engagement").Input = {
                 sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
                 database: input.database ?? { db: services.db }, analyze, stages, processes: input.processes,
                 ...(input.global ? { global: input.global } : {}),

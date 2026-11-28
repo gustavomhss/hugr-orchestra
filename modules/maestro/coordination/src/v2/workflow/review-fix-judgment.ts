@@ -1,6 +1,7 @@
 export * as ReviewFixJudgmentV2 from "./review-fix-judgment"
 
 import { Option, Schema } from "effect"
+import { SessionSchema } from "@orchestra/core/session"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEngagementReportV2 } from "./review-engagement-report"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
@@ -109,14 +110,14 @@ export function examine(input: Evidence & { readonly inputHash: string; readonly
     reason = "native-results-remain"
   } else if (disposition === "resolved" && (finding.evidence.kind === "quote" ? !hasQuote : !hasTool)) {
     disposition = "question"
-  } else if (disposition === "dismissed" && (!rawReturn.refutation || !hasQuote ||
+  } else if (disposition === "dismissed" && (!hasQuote ||
     (finding.evidence.kind === "tool" && !hasTool))) {
     disposition = "question"
   } else if (rawReturn.supporting.length === 0) {
     disposition = "question"
   }
   const withoutID = { findingID: finding.id, priorFindingSha256: prior.priorFindingSha256,
-    verifierSessionID: reply.sessionID, replyID: reply.replyID, offeredObservationIDs, currentRegionIDs,
+    verifierSessionID: SessionSchema.ID.make(reply.sessionID), replyID: reply.replyID, offeredObservationIDs, currentRegionIDs,
     rawReturn, disposition, reason }
   return { ...withoutID, examinationID: ReviewEngagementReportV2.digest({ schema: "review-fix-examination-v1", inputHash: input.inputHash, ...withoutID }) }
 }
