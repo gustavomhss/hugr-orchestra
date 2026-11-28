@@ -53,8 +53,15 @@
     }
   ],
   "required_next": [
-    "Reproduce exact candidate and its bound absolute corpus root",
     "Obtain two exact decisions for this new candidate; previous PASS and HOLD remain attached to d1",
     "After binding and governed admission, execute initial traverse, 14 consumers and S2-U1"
-  ]
+  ],
+  "replay": {
+    "state": "IDENTICAL_PREPARED_BYTES",
+    "run_id": 46158483047,
+    "workflow_revision": "21f41aea6ecae58f2d240c6ba4bd1094b454d38f",
+    "artifact_id": 15268941476,
+    "artifact_sha256": "731d85d0784d56628550e2d755b39b9d54800c110ae68bd14aecc6e306ff438d",
+    "prepared_sha256": "9570cd95aed8803e3198dd897f0c8845e84aa88d7c3d6cd7b9b107c6ec0accbd"
+  }
 }
