@@ -10,6 +10,7 @@ on:
       - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l4-acceptance.json"
       - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-knowledge.py"
       - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/prepare-full15.py"
 
 permissions:
   contents: read
@@ -50,4 +51,42 @@ jobs:
           name: genesis-knowledge-integrity-${{ github.sha }}
           if-no-files-found: error
           path: ${{ runner.temp }}/genesis-knowledge-${{ github.run_id }}/integrity-receipt.json
+          retention-days: 30
+
+  prepare-full15:
+    env:
+      RUNTIME_SHA: 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Pin runtime and install Atlas dependencies
+        run: |
+          set -euo pipefail
+          [[ "$RUNTIME_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git cat-file -e "$RUNTIME_SHA^{commit}"
+          git worktree add --detach "$RUNNER_TEMP/s4-runtime" "$RUNTIME_SHA"
+          test "$(git -C "$RUNNER_TEMP/s4-runtime" rev-parse HEAD)" = "$RUNTIME_SHA"
+          cd "$RUNNER_TEMP/s4-runtime/modules/atlas"
+          npm ci
+          bun typecheck
+      - name: Materialize exact S4 and prepare
+        run: |
+          set -euo pipefail
+          python3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/prepare-full15.py \
+            --repository "$GITHUB_WORKSPACE" --runtime-root "$RUNNER_TEMP/s4-runtime" --runtime-sha "$RUNTIME_SHA" \
+            --source-root "$RUNNER_TEMP/s4-source" --output-dir "$RUNNER_TEMP/s4-evidence"
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: s4-knowledge-prepare-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/s4-evidence
+            ${{ runner.temp }}/s4-source/.atlas/cas
+          if-no-files-found: error
           retention-days: 30
