@@ -3842,16 +3842,27 @@
   "supplemental_candidates": [
     {
       "id": "G3-candidate",
-      "status": "runtime_fixture_only",
-      "title": "Imported emitter omits required empty Struct payload",
-      "scope": "Public generator fixture; productive endpoint not established",
+      "status": "fixed_verified",
+      "title": "Imported Effect and Promise emitters omit required empty Struct payload",
+      "scope": "Public generator fixtures. Regenerating the current SDK produces no file changes.",
       "severity": "unclassified",
       "evidence": {
         "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865",
         "snapshot_sha": "ea0afd36197790ecf053baa6b7fb70f696aeddee",
         "case": "optional-payload.test.ts empty (imported)"
       },
-      "disposition": "Recorded separately from original 65; no silent G1 scope expansion."
+      "qualification": {
+        "pull_request": "https://github.com/gustavomhss/hugr-orchestra/pull/1650",
+        "candidate_sha": "7399b897107f50d0c703e5b7eddad5d2f5be1ecc",
+        "reproduction_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104729173",
+        "generator_matrix_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104772911",
+        "generator_matrix_result": "142 passing tests on Linux. The empty payload regressions pass on Windows, where three existing assertions still fail in the header fixture comparison and generated-file paths.",
+        "focused_windows_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104921677",
+        "client_regressions_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104773438",
+        "sdk_regeneration_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104773416",
+        "typecheck_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104798675"
+      },
+      "disposition": "Both emitters send an empty JSON object when a zero-field payload is declared and omit the body when no payload is declared. Tracked separately from the original 65 findings."
     }
   ],
   "summary": {

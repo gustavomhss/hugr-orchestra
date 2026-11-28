@@ -482,6 +482,41 @@ describe("HttpApiCodegen.generate", () => {
     }
   })
 
+  test("serializes a declared empty JSON payload without adding a body to other POSTs", async () => {
+    const output = emitPromise(
+      compileContract(
+        HttpApi.make("test").add(
+          HttpApiGroup.make("session")
+            .add(HttpApiEndpoint.post("empty", "/empty", { payload: Schema.Struct({}), success: Schema.String }))
+            .add(HttpApiEndpoint.post("noPayload", "/no-payload", { success: Schema.String })),
+        ),
+      ),
+    )
+    const directory = await mkdtemp(join(tmpdir(), "orchestra-httpapi-codegen-"))
+
+    try {
+      await Promise.all(output.files.map((file) => Bun.write(join(directory, file.path), file.content)))
+      const generated = await import(`${join(directory, "index.ts")}?t=${crypto.randomUUID()}`)
+      const requests: Array<Request> = []
+      const client = generated.Orchestra.make({
+        baseUrl: "https://example.com",
+        fetch: async (input: RequestInfo | URL, init?: RequestInit) => {
+          requests.push(new Request(input, init))
+          return Response.json("ok")
+        },
+      })
+
+      expect(await client.session.noPayload()).toBe("ok")
+      expect(requests[0]?.body).toBeNull()
+      expect(requests[0]?.headers.get("content-type")).toBeNull()
+      expect(await client.session.empty()).toBe("ok")
+      expect(await requests[1]?.text()).toBe("{}")
+      expect(requests[1]?.headers.get("content-type")).toBe("application/json")
+    } finally {
+      await rm(directory, { recursive: true, force: true })
+    }
+  })
+
   test("rejects with declared tagged errors and exports a type guard", async () => {
     const output = emitPromise(
       compileContract(
