@@ -97,16 +97,17 @@ export function registerActivityArmIpc(deps: {
       deps.getOwned()?.url === owned.url
     try {
       const preview = await client.preview(decoded.value, controller.signal)
-      if (!current() || !preview || preview.expiresAt <= Date.now() || preview.members.length === 0) return undefined
+      if (!current() || !preview || preview.expiresAt <= Date.now() || preview.target.targetID !== decoded.value.recordID ||
+        new Set(preview.members).size !== preview.members.length) return undefined
       const result = await deps.dialog.showMessageBox(win, {
         type: "warning",
-        title: "Stop activity tree",
-        message: "Stop this activity tree and all listed processes?",
+        title: "Stop activity members",
+        message: "Stop the listed processes in this activity tree?",
         detail: `${literal(preview.target.owner)} — ${literal(preview.target.label)}\n` +
           `Target: ${literal(preview.target.targetID)}\nGeneration: ${literal(preview.target.generation)}\n` +
           `Omni tree: ${literal(preview.treeID)}\n\n` +
           `Processes (${preview.members.length}):\n${preview.members.map(literal).join("\n")}`,
-        buttons: ["Cancel", "Stop activity tree"],
+        buttons: ["Cancel", "Stop members"],
         defaultId: 0,
         cancelId: 0,
         noLink: true,
