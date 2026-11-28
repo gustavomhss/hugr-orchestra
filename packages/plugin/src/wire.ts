@@ -529,6 +529,7 @@ export type ConfigV2RelayJudge = {
   backend?: "stub" | "api" | "orchestra"
   model?: string
   projectID?: string
+  projectDirectory?: string
   credentialID?: string
   variant?: string
   baseURL?: string

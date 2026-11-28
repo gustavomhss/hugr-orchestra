@@ -6,6 +6,7 @@ import {
   existsSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmdirSync,
   rmSync,
   statSync,
@@ -13,13 +14,15 @@ import {
   utimesSync,
   writeFileSync,
 } from "fs"
-import { Effect, Fiber, Layer, Redacted, Result, Schema } from "effect"
+import { Effect, Fiber, Layer, Option, Redacted, Result, Schema } from "effect"
 import * as TestClock from "effect/testing/TestClock"
 import { ArmState } from "@orchestra/relay/arm/state"
 import { LedgerVerify } from "@orchestra/relay/ledger/verify"
+import { JudgeConfig } from "@orchestra/relay/judge/config"
 import { Config } from "../src/config"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { LayerNode } from "../src/effect/layer-node"
+import { FSUtil } from "../src/fs-util"
 import { Global } from "../src/global"
 import { Location } from "../src/location"
 import { Project } from "../src/project"
@@ -620,29 +623,98 @@ describe("Relay.Service", () => {
     }),
   )
 
-  it.effect("binds the Orchestra judge only through the user's config for this project", () =>
-    Effect.sync(() => {
-      const judge = { backend: "orchestra", credentialID: "owner-connection", model: "gpt-6.2-sol", variant: "xhigh", projectID }
-      const global = path.resolve("user-config")
-      const document = (filepath: string, value: unknown) =>
-        new Config.Document({
-          type: "document",
-          path: filepath,
-          info: Schema.decodeUnknownSync(Config.Info)({ relay: { judge: value } }),
-        })
+  it.live("binds the Orchestra judge to the user's exact physical checkout", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      const worktree = realpathSync(dirs.work)
+      const judge = {
+        backend: "orchestra", credentialID: "owner-connection", model: "gpt-6.2-sol", variant: "xhigh",
+        projectID, projectDirectory: worktree,
+      }
+      const global = path.join(dirs.home, "user-config")
+      mkdirSync(global)
+      const document = (filepath: string, value: unknown) => {
+        const info = { relay: { judge: value } }
+        writeFileSync(filepath, JSON.stringify(info))
+        return new Config.Document({ type: "document", path: filepath, info: Schema.decodeUnknownSync(Config.Info)(info) })
+      }
       const owner = document(path.join(global, "orchestra.json"), judge)
-      const repository = document(path.resolve("repository", "orchestra.json"), { ...judge, credentialID: "other-connection" })
-      const downgrade = document(path.resolve("repository", ".orchestra", "orchestra.json"), {
+      const repository = document(path.join(worktree, "orchestra.json"), { ...judge, credentialID: "other-connection" })
+      const downgrade = document(path.join(worktree, "orchestra.jsonc"), {
         backend: "api", baseURL: "https://project.example", apiKey: "example",
       })
+      const settings = (entries: readonly Config.Entry[], id = projectID, directory = worktree) =>
+        RelayJudge.settings(entries, global, id, directory)
+          .pipe(Effect.provide(AppNodeBuilder.build(FSUtil.node)))
 
-      expect(RelayJudge.settings([repository], global, projectID).binding).toBeUndefined()
-      expect(RelayJudge.settings([owner], global, "other-project").binding).toBeUndefined()
-      expect(RelayJudge.settings([owner, repository, downgrade], global, projectID)).toMatchObject({
+      expect((yield* settings([repository])).binding).toBeUndefined()
+      expect((yield* settings([owner], "other-project")).binding).toBeUndefined()
+      expect((yield* settings([owner], projectID, dirs.data)).binding).toBeUndefined()
+      expect(yield* settings([owner, repository, downgrade])).toMatchObject({
         binding: { credentialID: "owner-connection", model: "gpt-6.2-sol", variant: "xhigh" },
         config: { backend: "orchestra", model: "openai/gpt-6.2-sol@xhigh", baseURL: undefined, apiKey: undefined },
       })
-      expect(RelayJudge.settings([owner, downgrade], global, "other-project").config.backend).toBe("api")
+      expect((yield* settings([owner, downgrade], "other-project")).config.backend).toBe("api")
+      if (process.platform !== "win32") {
+        const pathname = path.join(global, "orchestra.jsonc")
+        symlinkSync(repository.path!, pathname)
+        const linked = new Config.Document({ ...repository, path: pathname })
+        expect((yield* settings([linked])).binding).toBeUndefined()
+      }
+    }),
+  )
+
+  it.live("refuses unsafe worktree context before the native judge or diff can run", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      const worktree = realpathSync(dirs.work)
+      writeFileSync(path.join(worktree, "artifact.txt"), "inside\r\n")
+      writeFileSync(path.join(dirs.data, "secret.txt"), "outside")
+      if (process.platform !== "win32") {
+        symlinkSync(path.join(dirs.data, "secret.txt"), path.join(worktree, "linked.txt"))
+        symlinkSync(dirs.data, path.join(worktree, "linked"))
+      }
+      const calls: string[] = []
+      const diffs: string[] = []
+      const backend = { ...JudgeConfig.defaults, backend: "orchestra" as const, model: "openai/gpt-6.2-sol@xhigh" }
+      const judge = (directory: string, paths: readonly string[]) =>
+        JudgeConfig.Service.use((service) =>
+          service.judge({
+            criterion: "report the in-worktree artifact",
+            files: [{ name: "preloaded.txt", text: "untrusted preloaded bytes" }],
+            worktree: {
+              directory, paths, scopePaths: paths,
+              gitDiff: Effect.sync(() => {
+                diffs.push(directory)
+                return Option.some("computed patch")
+              }),
+            },
+          }),
+        ).pipe(Effect.provide(JudgeConfig.layer(backend, {
+          read: (evidence) => RelayJudge.readEvidence(worktree, evidence),
+          call: (input) => Effect.sync(() => {
+            calls.push(input.prompt)
+            return { verdict: "pass", reason: "The supplied artifact matches." }
+          }),
+        })))
+
+      for (const target of ["../data/secret.txt", path.join(dirs.data, "secret.txt"), "missing.txt", "."]) {
+        expect(yield* judge(worktree, ["artifact.txt", target])).toMatchObject({ available: false, verdict: "fail" })
+      }
+      if (process.platform !== "win32") {
+        for (const target of ["linked.txt", "linked/secret.txt"])
+          expect(yield* judge(worktree, [target])).toMatchObject({ available: false, verdict: "fail" })
+      }
+      expect(yield* judge(dirs.data, ["secret.txt"])).toMatchObject({ available: false, verdict: "fail" })
+      expect(calls).toEqual([])
+      expect(diffs).toEqual([])
+
+      expect(yield* judge(worktree, ["artifact.txt"])).toMatchObject({ available: true, verdict: "pass", artifact: expect.any(String) })
+      expect(calls).toHaveLength(1)
+      expect(diffs).toEqual([worktree])
+      expect(calls[0]).toContain("--- artifact.txt ---\ninside\n")
+      expect(calls[0]).toContain("--- computed.diff ---\ncomputed patch")
+      expect(calls[0]).not.toContain("untrusted preloaded bytes")
     }),
   )
 

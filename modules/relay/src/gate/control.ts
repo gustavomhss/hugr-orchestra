@@ -265,29 +265,46 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
     // The oracle and the ledger hold the raw scope: `${spec_dir}/x.json` is the same question in every run.
     const oracle = oracleSha(scope ? `${criterion} :: ${scope}` : criterion)
     const scopePaths = substitution(expandParams(scope, input.params))
+    const names = contextNames(field(control, "context")).map((name) => substitution(expandParams(name, input.params)))
+    const wantsDiff = raw(field(control, "diff")) === "true"
+    const computeDiff = GateDiff.compute({ workdir: input.workdir, baseRef: input.baseRef, pathspec: scopePaths })
+    const judge = yield* JudgeConfig.Service
+    const result = (response: JudgeConfig.Response, artifact: Option.Option<string>) => {
+      // Exactly a pass/fail verdict with a NUL-free string backend; anything else is unavailable, never a pass.
+      const backend = response.verdict === "pass" || response.verdict === "fail" ? text(response.backend) : undefined
+      const pass = backend !== undefined && response.verdict === "pass"
+      return graded(
+        pass ? "pass" : "fail",
+        `judge:${backend === undefined ? "unavailable(invalid-response)" : backend || "judge"}(non-independent)`,
+        oracle,
+        blocking && !pass,
+        scope,
+        artifact,
+      )
+    }
+    if (judge.requiresWorktreeEvidence) {
+      const git = yield* GateShell.Git
+      const response = yield* judge.judge({
+        criterion,
+        files: [],
+        worktree: {
+          directory: input.workdir,
+          paths: names,
+          scopePaths: GateDiff.words(scopePaths),
+          ...(wantsDiff ? { gitDiff: computeDiff.pipe(Effect.provideService(GateShell.Git, git)) } : {}),
+        },
+      })
+      return result(response, Option.fromUndefinedOr(response.artifact))
+    }
     const artifact = yield* artifactSha(scopePaths, input.workdir)
-    const files = yield* Effect.forEach(contextNames(field(control, "context")), (name) =>
-      readContext(`${input.workdir}/${substitution(expandParams(name, input.params))}`),
-    )
-    if (raw(field(control, "diff")) === "true") {
-      const diff = yield* GateDiff.compute({ workdir: input.workdir, baseRef: input.baseRef, pathspec: scopePaths })
+    const files = yield* Effect.forEach(names, (name) => readContext(`${input.workdir}/${name}`))
+    if (wantsDiff) {
+      const diff = yield* computeDiff
       // Fail closed, but an advisory control that cannot run still only advises.
       if (Option.isNone(diff)) return graded("fail", "judge:unavailable(no-diff)", oracle, blocking, scope, artifact)
       files.push({ name: GateDiff.NAME, text: newlines(diff.value) })
     }
-    const judge = yield* JudgeConfig.Service
-    const response = yield* judge.judge({ criterion, files })
-    // Exactly a pass/fail verdict with a NUL-free string backend; anything else is unavailable, never a pass.
-    const backend = response.verdict === "pass" || response.verdict === "fail" ? text(response.backend) : undefined
-    const pass = backend !== undefined && response.verdict === "pass"
-    return graded(
-      pass ? "pass" : "fail",
-      `judge:${backend === undefined ? "unavailable(invalid-response)" : backend || "judge"}(non-independent)`,
-      oracle,
-      blocking && !pass,
-      scope,
-      artifact,
-    )
+    return result(yield* judge.judge({ criterion, files }), artifact)
   })
 
 function field(value: unknown, key: string): unknown {

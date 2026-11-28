@@ -6,7 +6,7 @@ import { Effect, Option, Result } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
 import { GateDiff } from "../gate/diff"
-import type { GateShell } from "../gate/shell"
+import { GateShell } from "../gate/shell"
 import { JudgeConfig } from "../judge/config"
 import { RelayJson } from "../json"
 import { ArmState } from "./state"
@@ -58,17 +58,22 @@ export const corroborate = (
   Effect.gen(function* () {
     const text = RelayJson.argText(claim)
     const sha = createHash("sha256").update(claim).digest("hex")
-    const diff = yield* GateDiff.compute({ workdir, baseRef, pathspec: "" })
-    if (Option.isNone(diff)) return { text, sha, corroborated: "unavailable", graded_by: "judge:unavailable" }
     const judge = yield* JudgeConfig.Service
+    const git = yield* GateShell.Git
+    const computeDiff = GateDiff.compute({ workdir, baseRef, pathspec: "" }).pipe(Effect.provideService(GateShell.Git, git))
+    const diff = judge.requiresWorktreeEvidence ? undefined : yield* computeDiff
+    if (diff && Option.isNone(diff)) return { text, sha, corroborated: "unavailable", graded_by: "judge:unavailable" }
     const response: Readonly<Record<string, unknown>> = yield* judge.judge({
       criterion: `The agent claims it cannot complete this state for the following reason: '${text}'. Judge ONLY whether the artifact supports that claim. FAIL if the artifact shows the work was simply not attempted, or shows no trace of the obstacle described.`,
-      files: [{ name: GateDiff.NAME, text: diff.value.replace(/\r\n?/g, "\n") }],
+      files: diff ? [{ name: GateDiff.NAME, text: diff.value.replace(/\r\n?/g, "\n") }] : [],
+      ...(judge.requiresWorktreeEvidence ? { worktree: { directory: workdir, paths: [], gitDiff: computeDiff } } : {}),
     })
     return {
       text,
       sha,
-      corroborated: alternative(response.verdict, "unavailable") || "unavailable",
+      corroborated: judge.requiresWorktreeEvidence && response.available === false
+        ? "unavailable"
+        : alternative(response.verdict, "unavailable") || "unavailable",
       graded_by: `judge:${alternative(response.backend, "judge")}(non-independent)`,
     }
   })

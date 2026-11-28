@@ -1,5 +1,8 @@
 export * as RelayJudge from "./relay-judge"
 
+import { createHash } from "node:crypto"
+import { realpath } from "node:fs/promises"
+import path from "node:path"
 import { LLM, LLMClient, ReasoningEfforts } from "@orchestra/llm"
 import { JudgeConfig } from "@orchestra/relay/judge/config"
 import { SessionID } from "@orchestra/schema/session-id"
@@ -11,16 +14,19 @@ import type { ConfigRelay } from "./config/relay"
 import { ConfigTrust } from "./config/trust"
 import { makeLocationNode } from "./effect/app-node"
 import { LayerNodePlatform } from "./effect/app-node-platform"
+import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { Integration } from "./integration"
 import { Location } from "./location"
 import { ModelV2 } from "./model"
 import { ProviderV2 } from "./provider"
 import { SessionRunnerModel } from "./session/runner/model"
+import { PhysicalPath } from "./util/physical-path"
 
 const openai = Integration.ID.make("openai")
 
 type Binding = {
+  readonly projectDirectory: string
   readonly credentialID: string
   readonly model: string
   readonly variant: string
@@ -36,22 +42,50 @@ export class Service extends Context.Service<
   }
 >()("@orchestra/RelayJudge") {}
 
-export function settings(entries: readonly Config.Entry[], globalConfig: string, projectID: string): Selected {
+export const settings = Effect.fn("RelayJudge.settings")(function* (
+  entries: readonly Config.Entry[],
+  globalConfig: string,
+  projectID: string,
+  projectDirectory: string,
+): Effect.fn.Return<Selected, never, FSUtil.Service> {
+  const fs = yield* FSUtil.Service
+  const canonical = (directory: string) => fs.realPath(directory).pipe(Effect.orElseSucceed(() => undefined))
+  const globalRoot = yield* canonical(globalConfig)
+  const worktree = yield* canonical(projectDirectory)
+  const userDocuments = globalRoot && (!worktree || !ConfigTrust.within(worktree, globalRoot))
+    ? yield* Effect.filter(entries, (entry) => {
+        if (
+          entry.type !== "document" ||
+          entry.path === undefined ||
+          path.dirname(entry.path) !== globalConfig ||
+          !["orchestra.json", "orchestra.jsonc"].includes(path.basename(entry.path))
+        ) return Effect.succeed(false)
+        const expected = path.join(globalRoot, path.basename(entry.path))
+        return canonical(entry.path).pipe(Effect.map((physical) => physical === expected))
+      })
+    : []
   const merge = (documents: readonly Config.Entry[]) =>
     documents
       .flatMap((entry) => (entry.type === "document" && entry.info.relay?.judge ? [entry.info.relay.judge] : []))
       .reduce<Partial<ConfigRelay.Judge>>((result, current) => ({ ...result, ...current }), {})
-  const owner = merge(entries.filter((entry) => ConfigTrust.isUser(globalConfig, entry)))
-  const bound = owner.backend === "orchestra" && owner.projectID === projectID
+  const owner = merge(userDocuments)
+  const bound =
+    owner.backend === "orchestra" &&
+    owner.projectID === projectID &&
+    worktree !== undefined &&
+    path.isAbsolute(worktree) &&
+    path.parse(worktree).root !== worktree &&
+    owner.projectDirectory === worktree
   const configured = bound ? owner : merge(entries)
   const backend = configured.backend ?? JudgeConfig.defaults.backend
   const binding =
     bound &&
+    worktree &&
     owner.credentialID &&
     owner.model &&
     owner.variant &&
     ReasoningEfforts.some((effort) => effort !== "max" && effort === owner.variant)
-      ? { credentialID: owner.credentialID, model: owner.model, variant: owner.variant }
+      ? { projectDirectory: worktree, credentialID: owner.credentialID, model: owner.model, variant: owner.variant }
       : undefined
   return {
     config: {
@@ -65,7 +99,7 @@ export function settings(entries: readonly Config.Entry[], globalConfig: string,
     },
     binding,
   }
-}
+})
 
 const layer = Layer.effect(
   Service,
@@ -76,13 +110,19 @@ const layer = Layer.effect(
     const catalog = yield* Catalog.Service
     const integrations = yield* Integration.Service
     const llm = yield* LLMClient.Service
-    const chosen = settings(yield* config.entries(), global.config, location.project.id)
+    const fs = yield* FSUtil.Service
+    const load = () => config.entries().pipe(
+      Effect.flatMap((entries) => settings(entries, global.config, location.project.id, location.project.directory)),
+      Effect.provideService(FSUtil.Service, fs),
+    )
+    const chosen = yield* load()
     const selection = chosen.binding
     const native = selection && Effect.fn("RelayJudge.vote")(function* (input: Parameters<JudgeConfig.NativeCall>[0]) {
-      const current = settings(yield* config.entries(), global.config, location.project.id)
+      const current = yield* load()
       // Recheck global opt-in on every sample, including samples in a multi-vote ballot.
       if (
         !current.binding ||
+        current.binding.projectDirectory !== selection.projectDirectory ||
         current.binding.credentialID !== selection.credentialID ||
         current.binding.model !== selection.model ||
         current.binding.variant !== selection.variant ||
@@ -138,7 +178,10 @@ const layer = Layer.effect(
         return yield* Effect.fail("the OpenAI judge did not complete one verdict")
       return call.input
     })
-    const service = yield* JudgeConfig.Service.pipe(Effect.provide(JudgeConfig.layer(chosen.config, native)))
+    const service = yield* JudgeConfig.Service.pipe(Effect.provide(JudgeConfig.layer(
+      chosen.config,
+      selection && native ? { call: native, read: (evidence) => readEvidence(selection.projectDirectory, evidence) } : undefined,
+    )))
     return Service.of({ config: chosen.config, service })
   }),
 )
@@ -146,5 +189,37 @@ const layer = Layer.effect(
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Config.node, Global.node, Location.node, Catalog.node, Integration.node, LayerNodePlatform.llmClient],
+  deps: [Config.node, Global.node, Location.node, Catalog.node, Integration.node, LayerNodePlatform.llmClient, FSUtil.node],
 })
+
+export function readEvidence(projectDirectory: string, evidence: JudgeConfig.WorktreeEvidence) {
+  return Effect.tryPromise({
+    try: async () => {
+      if (evidence.directory !== projectDirectory || (await realpath(projectDirectory)) !== projectDirectory)
+        throw new Error("worktree does not match the owner binding")
+      const scopePaths = evidence.scopePaths ?? []
+      // The context and its digest use the same bytes, even when a path appears in both lists.
+      const bytes = new Map<string, Uint8Array>()
+      for (const name of new Set([...evidence.paths, ...scopePaths]))
+        bytes.set(name, await readContextFile(projectDirectory, name))
+      const utf8 = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
+      const files = evidence.paths.map((name) => ({
+        name: path.basename(name),
+        text: utf8.decode(bytes.get(name)!).replace(/\r\n?/g, "\n"),
+      }))
+      const scope = scopePaths.map((name) => `${name}:${createHash("sha256").update(bytes.get(name)!).digest("hex")}\n`)
+      return {
+        files,
+        ...(scope.length ? { artifact: createHash("sha256").update(scope.join("")).digest("hex") } : {}),
+      }
+    },
+    catch: () => "worktree evidence is missing or outside the user-configured judge boundary",
+  })
+}
+
+function readContextFile(directory: string, name: string) {
+  const segments = name.split("/")
+  if (/[\\:\u0000]/.test(name) || segments.some((part) => !part || part === "." || part === ".." || part === ".git"))
+    throw new Error("expected an exact relative worktree file path")
+  return PhysicalPath.readPhysicalFile(path.join(directory, ...segments))
+}

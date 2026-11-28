@@ -63,11 +63,13 @@ A run is bound to a session. Each turn, the runner injects the current step into
 | `judge` | Asks a model. Set `relay.judge.backend` to `api` for the Messages API or `orchestra` for a managed ChatGPT plan connection |
 | Host checks | Package verification and cold review, run by the host rather than a command |
 
-For the Orchestra judge, set `backend: "orchestra"`, `projectID`, `credentialID`, `model` and `variant` in your user
-`orchestra.json`. Use the exact project ID, the active OpenAI ChatGPT plan connection ID, the OpenAI model slug such as
-`gpt-6.2-sol`, and an explicit reasoning variant such as `xhigh`. Each sample is a fresh native model call with one verdict
-tool and the bound criterion and artifact. Project settings cannot opt into or change this binding. An unavailable
-connection, model, variant or verdict fails the check. The Messages API backend uses its separately configured key.
+For the Orchestra judge, set `backend: "orchestra"`, `projectID`, `projectDirectory`, `credentialID`, `model` and `variant`
+in your user `orchestra.json`. Use the exact project ID, the canonical absolute worktree path, the active OpenAI
+ChatGPT plan connection ID, an OpenAI model slug such as `gpt-6.2-sol`, and a reasoning variant such as `xhigh`.
+Each sample uses a fresh native call against the artifact from that exact worktree. Give the workflow regular
+files by relative path. Relay refuses missing files, symlinks, and paths outside the authorized worktree.
+The workflow editor reports the configured backend. Each ballot verifies the connection, model, variant, and evidence
+before requesting a verdict. The Messages API backend uses its separately configured key.
 
 Package verification runs Bun in the authority Session's directory. On a GitHub Actions Linux runner, the subprocess receives the runner's CI marker for repository test guards without inheriting the host's credentials.
 

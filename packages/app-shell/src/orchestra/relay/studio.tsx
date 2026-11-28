@@ -327,7 +327,8 @@ export function Inspector(props: {
         .filter((node) => node.type === "relay.execute" || node.type === "relay.review")
         .every((node) => readChecklist(node).controls.length > 0),
     },
-    ...(aiChecks() ? [{ key: "judge", done: preview()?.judge === "api" }] : []),
+    // Preview reports the configured backend. A real ballot still checks credentials and artifact boundaries.
+    ...(aiChecks() ? [{ key: "judge", done: preview()?.judge === "api" || preview()?.judge === "orchestra" }] : []),
   ]
   const title = (finding: RelayPreview["findings"][number]) => {
     const known = LINT.find((item) => item === finding.category)

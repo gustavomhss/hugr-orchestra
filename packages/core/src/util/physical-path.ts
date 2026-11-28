@@ -50,6 +50,18 @@ export async function writePhysical(target: string, content: string | Uint8Array
     .finally(() => handle.close())
 }
 
+/** Read an existing regular file at an already authorized physical path. */
+export async function readPhysicalFile(target: string) {
+  if (!(await fs.lstat(target)).isFile()) throw new Error("Refusing a non-regular file")
+  const handle = await fs.open(target, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+  return handle.stat()
+    .then(async (info) => {
+      if (!info.isFile() || !(await opensAt(handle, target))) throw new Error("Refusing a changed or linked file")
+      return handle.readFile()
+    })
+    .finally(() => handle.close())
+}
+
 // Whether the opened file is the one at `target`, reached with no link on the way. On Linux the descriptor names its
 // own path. Elsewhere the path is checked first and its file then matched to the descriptor, so a parent swapped and
 // swapped back around the open is caught; the path check must come before the identity check for that.

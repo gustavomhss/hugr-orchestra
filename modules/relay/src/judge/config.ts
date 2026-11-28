@@ -1,6 +1,7 @@
 export * as JudgeConfig from "./config"
 
-import { Context, Effect, Layer, Redacted } from "effect"
+import { Context, Effect, Layer, Option, Redacted } from "effect"
+import { GateDiff } from "../gate/diff"
 import { JudgeApi } from "./api"
 import type { JudgeBallot } from "./ballot"
 import { JudgeStub } from "./stub"
@@ -39,36 +40,75 @@ export interface File {
 export interface Input {
   readonly criterion: string
   readonly files: ReadonlyArray<File>
+  readonly worktree?: WorktreeEvidence
+}
+
+/** References from an approved workflow, rather than bytes supplied by its author. */
+export interface WorktreeEvidence {
+  readonly directory: string
+  readonly paths: ReadonlyArray<string>
+  readonly scopePaths?: ReadonlyArray<string>
+  readonly gitDiff?: Effect.Effect<Option.Option<string>>
+}
+
+export interface Response extends JudgeBallot.Response {
+  readonly artifact?: string
 }
 
 export interface Interface {
-  readonly judge: (input: Input) => Effect.Effect<JudgeBallot.Response>
+  readonly requiresWorktreeEvidence?: boolean
+  readonly judge: (input: Input) => Effect.Effect<Response>
+}
+
+export interface CheckedEvidence {
+  readonly files: ReadonlyArray<File>
+  readonly artifact?: string
 }
 
 export type NativeCall = JudgeApi.NativeCall
+export interface Native {
+  readonly call: NativeCall
+  readonly read: (input: WorktreeEvidence) => Effect.Effect<CheckedEvidence, string>
+}
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/relay/Judge") {}
 
 // Replaces `pick_backend`: the backend comes from config alone, so a provider key in the environment can neither turn
 // the stub into an API call nor become the API's key.
-export const layer = (config: Config, native?: JudgeApi.NativeCall) =>
+export const layer = (config: Config, native?: Native) =>
   Layer.succeed(
     Service,
     Service.of({
+      requiresWorktreeEvidence: config.backend === "orchestra",
       judge: (input) => {
         if (config.backend === "api") return JudgeApi.judge(config, input)
-        if (config.backend === "orchestra" && native) return JudgeApi.judge(config, input, native)
-        if (config.backend === "orchestra")
-          return Effect.succeed({
-            verdict: "fail",
-            available: false,
-            backend: `api-error:${config.model}`,
-            reason: "the Orchestra judge requires a user-configured OAuth connection bound to this project",
-          } as const)
+        if (config.backend === "orchestra") return judgeWorktree(config, input, native)
         return unconfigured(config, input)
       },
     }),
   )
+
+function judgeWorktree(config: Config, input: Input, native?: Native) {
+  const denied = (reason: string) => ({
+    verdict: "fail",
+    available: false,
+    backend: `api-error:${config.model}`,
+    reason,
+  } as const)
+  if (!native || !input.worktree)
+    return Effect.succeed(denied("the Orchestra judge requires an owner-bound OAuth connection and worktree evidence"))
+  const worktree = input.worktree
+  return Effect.gen(function* () {
+    const evidence = yield* native.read(worktree)
+    const diff = worktree.gitDiff ? yield* worktree.gitDiff : undefined
+    if (diff && Option.isNone(diff)) return denied("computed Git diff is unavailable")
+    const result = yield* JudgeApi.judge(config, {
+      criterion: input.criterion,
+      files: diff ? [...evidence.files, { name: GateDiff.NAME, text: diff.value.replace(/\r\n?/g, "\n") }] : evidence.files,
+    }, native.call)
+    return evidence.artifact === undefined ? result : { ...result, artifact: evidence.artifact }
+  }).pipe(Effect.catch((reason) => Effect.succeed(denied(reason))))
+}
 
 export const NOT_CONFIGURED =
   'The relay judge is not configured (backend "stub"): set relay.judge.backend to "api" and relay.judge.apiKey in the Orchestra config to evaluate judge rules.'

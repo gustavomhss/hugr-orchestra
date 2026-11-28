@@ -12,6 +12,9 @@ export class Judge extends Schema.Class<Judge>("ConfigV2.Relay.Judge")({
   projectID: Schema.NonEmptyString.pipe(Schema.optional).annotate({
     description: "Exact project ID authorized to use the Orchestra judge, in user configuration only",
   }),
+  projectDirectory: Schema.NonEmptyString.pipe(Schema.optional).annotate({
+    description: "Canonical absolute path of the worktree authorized to use the Orchestra judge, in user configuration only",
+  }),
   credentialID: Schema.NonEmptyString.pipe(Schema.optional).annotate({
     description: "ID of the active ChatGPT plan OAuth connection selected by the user for the Orchestra judge",
   }),

@@ -140,11 +140,14 @@ describe("goldens", () => {
 describe("beyond the goldens", () => {
   test("an explicitly bound native judge applies the same evidence cuts and verdict validation", async () => {
     const settings = { ...JudgeConfig.defaults, backend: "orchestra" as const, model: "openai/gpt-6.2-sol@xhigh", maxContext: 3 }
-    const ballot = (native?: JudgeConfig.NativeCall) =>
+    const ballot = (call?: JudgeConfig.NativeCall) =>
       Effect.runPromise(
         JudgeConfig.Service.use((service) =>
-          service.judge({ criterion: "includes a", files: [{ name: "/work/artifact.txt", text: "abcd" }] }),
-        ).pipe(Effect.provide(JudgeConfig.layer(settings, native))),
+          service.judge({ criterion: "includes a", files: [], worktree: { directory: "/work", paths: ["artifact.txt"] } }),
+        ).pipe(Effect.provide(JudgeConfig.layer(settings, call && {
+          call,
+          read: () => Effect.succeed({ files: [{ name: "artifact.txt", text: "abcd" }] }),
+        }))),
       )
     const outcome = await ballot((request) =>
       Effect.sync(() => {
