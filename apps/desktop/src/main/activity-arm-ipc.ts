@@ -17,7 +17,7 @@ export type ActivityStopClient = {
 
 export type ActivityEmptyClient = {
   isCurrent(): boolean
-  preview(request: typeof ActivityEmpty.Request.Type, signal?: AbortSignal): Promise<ActivityEmpty.Preview | undefined>
+  preview(request: ActivityEmpty.Request, signal?: AbortSignal): Promise<ActivityEmpty.Preview | undefined>
   confirm(request: ActivityEmpty.Confirm, signal?: AbortSignal): Promise<ActivityEmpty.Receipt | undefined>
 }
 

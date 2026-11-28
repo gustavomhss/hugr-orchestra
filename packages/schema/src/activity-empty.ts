@@ -9,6 +9,7 @@ const Target = Schema.Struct({
   ...ActivityArm.Target.fields,
   originalPath: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(1024)),
 })
+export type Request = Readonly<Record<string, never>>
 export const Confirm = Schema.Struct({ previewID })
 export type Confirm = typeof Confirm.Type
 export const Preview = Schema.Struct({
@@ -27,7 +28,7 @@ export const Receipt = Schema.Struct({
 })
 export type Receipt = typeof Receipt.Type
 
-export function decodeRequest(input: unknown) {
+export function decodeRequest(input: unknown): Option.Option<Request> {
   return typeof input === "object" && input !== null && !Array.isArray(input) && Reflect.ownKeys(input).length === 0
     ? Option.some({})
     : Option.none()
