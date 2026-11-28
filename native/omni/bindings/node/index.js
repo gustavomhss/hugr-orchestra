@@ -331,6 +331,9 @@ class PtyChild extends Child {
 function spawn(command, args, options) {
   const native = load();
   started = true;
+  if (options != null && "memberIsolation" in Object(options) && native.supportsMemberIsolation?.() !== true) {
+    throw refused("member isolation requires a compatible native addon");
+  }
   const child = native.spawn(command, args ?? [], withEnv(options), cancelOf(options?.signal));
   return child.isPty ? new PtyChild(child) : new PipeChild(child);
 }
@@ -339,6 +342,9 @@ function run(command, args, options) {
   return later(() => {
     const native = load();
     started = true;
+    if (options != null && "memberIsolation" in Object(options) && native.supportsMemberIsolation?.() !== true) {
+      throw refused("member isolation requires a compatible native addon");
+    }
     return native.run(command, args ?? [], withEnv(options), cancelOf(options?.signal));
   });
 }

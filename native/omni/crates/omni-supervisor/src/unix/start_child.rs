@@ -12,38 +12,53 @@ type Member = ();
 
 impl Sup {
     pub(super) fn spawn(&mut self, s: Spawn) -> Result<(), Closed> {
+        #[cfg(target_os = "linux")]
+        let mut s = s;
         let pipes = usize::from(s.stdin == Slot::Pipe) + 1 + usize::from(s.stderr == Slot::Pipe);
         let fds = self.chan.take_fds(if s.pty.is_some() { 0 } else { pipes })?;
         let req = s.req;
+        #[cfg(target_os = "linux")]
+        if self.executable_policy.is_some() {
+            s.env.clear();
+        }
         let started = if !self.trees.admits() {
             let msg = format!("the supervisor already holds {MAX_TREES} trees (live or not yet released)");
             Err(Fail::new(FailCode::Io, 0, msg))
         } else {
-            Prepared::new(&s).and_then(|p| match s.pty {
-                None => {
-                    let mut it = fds.iter().map(AsFd::as_fd);
-                    let stdin = if s.stdin == Slot::Pipe { it.next() } else { None };
-                    let (stdout, stderr) = (it.next(), it.next());
-                    let stdout = stdout.ok_or_else(|| Fail::new(FailCode::Invalid, 0, "no stdout".into()))?;
-                    #[cfg(target_os = "linux")]
-                    if let Some(isolation) = &self.isolation {
-                        let (pid, member) = isolation.spawn(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
-                        return Ok((pid, None, Exec::Running, Some(member)));
-                    }
-                    let pid = spawn::spawn_pipe(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
-                    Ok((pid, None, Exec::Running, None::<Member>))
+            Prepared::new(&s).and_then(|p| {
+                #[cfg(target_os = "linux")]
+                let mut p = p;
+                #[cfg(target_os = "linux")]
+                if let Some(policy) = &self.executable_policy {
+                    policy.admit(&p.program)?;
+                    p.restrict();
                 }
-                Some((cols, rows)) => {
-                    #[cfg(target_os = "linux")]
-                    if self.isolation.is_some() {
-                        return Err(Fail::new(
-                            FailCode::Invalid,
-                            0,
-                            "isolated mode does not admit PTY commands".into(),
-                        ));
+                match s.pty {
+                    None => {
+                        let mut it = fds.iter().map(AsFd::as_fd);
+                        let stdin = if s.stdin == Slot::Pipe { it.next() } else { None };
+                        let (stdout, stderr) = (it.next(), it.next());
+                        let stdout = stdout.ok_or_else(|| Fail::new(FailCode::Invalid, 0, "no stdout".into()))?;
+                        #[cfg(target_os = "linux")]
+                        if let Some(isolation) = &self.isolation {
+                            let (pid, member) = isolation.spawn(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
+                            return Ok((pid, None, Exec::Running, Some(member)));
+                        }
+                        let pid = spawn::spawn_pipe(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
+                        Ok((pid, None, Exec::Running, None::<Member>))
                     }
-                    let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
-                    Ok((pid, Some(master), Exec::Held(held), None))
+                    Some((cols, rows)) => {
+                        #[cfg(target_os = "linux")]
+                        if self.isolation.is_some() {
+                            return Err(Fail::new(
+                                FailCode::Invalid,
+                                0,
+                                "isolated mode does not admit PTY commands".into(),
+                            ));
+                        }
+                        let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
+                        Ok((pid, Some(master), Exec::Held(held), None))
+                    }
                 }
             })
         };

@@ -80,6 +80,9 @@ export const Flag = {
   ORCHESTRA_MODELS_PATH: process.env["ORCHESTRA_MODELS_PATH"],
   ORCHESTRA_DB: process.env["ORCHESTRA_DB"],
   ORCHESTRA_ACTIVITY_EXTERNAL_CACHES: process.env["ORCHESTRA_ACTIVITY_EXTERNAL_CACHES"],
+  get ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES() {
+    return process.env["ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES"]
+  },
 
   // Evaluated at access time (not module load) because tests, the CLI, and
   // external tooling set these env vars at runtime.

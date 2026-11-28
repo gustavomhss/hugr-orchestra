@@ -93,6 +93,8 @@ export interface RunOptions extends CommonOptions {
   pty?: PtyOption;
 }
 export interface SpawnOptions extends CommonOptions {
+  /** Require the provisioned Linux isolated supervisor; fails closed when unavailable. */
+  memberIsolation?: boolean;
   /** Pipe mode only; default `"closed"` (end of input at once). */
   stdin?: "closed" | "pipe";
   /**

@@ -11,6 +11,8 @@
 
 mod chan;
 mod diag;
+#[cfg(target_os = "linux")]
+mod executable_policy;
 mod exits;
 mod footprint;
 mod fork;
@@ -18,6 +20,8 @@ mod fork;
 mod isolated;
 mod member_control;
 mod observe;
+#[cfg(target_os = "linux")]
+mod peer;
 mod procs;
 mod replies;
 mod setup;
@@ -76,6 +80,8 @@ struct Sup {
     trees: Trees,
     #[cfg(target_os = "linux")]
     isolation: Option<isolated::Isolation>,
+    #[cfg(target_os = "linux")]
+    executable_policy: Option<executable_policy::ExecutablePolicy>,
     observation: Observation,
     out: Vec<Msg>,
     /// Set at host death: exit by then even if a tree cannot be confirmed gone.
@@ -89,13 +95,20 @@ impl Sup {
     fn start(args: &Args) -> std::io::Result<Option<Sup>> {
         sys::fill_stdio()?;
         sys::close_inherited()?;
-        let chan = Chan::new(take_channel()?)?;
-        let (sigchld, sigchld_w) = signals()?;
-        let host = i32::try_from(args.host_pid).map_err(std::io::Error::other)?;
-        let watch = HostWatch::arm(host);
-        let pidfd = watch::pidfd_available();
         #[cfg(target_os = "linux")]
         let isolation = isolated::Isolation::load()?;
+        #[cfg(target_os = "linux")]
+        let watch = peer::host_watch(args, isolation.as_ref())?;
+        #[cfg(target_os = "linux")]
+        let executable_policy = args
+            .isolated_peer_uid
+            .map(|_| executable_policy::ExecutablePolicy::load())
+            .transpose()?;
+        #[cfg(not(target_os = "linux"))]
+        let watch = HostWatch::arm(i32::try_from(args.host_pid).map_err(std::io::Error::other)?);
+        let chan = Chan::new(take_channel()?)?;
+        let (sigchld, sigchld_w) = signals()?;
+        let pidfd = watch::pidfd_available();
         #[cfg(target_os = "linux")]
         if isolation.is_some() && !pidfd {
             return Err(std::io::Error::other("isolated member freeze requires pidfd"));
@@ -111,6 +124,8 @@ impl Sup {
             trees: Trees::new(pidfd),
             #[cfg(target_os = "linux")]
             isolation,
+            #[cfg(target_os = "linux")]
+            executable_policy,
             observation: Observation::default(),
             out: Vec::new(),
             exit_by: None,
