@@ -1,9 +1,16 @@
+import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
 import { ConflictError, InvalidRequestError, ServiceUnavailableError } from "../errors"
 
 export const ActivityGroup = HttpApiGroup.make("server.activity")
+  .add(
+    HttpApiEndpoint.get("activity.plan", "/api/activity/plan", {
+      success: ActivityArm.PlanSnapshot,
+      error: ServiceUnavailableError,
+    }).annotateMerge(OpenApi.annotations({ summary: "Read the eligible objects and durable Activity arm receipts" })),
+  )
   .add(
     HttpApiEndpoint.get("activity.worktrees", "/api/activity/worktrees", {
       success: ActivityMonitor.WorktreeSnapshot,

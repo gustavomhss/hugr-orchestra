@@ -29,6 +29,8 @@
   "actionsWorkflows-types-part-2.ts",
   "actionsWorkflows-types.ts",
   "actionsWorkflows.ts",
+  "activity-types-part-1.ts",
+  "activity-types-part-2.ts",
   "activity-types.ts",
   "activity.ts",
   "client-error.ts",

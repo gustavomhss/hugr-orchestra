@@ -1,4 +1,5 @@
 import type {
+  ActivityPlanOutput,
   ActivityWorktreesOutput,
   ActivityReadWorktreeInput,
   ActivityReadWorktreeOutput,
@@ -24,6 +25,17 @@ export function makeActivity(
   sse: <A>(descriptor: RequestDescriptor, options?: RequestOptions) => AsyncIterable<A>,
 ) {
   return {
+    plan: (requestOptions?: RequestOptions) =>
+      request<ActivityPlanOutput>(
+        {
+          method: "GET",
+          path: `/api/activity/plan`,
+          successStatus: 200,
+          declaredStatuses: [503, 401, 400],
+          empty: false,
+        },
+        requestOptions,
+      ),
     worktrees: (requestOptions?: RequestOptions) =>
       request<ActivityWorktreesOutput>(
         {

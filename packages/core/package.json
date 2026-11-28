@@ -14,6 +14,8 @@
   },
   "exports": {
     "./activity-worktree": "./src/activity-worktree.ts",
+    "./activity-arm": "./src/activity-arm.ts",
+    "./activity-action-ledger": "./src/activity-action-ledger.ts",
     "./activity-disk": "./src/activity-disk.ts",
     "./activity-docker": "./src/activity-docker.ts",
     "./activity-external-cache": "./src/activity-external-cache.ts",

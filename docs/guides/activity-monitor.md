@@ -75,9 +75,15 @@ The hypothesis is **insufficient** until there is a baseline for the same set of
 
 The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree ID and observation UUID remain separate. The API identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request leaves membership unavailable. Inspection failure displays **unknown** and preserves previous members with their original reading age. Failed HTTP refreshes preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
 
-The **IN/OUT** and **Quarantine** tabs currently show **collection unavailable** in the Monitor.
-
 The category names stay in English in both supported languages. Tab through the category strip once, then use Left/Right, Home or End to select a category.
+
+## IN/OUT and Quarantine
+
+**IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
+
+When an owned Desktop sidecar has a **Ready** object, **Arm quarantine** opens a system dialog with the selected object, its recorded owner, ID and generation. Confirming records **Armed** in the ledger. Cancel leaves the ledger unchanged. Arming leaves the object in its original location.
+
+**Quarantine** shows **collection unavailable** while the filesystem capability is absent. Process control remains unavailable in Trees.
 
 ## Docker
 

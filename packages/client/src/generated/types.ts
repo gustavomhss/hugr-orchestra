@@ -14649,6 +14649,7 @@ export {
 export { type ActionsTransfersInfoInput, type ActionsTransfersInfoOutput } from "./actionsTransfers-types"
 
 export {
+  type ActivityPlanOutput,
   type ActivityWorktreesOutput,
   type ActivityReadWorktreeInput,
   type ActivityReadWorktreeOutput,

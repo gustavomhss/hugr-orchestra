@@ -7,6 +7,7 @@ import type { WslServersPlatform } from "../wsl/types"
 import type { UpdaterPlatform } from "../updater"
 import type { DraftStore } from "@/utils/draft-store"
 import type { NativeTitlebarFrame } from "../native-titlebar"
+import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type {
   LiveHotkey,
   LiveHotkeyAction,
@@ -87,6 +88,7 @@ export type FatalRendererErrorLog = {
 }
 
 type PlatformBase = {
+  armActivityQuarantine?(serverURL: string, request: ActivityArm.Request): Promise<ActivityArm.Receipt | undefined>
   /** Native caption area in CSS viewport coordinates; omitted geometry restores default placement. */
   setTitlebarFrame?(frame?: NativeTitlebarFrame): Promise<void>
   /** App version */

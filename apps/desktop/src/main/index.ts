@@ -5,7 +5,7 @@ import { homedir, tmpdir } from "node:os"
 import { join } from "node:path"
 import { getCACertificates, setDefaultCACertificates } from "node:tls"
 import type { Event } from "electron"
-import { app, BrowserWindow, dialog } from "electron"
+import { app, BrowserWindow, dialog, ipcMain } from "electron"
 
 import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import contextMenu from "electron-context-menu"
@@ -50,6 +50,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
 import { sidecarMode, startOwnedServe } from "./owned-serve"
+import { registerActivityArmIpc } from "./activity-arm-ipc"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
@@ -427,6 +428,14 @@ const main = Effect.gen(function* () {
     },
   }).stopLinuxRuntime
   registerWslIpcHandlers(wslServers)
+  const activityArm = { owned: undefined as Awaited<ReturnType<typeof startOwnedServe>> | undefined }
+  registerActivityArmIpc({
+    ipcMain,
+    BrowserWindow,
+    dialog,
+    rendererDevURL: undefined,
+    getOwned: () => activityArm.owned,
+  })
   // Not awaited: the net log took about a second to start, and the server start below does not need it.
   void startNetLog().catch((error) => logger.warn("failed to start net log", error))
 
@@ -486,6 +495,7 @@ const main = Effect.gen(function* () {
           signal.throwIfAborted()
           return startOwnedServe({
             logger,
+            privateActivityApproval: app.isPackaged,
             command: [binary.value],
             env: { ...env.value, ...dock.env },
             cwd,
@@ -527,6 +537,7 @@ const main = Effect.gen(function* () {
       try: () => owned.health.wait,
       catch: (e) => (e instanceof Error ? e : new Error(String(e))),
     }).pipe(Effect.tapError((e) => Effect.sync(() => logger.error("owned serve health check failed", e.message))))
+    if (app.isPackaged) activityArm.owned = owned
     const liveServer = { url: owned.url, username: owned.username, password: owned.password }
     liveConnection.server = liveServer
     yield* Effect.promise(() => liveOwner.setConnection({ mode: "owned", epoch: liveConnection.epoch, server: liveServer }))
