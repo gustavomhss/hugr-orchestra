@@ -374,7 +374,7 @@ The same lockfile change also runs pinned syft 1.57.1 as `scan dir:<copy> --base
 
 The same review runs pinned staticcheck 2026.2.2 and pinned gosec 2.30.0 on those packages. The host names both binaries. staticcheck gets no flag. gosec gets only `-fmt sarif` and an output path in the copy. It does not send findings to an external service. On a machine that is not the qualified Linux x64 runtime the card records that and does not block approval. A missing pin on Linux still does.
 
-A Go concurrency candidate can be probed with `go test -race` in the scratch copy. The host fixes that command. The verifier reads the result from the race proof leaf and does not name the command. It does not install Go. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Other languages are not offered that probe, because they have no race detector in the catalog. Mutants, interleave and property still do not run.
+A Go concurrency candidate can be probed with `go test -race` in the scratch copy. The host fixes that command. The verifier reads the result from the race proof leaf and does not name the command. It does not install Go. A missing Go is unavailable, and approval waits until that check is listed in `review.acceptedUnavailable` or Go is present. Other languages are not offered that probe, because they have no race detector in the catalog. The bounded mutation, interleave and property adapters are described under Advanced proofs below.
 
 The same trusted review also runs one pinned type-aware rule, `typescript(no-floating-promises)`, with the pinned
 `oxlint` and `tsgolint`. It does not install a project tool and it does not search `PATH` for a binary. On a machine
@@ -447,8 +447,9 @@ latest retained analysis rather than the earlier run.
 
 Governed and PR review raw CODE, probe and history output stays in the review's OS-managed temporary analysis cache
 after its Sessions and scratch copies close. Newly completed independent engagements additionally retain their
-required CODE and analysis evidence in the durable receipt described above. History and executable verifier probes
-remain unavailable in independent engagements.
+required CODE and analysis evidence in the durable receipt described above. For eligible diligence findings on
+Linux x64, the scoped TypeScript probe also retains its diagnostic and compiler outcome. History and general
+verifier probes remain outside independent engagement scope.
 
 A card states its limits; it never claims "no problems" for anything it did not look at.
 
@@ -493,9 +494,9 @@ platform, or a tool may be missing. The review policy requires a `blocked` card 
 unless the owner has accepted that unavailable lane where acceptance is allowed.
 
 To accept a lane where allowed, list it in the project setting `review.acceptedUnavailable` (board project settings).
-The method expects the card to report it as `not-run` with its reason, list it under "not examined", and cite other
-recorded checks, such as CI results. The current PR card validator does not independently verify those decisions or
-the completeness of the checks list; an `APPROVE` alone does not establish that this policy was satisfied.
+The card must report the host-retained checks, including unavailable checks and their reasons. The PR validator
+requires an exact match and validates accepted exceptions against host settings. Required acquisition errors and
+unaccepted unavailable checks remain blockers; a required repository-command failure prevents `APPROVE`.
 
 Accept a lane only when you rely on another check for it, such as CI. Security and private-cache refusals are not
 lanes that this setting can accept.
