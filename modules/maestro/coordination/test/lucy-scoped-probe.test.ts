@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
+import { eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
 import { ResearchToolkit } from "@orchestra/core/research-toolkit/index"
+import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-runtime"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
@@ -11,7 +13,7 @@ import { fence, run, text } from "./fixture/lucy-engagement"
 import { decoded, digest, receipt, request } from "./fixture/lucy-engagement-artifacts"
 import { commit } from "./fixture/lucy-engagement-artifact-limits"
 import { completedPrior, decodedFix, defaultVerdict, fixRequest, fixScript } from "./fixture/lucy-fix-review"
-import { fixReceipt } from "./fixture/lucy-fix-review-evidence"
+import { fixReceipt, saved } from "./fixture/lucy-fix-review-evidence"
 import { data, variantScript } from "./fixture/lucy-variants"
 
 const qualified = process.platform === "linux" && process.arch === "x64"
@@ -41,10 +43,12 @@ test(qualified
         id: Schema.String, class: Schema.String, path: Schema.String, line: Schema.Number,
         options: Schema.Array(Schema.Struct({ id: Schema.String })),
       })))(data(turn.log.text, "candidates"))
-      const witnesses = data(turn.log.text, "scoped probe evidence") as ReadonlyArray<{
+      const witnesses = turn.log.text.includes('<data name="scoped probe evidence">')
+        ? data(turn.log.text, "scoped probe evidence") as ReadonlyArray<{
         candidate: string; uri: string; command: string; status: "fail" | "pass";
         diagnostics: ReadonlyArray<{ line: number; column: number; code: string }>
-      }>
+        }>
+        : []
       const results = offered.map((candidate) => {
         expect(candidate.class).toBe("logic.contract")
         const witness = witnesses.find((entry) => entry.candidate === candidate.id && entry.status === "fail")
@@ -68,7 +72,7 @@ test(qualified
       if (!observation || !("observationID" in observation)) throw new Error("real scoped typecheck observation missing")
       return { ...defaultVerdict(basis), supporting: [{ kind: "tool", observationID: observation.observationID }] }
     } })
-    yield* root.open((host) => Effect.gen(function* () {
+    const original = yield* root.open((host) => Effect.gen(function* () {
       if (qualified) {
         yield* ResearchToolkit.ensure("typescript").pipe(
           Effect.catch((error) => Effect.die(new Error(`conformance-missing: TypeScript ${error.reason}`))),
@@ -84,7 +88,7 @@ test(qualified
       if (!qualified) {
         expect(finding.evidence.kind).toBe("quote")
         expect(original.value).not.toHaveProperty("scopedProbes")
-        return
+        return undefined
       }
       expect(finding).toMatchObject({ path: sourcePath, line: 1, class: "logic.contract", rule: "logic.contract",
         evidence: { kind: "probe" } })
@@ -113,7 +117,9 @@ test(qualified
       expect(probe.stdout + probe.stderr).toContain("TS2322")
 
       const current = yield* commit(root, { [sourcePath]: fixedSource })
-      const result = decodedFix(yield* host.invoke(fixRequest(prior.report, "scoped-probe-fix", current)))
+      const input = fixRequest(prior.report, "scoped-probe-fix", current)
+      const output = yield* host.invoke(input)
+      const result = decodedFix(output)
       expect(result.status).toBe("completed")
       expect(result.dispositions.map((entry) => entry.disposition)).toEqual(["resolved"])
       const fixed = yield* fixReceipt(host, result)
@@ -132,16 +138,33 @@ test(qualified
       expect(currentProbe.proofID).not.toBe(probe.proofID)
       expect(fixed.value.artifacts.find((artifact) => artifact.artifactID === currentRows?.[0]?.artifactID)?.kind).toBe("scoped-probe")
 
-      const bytes = fixed.bytes
-      const calls = root.requests.length
-      const replay = decodedFix(yield* host.invoke(fixRequest(prior.report, "scoped-probe-fix", current)))
-      expect(replay.reportID).toBe(result.reportID)
-      expect(root.requests.length).toBe(calls)
-      expect((yield* fixReceipt(host, replay)).bytes).toEqual(bytes)
       expect((yield* receipt(host, prior.report)).bytes).toEqual(original.bytes)
       expect(yield* Effect.promise(() => fs.readFile(path.join(root.directory, sourcePath), "utf8"))).toBe(fixedSource)
       expect(sourceRevision).not.toBe(current)
+      const oldPrior = yield* saved(host, prior.report.sessionID)
+      const { lucyEngagementV1, ...withoutPrior } = oldPrior.row.metadata ?? {}
+      expect(lucyEngagementV1).toBeDefined()
+      yield* host.db.update(SessionTable).set({ metadata: withoutPrior })
+        .where(eq(SessionTable.id, prior.report.sessionID)).run().pipe(Effect.orDie)
+      return { prior, original, input, output, result, fixed, oldMetadata: oldPrior.row.metadata,
+        calls: root.requests.length, inputs: yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie),
+        providerTurns: provider.turns.length }
     }), { stream: provider.stream })
+    if (!original) return
+    yield* root.open((host) => Effect.gen(function* () {
+      const priorRow = yield* host.db.select().from(SessionTable).where(eq(SessionTable.id, original.prior.report.sessionID)).get().pipe(Effect.orDie)
+      expect(priorRow?.metadata?.lucyEngagementV1).toBeUndefined()
+      const output = yield* host.invoke(original.input)
+      expect(output.text).toBe(original.output.text)
+      const replay = decodedFix(output)
+      expect(replay).toEqual(original.result)
+      expect(root.requests.length).toBe(original.calls)
+      expect(provider.turns.length).toBe(original.providerTurns)
+      expect(yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)).toEqual(original.inputs)
+      expect((yield* fixReceipt(host, replay)).bytes).toEqual(original.fixed.bytes)
+      expect((yield* receipt(host, original.prior.report)).bytes).toEqual(original.original.bytes)
+    }).pipe(Effect.ensuring(host.db.update(SessionTable).set({ metadata: original.oldMetadata })
+      .where(eq(SessionTable.id, original.prior.report.sessionID)).run().pipe(Effect.orDie))), { stream: provider.stream })
   })))
 }, 600_000)
 
