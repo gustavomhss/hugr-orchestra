@@ -16,6 +16,7 @@ mod footprint;
 mod fork;
 mod observe;
 mod procs;
+mod replies;
 mod setup;
 mod spawn;
 mod sweep;
@@ -298,16 +299,6 @@ impl Sup {
             pty_ends,
         };
         self.chan.send(&msg, host_end).map_err(|e| Closed::Proto(e.0))
-    }
-
-    fn fail(&mut self, req: u64, f: Fail) -> Result<(), Closed> {
-        let msg = Msg::SpawnFailed {
-            req,
-            code: f.code,
-            errno: f.errno,
-            msg: f.msg,
-        };
-        self.chan.send(&msg, None).map_err(|e| Closed::Proto(e.0))
     }
 
     /// Queues pending messages and sends what fits.

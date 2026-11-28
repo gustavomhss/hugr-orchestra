@@ -107,3 +107,49 @@ fn pin(job: &OwnedHandle, member: &Member) -> io::Result<OwnedHandle> {
     }
     Ok(handle)
 }
+
+impl super::Supervisor {
+    pub(super) fn control_list(&mut self, req: u64, id: u64) -> omni_proto::Msg {
+        let result = self.live(id).map(|tree| {
+            if tree.gone || tree.stop.is_some() {
+                return Err(io::Error::other("tree is not available for control"));
+            }
+            list(tree.inventory_job()?)
+        });
+        match result {
+            None => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Unknown },
+            Some(Err(_)) => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Error },
+            Some(Ok(members)) => omni_proto::Msg::ControlMembers {
+                req,
+                id,
+                members: members.into_iter().map(|member| omni_proto::ControlMember {
+                    pid: member.pid,
+                    birth: member.birth,
+                }).collect(),
+            },
+        }
+    }
+
+    pub(super) fn control_stop(
+        &mut self,
+        req: u64,
+        id: u64,
+        members: Vec<omni_proto::ControlMember>,
+    ) -> omni_proto::Msg {
+        let result = self.live(id).map(|tree| {
+            if tree.gone || tree.stop.is_some() {
+                return Err(io::Error::other("tree is not available for control"));
+            }
+            let selected: Vec<_> = members.into_iter().map(|member| Member {
+                pid: member.pid,
+                birth: member.birth,
+            }).collect();
+            stop(tree.inventory_job()?, &selected)
+        });
+        match result {
+            None => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Unknown },
+            Some(Err(_)) => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Error },
+            Some(Ok(outcomes)) => omni_proto::Msg::ControlResults { req, id, outcomes },
+        }
+    }
+}
