@@ -287,6 +287,11 @@ export const coldReview = Effect.fn("WorkflowSettlementV2.coldReview")(function*
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
 })
 
+/** Identifies named Bun tests in a workflow's approved worktree-relative paths. */
+export function verificationFiles(writePaths: readonly string[]) {
+  return [...new Set(writePaths.filter((entry) => /[._](?:test|spec)\.(?:[jt]sx?|[cm][jt]s)\/*$/.test(entry)))]
+}
+
 /**
  * The global package-verification check: the fixed native Bun test runner in the placement, sandboxed, with a JUnit
  * report whose counts must agree with its cases; a zero exit alone is not execution evidence. `authorize` asks for the
@@ -301,10 +306,9 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
     const fs = yield* FSUtil.Service
     const processes = yield* AppProcess.Service
     const refused = (status: "missing" | "acquisition-error", reason: string) => ({ outcome: { status }, reason })
-    const files = [...new Set(
-      scope?.writePaths.filter((entry) => /[._](?:test|spec)\.(?:[jt]sx?|[cm][jt]s)\/*$/.test(entry)),
-    )]
-    const selection = scope && files.length ? verificationSelection(fs, scope.worktree, files) : undefined
+    const files = scope ? verificationFiles(scope.writePaths) : []
+    if (scope && !files.length) return refused("acquisition-error", "RUNNER_TEST_SELECTION_EMPTY")
+    const selection = scope ? verificationSelection(fs, scope.worktree, files) : undefined
     const focused = selection ? yield* selection : undefined
     if (selection && !focused) return refused("acquisition-error", "RUNNER_TEST_SELECTION_INVALID")
     const cwd = focused?.cwd ?? directory
@@ -312,7 +316,7 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
     const file = path.join(temporary, "junit.xml")
     const args = ["test", ...(focused?.args ?? []), "--timeout", "30000", "--reporter=junit", `--reporter-outfile=${file}`]
     const commandLine = [process.execPath, ...args].map((item) => JSON.stringify(item)).join(" ")
-    yield* authorize(focused ? `cd ${JSON.stringify(cwd)} && ${commandLine}` : commandLine)
+    yield* authorize(`cd ${JSON.stringify(cwd)} && ${commandLine}`)
     if (selection && !isDeepStrictEqual(yield* selection, focused))
       return refused("acquisition-error", "RUNNER_TEST_SELECTION_CHANGED")
     // The compiled Orchestra CLI must invoke Bun, and the package guard needs GitHub's CI marker on Linux.
@@ -372,6 +376,8 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
       )
     )
       return refused("acquisition-error", "RUNNER_COUNTS_EMPTY_OR_CONTRADICTORY")
+    if (focused && !(yield* verificationReportPaths(fs, cwd, focused.files, suites)))
+      return refused("acquisition-error", "RUNNER_TEST_REPORT_PATHS_MISMATCH")
     const outcome: Outcome =
       failed || result.exitCode !== 0
         ? { status: "fail", exitCode: result.exitCode === 0 ? 1 : Math.min(255, Math.max(1, result.exitCode)) }
@@ -397,13 +403,38 @@ function verificationSelection(fs: FSUtil.Interface, worktree: string, files: re
         if (!manifest || (yield* fs.realPath(manifest)) !== manifest || !(yield* fs.isFile(manifest))) return
         const cwd = path.dirname(manifest)
         // Bun treats ./ arguments as exact paths and bare names as substring filters.
-        return { cwd, arg: `./${path.relative(cwd, file).replaceAll(path.sep, "/")}` }
+        return { cwd, file, arg: `./${path.relative(cwd, file).replaceAll(path.sep, "/")}` }
       }),
     )
     const cwd = selected[0]?.cwd
     if (!cwd || !selected.every((item) => item?.cwd === cwd)) return
-    return { cwd, args: selected.flatMap((item) => item ? [item.arg] : []) }
+    return {
+      cwd,
+      args: selected.flatMap((item) => item ? [item.arg] : []),
+      files: selected.flatMap((item) => item ? [item.file] : []),
+    }
   }).pipe(Effect.orElseSucceed(() => undefined))
+}
+
+function verificationReportPaths(
+  fs: FSUtil.Interface,
+  cwd: string,
+  files: readonly string[],
+  suites: readonly Schema.Schema.Type<typeof Suite>[],
+) {
+  return Effect.gen(function* () {
+    const expected = new Set(files)
+    const reported = new Set<string>()
+    for (const suite of suites) {
+      const file = suite["@file"] && path.resolve(cwd, suite["@file"])
+      // Bun reports the suite and its cases with paths relative to the runner's package directory.
+      if (!file || !expected.has(file) || !suite.testcase?.length ||
+        suite.testcase.some((testcase) => path.resolve(cwd, testcase["@file"]) !== file)) return false
+      if ((yield* fs.realPath(file)) !== file) return false
+      reported.add(file)
+    }
+    return reported.size === expected.size
+  }).pipe(Effect.orElseSucceed(() => false))
 }
 
 /**
@@ -440,6 +471,7 @@ const Case = Schema.Struct({
   error: Schema.optional(Schema.Unknown),
 })
 const Suite = Schema.Struct({
+  "@file": Schema.optional(Schema.NonEmptyString),
   "@tests": Count,
   "@failures": Count,
   "@skipped": Count,

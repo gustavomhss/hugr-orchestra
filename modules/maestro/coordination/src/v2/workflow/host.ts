@@ -108,6 +108,7 @@ const layer = Layer.effect(
             atlas: { config, git, fs, skills },
           })
           const directory = authority.location.directory
+          const writePaths = bound.binding.definition.writePaths
           const binding = {
             sessionID: authority.id,
             projectID: authority.projectID,
@@ -148,10 +149,10 @@ const layer = Layer.effect(
                       resources: [command],
                       metadata: { completionCheck: true },
                     }),
-                  {
+                  WorkflowSettlementV2.verificationFiles(writePaths).length ? {
                     worktree: location.project.directory === "/" ? location.directory : location.project.directory,
-                    writePaths: bound.binding.definition.writePaths,
-                  },
+                    writePaths,
+                  } : undefined,
                 ).pipe(
                   Effect.map((verified) => verified.outcome),
                   Effect.provideService(FSUtil.Service, fs),
