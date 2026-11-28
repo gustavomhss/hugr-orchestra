@@ -12,6 +12,8 @@ import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
 import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
 import { ReviewVariantSchemaV2 } from "../workflow/review-variant-schema"
+import { ReviewFixSchemaV2 } from "../workflow/review-fix-schema"
+import { ReviewFixAuthorityV2 } from "../workflow/review-fix-authority"
 
 const KEY = "lucyEngagementV1"
 const strict = { onExcessProperty: "error" } as const
@@ -36,7 +38,9 @@ const StateV2 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-
   evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState) })
 const StateV3 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-v3"), ...recordFields,
   evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState), variants: ReviewVariantSchemaV2.VariantJournal })
-const StoredRecord = Schema.Union([StateV1, StateV2, StateV3])
+const StateV4 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-v4"), ...recordFields,
+  evidence: ReviewEngagementArtifactsV2.EvidenceState, fix: ReviewFixSchemaV2.FixState })
+const StoredRecord = Schema.Union([StateV1, StateV2, StateV3, StateV4])
 type Common = Omit<typeof StateV1.Type, "state" | "output"> | Omit<typeof StateV2.Type, "state" | "output"> |
   Omit<typeof StateV3.Type, "state" | "output">
 export type Running = Common & { readonly state: "running" }
@@ -45,6 +49,13 @@ export type Record = Running | Terminal
 export type Ticket = { readonly identity: Identity; readonly owner: string }
 export type Outcome = { readonly status: "completed"; readonly result: ReviewEngagementReportV2.Stored; readonly evidence: ReviewEngagementArtifactsV2.Sealed } |
   { readonly status: ReviewEngagementReportV2.Stopped; readonly reason?: string }
+type FixCommon = Omit<typeof StateV4.Type, "state" | "output">
+export type FixRunning = FixCommon & { readonly state: "running" }
+export type FixTerminal = FixCommon & { readonly state: "terminal"; readonly terminal: ReviewFixSchemaV2.Stored }
+export type FixRecord = FixRunning | FixTerminal
+export type FixOutcome = { readonly status: "completed"; readonly result: ReviewFixSchemaV2.Stored; readonly evidence: ReviewFixSchemaV2.Sealed } |
+  { readonly status: ReviewEngagementReportV2.Stopped; readonly reason?: string;
+    readonly notExamined?: ReviewFixSchemaV2.FixResult["notExamined"] }
 export type Interface = {
   readonly read: (identity: Identity) => Effect.Effect<Record | undefined, Tool.Failure>
   readonly lookup: (parent: SessionSchema.Info, reportID: string) => Effect.Effect<Terminal | undefined, Tool.Failure>
@@ -56,6 +67,14 @@ export type Interface = {
   readonly settleVariant: (ticket: Ticket, input: { readonly generation: ReviewVariantSchemaV2.GenerationRecord }) => Effect.Effect<Record, Tool.Failure>
   readonly closeVariants: (ticket: Ticket, input: { readonly stop: ReviewVariantSchemaV2.VariantStop }) => Effect.Effect<Record, Tool.Failure>
   readonly finish: (ticket: Ticket, outcome: Outcome) => Effect.Effect<Terminal, Tool.Failure>
+  readonly readFix: (id: Identity) => Effect.Effect<FixRecord | undefined, Tool.Failure>
+  readonly lookupFix: (parent: SessionSchema.Info, reportID: string) => Effect.Effect<FixTerminal | undefined, Tool.Failure>
+  readonly admitFix: (identity: Identity, input: ReviewEngagementPolicyV2.Input, owner: string,
+    model?: SessionSchema.Info["model"]) => Effect.Effect<FixRecord, Tool.Failure>
+  readonly bindFixPrior: (ticket: Ticket, prior: ReviewFixSchemaV2.PriorBinding) => Effect.Effect<FixRecord, Tool.Failure>
+  readonly captureFix: (ticket: Ticket, source: ReviewEngagementReportV2.Source) => Effect.Effect<FixRecord, Tool.Failure>
+  readonly ownFix: (ticket: Ticket, child: Child) => Effect.Effect<FixRecord, Tool.Failure>
+  readonly finishFix: (ticket: Ticket, outcome: FixOutcome) => Effect.Effect<FixTerminal, Tool.Failure>
 }
 type Sql = Pick<Database.Interface["db"], "select" | "update">
 type Row = typeof SessionTable.$inferSelect
@@ -76,6 +95,24 @@ export function identity(parent: SessionSchema.Info, input: ReviewEngagementPoli
     inputHash: ReviewEngagementReportV2.digest(input) }
 }
 
+export function priorAuthority(view: Terminal): unknown {
+  return { ...common(view), state: "terminal", output: view.terminal.text }
+}
+
+export function readPriorAuthority(value: unknown): Effect.Effect<Terminal, Tool.Failure> {
+  return Effect.gen(function* () {
+    const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Union([StateV2, StateV3]))(value, strict),
+      catch: (error) => invalid(String(error)) })
+    const row = { id: data.identity.leadID, parent_id: data.identity.parentID, agent: "lucy",
+      project_id: data.identity.projectID, directory: data.identity.location.directory,
+      workspace_id: data.identity.location.workspaceID ?? null, model: data.model ?? null, metadata: { [KEY]: value } } as Row
+    const record = yield* decode(row, data.identity)
+    if (!record || record.state !== "terminal" || record.terminal.value.status !== "completed")
+      return yield* invalid("prior authority is not a completed ordinary record")
+    return record
+  })
+}
+
 /** Native Session.create runs before admit, outside these deliberately short SQL transactions. */
 export function make(database: Database.Interface): Interface {
   const atomic = <A>(run: (tx: Sql) => Effect.Effect<A, Tool.Failure>) =>
@@ -90,6 +127,14 @@ export function make(database: Database.Interface): Interface {
     if (record.owner !== ticket.owner) return yield* failure("engagement-owner-lost", "request owner changed")
     return record
   })
+  const ownedFix = (tx: Sql, ticket: Ticket) => Effect.gen(function* () {
+    const row = yield* load(tx, ticket.identity.leadID)
+    if (!row) return yield* invalid("lead Session is unavailable")
+    const record = yield* decodeFix(row, ticket.identity)
+    if (!record) return yield* invalid("fix request was not admitted")
+    if (record.owner !== ticket.owner) return yield* failure("engagement-owner-lost", "request owner changed")
+    return record
+  })
   const stop = (tx: Sql, record: Running, status: ReviewEngagementReportV2.Stopped, reason?: string) => {
     const terminal: Terminal = { ...record, state: "terminal", terminal: ReviewEngagementReportV2.terminal({ ...context(record),
       ...(record.schema !== "review-engagement-state-v1" ? { notExamined: [{ item: "engagement:evidence-publication",
@@ -100,6 +145,10 @@ export function make(database: Database.Interface): Interface {
     read: (id) => Effect.gen(function* () {
       const row = yield* load(database.db, id.leadID)
       return row ? yield* decode(row, id) : undefined
+    }),
+    readFix: (id) => Effect.gen(function* () {
+      const row = yield* load(database.db, id.leadID)
+      return row ? yield* decodeFix(row, id) : undefined
     }),
     lookup: (parent, reportID) => Effect.gen(function* () {
       // SQL restricts the authoritative placement before any report ID or JSON record is inspected.
@@ -116,11 +165,29 @@ export function make(database: Database.Interface): Interface {
         const selected = yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Struct({ reportID: Digest }))(JSON.parse(output)),
           catch: () => undefined }).pipe(Effect.catch(() => Effect.succeed(undefined)))
         if (selected?.reportID !== reportID) continue
+        if (typeof value === "object" && value !== null && "schema" in value && value.schema === "review-engagement-state-v4") continue
         const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(StoredRecord)(value, strict),
           catch: (error) => storedFailure(value, invalid(String(error))) })
         const record = yield* decode(row, identity(parent, data.input))
         if (!record || record.state !== "terminal" || record.terminal.value.reportID !== reportID || found)
           return yield* invalid("report lookup identity differs")
+        found = record
+      }
+      return found
+    }),
+    lookupFix: (parent, reportID) => Effect.gen(function* () {
+      const rows = yield* lookupRows(database.db, parent)
+      let found: FixTerminal | undefined
+      for (const row of rows) {
+        const value = row.metadata?.[KEY]
+        if (typeof value !== "object" || value === null || !("schema" in value) || value.schema !== "review-engagement-state-v4") continue
+        if (!("input" in value)) return yield* invalid("fix record has no accepted input")
+        const input = yield* Effect.try({ try: () => Schema.decodeUnknownSync(ReviewEngagementPolicyV2.Input)(value.input, strict),
+          catch: (error) => invalid(String(error)) })
+        const record = yield* decodeFix(row, identity(parent, input))
+        if (!record || record.state !== "terminal" || record.terminal.value.reportID !== reportID) continue
+        if (found)
+          return yield* invalid("fix report lookup identity differs")
         found = record
       }
       return found
@@ -148,6 +215,29 @@ export function make(database: Database.Interface): Interface {
         budget: { startedAt: budget.startedAt, deadlineAt: budget.deadlineAt },
         children: [{ id: id.leadID, key: "lead", role: "lead" }], state: "running" }
       yield* write(tx, record)
+      return record
+    })),
+    admitFix: (id, input, owner, requestedModel) => atomic((tx) => Effect.gen(function* () {
+      const parent = yield* load(tx, id.parentID)
+      const lead = yield* load(tx, id.leadID)
+      if (!lead) return yield* invalid("lead Session is unavailable")
+      const existing = yield* decodeFix(lead, id)
+      if (existing) return existing
+      if (!parent || !placed(parent, id) || !same(normalizeModel(parent.model), normalizeModel(requestedModel)))
+        return yield* invalid("parent admission identity changed")
+      if (input.profile === "compliance" || input.fixReview === undefined || !owner || input.requestID !== id.requestID ||
+        ReviewEngagementReportV2.digest(input) !== id.inputHash)
+        return yield* invalid("invalid fix admission input")
+      yield* verifySession(lead, id, id.parentID, normalizeModel(requestedModel))
+      yield* pristine(tx, lead)
+      const now = yield* Clock.currentTimeMillis
+      const budget = ReviewEngagementPolicyV2.createBudget(input, now)
+      const model = normalizeModel(requestedModel)
+      const record: FixRunning = { schema: "review-engagement-state-v4", evidence: { policy: "required-completed-v1" },
+        fix: { policy: "fix-review-v1" }, identity: id, input, owner, ...(model ? { model } : {}),
+        budget: { startedAt: budget.startedAt, deadlineAt: budget.deadlineAt },
+        children: [{ id: id.leadID, key: "lead", role: "lead" }], state: "running" }
+      yield* writeFix(tx, record)
       return record
     })),
     capture: (ticket, source) => atomic((tx) => Effect.gen(function* () {
@@ -297,6 +387,79 @@ export function make(database: Database.Interface): Interface {
       yield* write(tx, terminal, record)
       return terminal
     })),
+    bindFixPrior: (ticket, prior) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* ownedFix(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
+      if (!record.input.fixReview || prior.reportID !== record.input.fixReview.reportID ||
+        !same(prior.findings.map((finding) => finding.findingID), record.input.fixReview.findingIDs))
+        return yield* invalid("fix prior differs from accepted selection")
+      yield* Effect.try({ try: () => ReviewFixAuthorityV2.assertPrior(prior), catch: (error) => invalid(String(error)) })
+      if (record.fix.prior) {
+        if (!same(record.fix.prior, prior)) return yield* invalid("bound fix prior cannot change")
+        return record
+      }
+      const next: FixRunning = { ...record, fix: { ...record.fix, prior } }
+      yield* writeFix(tx, next, record)
+      return next
+    })),
+    captureFix: (ticket, source) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* ownedFix(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
+      if (!record.fix.prior) return yield* invalid("fix source cannot be captured before the prior is bound")
+      yield* Effect.try({ try: () => {
+        Schema.decodeUnknownSync(ReviewEngagementReportV2.Source)(source, strict)
+        validateCapture(record.input, source)
+        if (!same(source.files.map((file) => file.path), record.fix.prior.requiredFiles))
+          throw new Error("fix source differs from the exact bound file projection")
+      }, catch: (error) => invalid(String(error)) })
+      if (record.source) {
+        if (!same(record.source, source)) return yield* invalid("captured fix source cannot change")
+        return record
+      }
+      const next: FixRunning = { ...record, source }
+      yield* writeFix(tx, next, record)
+      return next
+    })),
+    ownFix: (ticket, child) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* ownedFix(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
+      if (!record.fix.prior || !record.source) return yield* invalid("fix child cannot be owned before prior and source are bound")
+      const previous = record.children.find((entry) => entry.key === child.key || entry.id === child.id)
+      if (previous && !same(previous, child)) return yield* invalid("fix child identity conflict")
+      if (child.role === "lead" && (child.id !== record.identity.leadID || child.key !== "lead") ||
+        child.role !== "lead" && (child.id === record.identity.leadID || child.key === "lead"))
+        return yield* invalid("fix child role conflict")
+      const row = yield* load(tx, child.id)
+      if (!row) return yield* invalid("owned fix child Session is unavailable")
+      yield* verifySession(row, record.identity, child.role === "lead" ? record.identity.parentID : record.identity.leadID, record.model)
+      if (previous) return record
+      yield* pristine(tx, row)
+      const next: FixRunning = { ...record, children: [...record.children, child] }
+      yield* writeFix(tx, next, record)
+      return next
+    })),
+    finishFix: (ticket, outcome) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* ownedFix(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
+      if (outcome.status !== "completed") return yield* stopFix(tx, record, outcome.status, outcome.reason, outcome.notExamined)
+      if (!record.fix.prior || !record.source) return yield* invalid("fix completion has no bound prior or source")
+      const result = yield* Effect.try({ try: () => ReviewFixAuthorityV2.parse(outcome.result.text), catch: (error) => invalid(String(error)) })
+      if (!same(result, outcome.result) || result.value.status !== "completed" || result.value.reportID !== outcome.result.value.reportID ||
+        result.value.inputHash !== record.identity.inputHash || result.value.requestID !== record.input.requestID ||
+        result.value.sessionID !== record.identity.leadID || !same(result.value.budget, record.budget) ||
+        !same(result.value.prior, record.fix.prior) || !same(result.value.source, record.source))
+        return yield* invalid("fix result does not match durable admission")
+      const evidence = yield* Effect.try({ try: () => ReviewFixAuthorityV2.assertSeal(outcome.evidence, result, record),
+        catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
+      const terminal: FixTerminal = { ...record, evidence, state: "terminal", terminal: result }
+      yield* writeFix(tx, terminal, record)
+      return terminal
+    })),
   }
 }
 
@@ -320,6 +483,8 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     const data = yield* Effect.try({
       try: () => Schema.decodeUnknownSync(StoredRecord)(value, strict), catch: (error) => invalid(String(error)),
     })
+    if (data.schema === "review-engagement-state-v4")
+      return yield* failure("engagement-request-conflict", "request ID already owns a fix review")
     if (data.identity.inputHash !== expected.inputHash)
       return yield* failure("engagement-request-conflict", "request ID already owns a different accepted input")
     const legacy = data.schema === "review-engagement-state-v1"
@@ -364,10 +529,66 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
   }).pipe(Effect.mapError((error) => storedFailure(row.metadata?.[KEY], error)))
 }
 
+function decodeFix(row: Row, expected: Identity): Effect.Effect<FixRecord | undefined, Tool.Failure> {
+  return Effect.gen(function* () {
+    if (!placed(row, expected) || row.id !== expected.leadID || row.parent_id !== expected.parentID || row.agent !== "lucy")
+      return yield* invalid("fix lead Session identity mismatch")
+    const raw = row.metadata?.[KEY]
+    if (raw === undefined) return undefined
+    if (typeof raw !== "object" || raw === null || !("schema" in raw) || raw.schema !== "review-engagement-state-v4")
+      return yield* failure("engagement-request-conflict", "request ID is not a fix review")
+    const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(StateV4)(raw, strict),
+      catch: (error) => invalid(String(error)) })
+    if (data.identity.inputHash !== expected.inputHash)
+      return yield* failure("engagement-request-conflict", "request ID already owns a different accepted input")
+    if (!same(data.identity, expected) || ReviewEngagementReportV2.digest(data.input) !== expected.inputHash ||
+      data.input.requestID !== expected.requestID || data.input.profile === "compliance" || data.input.fixReview === undefined ||
+      !same(normalizeModel(row.model), normalizeModel(data.model)) ||
+      data.budget.deadlineAt - data.budget.startedAt !== data.input.timeBoxMinutes * 60_000 ||
+      !Number.isSafeInteger(data.budget.startedAt) || !Number.isSafeInteger(data.budget.deadlineAt) ||
+      new Set(data.children.map((child) => child.id)).size !== data.children.length ||
+      new Set(data.children.map((child) => child.key)).size !== data.children.length ||
+      !data.children.some((child) => child.id === expected.leadID && child.key === "lead" && child.role === "lead") ||
+      data.fix.policy !== "fix-review-v1") return yield* invalid("durable fix admission identity mismatch")
+    if (data.source) yield* Effect.try({ try: () => validateCapture(data.input, data.source!), catch: (error) => invalid(String(error)) })
+    const { state, output, ...common } = data
+    if (state === "running") {
+      if (output !== undefined || data.evidence.receiptID !== undefined || data.evidence.bytes !== undefined)
+        return yield* invalid("unfinished fix record has terminal evidence")
+      return { ...common, state }
+    }
+    if (output === undefined) return yield* invalid("terminal fix bytes are missing")
+    const terminal = yield* Effect.try({ try: () => ReviewFixAuthorityV2.parse(output), catch: (error) => invalid(String(error)) })
+    if (terminal.value.inputHash !== expected.inputHash || terminal.value.requestID !== expected.requestID ||
+      terminal.value.sessionID !== expected.leadID || !same(terminal.value.budget, data.budget) ||
+      !same(terminal.value.prior ?? null, data.fix.prior ?? null) || !same(terminal.value.source ?? null, data.source ?? null) ||
+      terminal.value.status === "completed" && (data.evidence.receiptID === undefined || data.evidence.bytes === undefined) ||
+      terminal.value.status !== "completed" && (data.evidence.receiptID !== undefined || data.evidence.bytes !== undefined))
+      return yield* invalid("terminal fix result differs from durable admission")
+    return { ...common, state, terminal }
+  }).pipe(Effect.mapError((error) => storedFailure(row.metadata?.[KEY], error)))
+}
+
+function stopFix(tx: Sql, record: FixRunning, status: ReviewEngagementReportV2.Stopped,
+  reason?: string, notExamined?: ReviewFixSchemaV2.FixResult["notExamined"]): Effect.Effect<FixTerminal, Tool.Failure> {
+  const authority = { ...record, fix: record.fix }
+  const terminal: FixTerminal = { ...record, state: "terminal", terminal: ReviewFixAuthorityV2.stopped(authority, status, reason, notExamined) }
+  return writeFix(tx, terminal, record).pipe(Effect.as(terminal))
+}
+
+function lookupRows(db: Pick<Sql, "select">, parent: SessionSchema.Info) {
+  return db.select().from(SessionTable).where(and(eq(SessionTable.parent_id, parent.id),
+    eq(SessionTable.project_id, parent.projectID), eq(SessionTable.directory, parent.location.directory),
+    eq(SessionTable.agent, "lucy"), parent.location.workspaceID === undefined
+      ? sql`${SessionTable.workspace_id} IS NULL` : eq(SessionTable.workspace_id, parent.location.workspaceID)))
+    .all().pipe(Effect.orDie)
+}
+
 /** New durable integrity failures have evidence semantics; legacy admission/conflict behavior is preserved. */
 function storedFailure(value: unknown, error: Tool.Failure): Tool.Failure {
   if (typeof value === "object" && value !== null && "schema" in value &&
-    (value.schema === "review-engagement-state-v2" || value.schema === "review-engagement-state-v3") &&
+    (value.schema === "review-engagement-state-v2" || value.schema === "review-engagement-state-v3" ||
+      value.schema === "review-engagement-state-v4") &&
     (error.metadata?.reason === "engagement-record-invalid" || error.metadata?.reason === "engagement-report-invalid"))
     return failure("engagement-evidence-corrupt", "versioned evidence record is unavailable or corrupt")
   return error
@@ -458,6 +679,26 @@ function write(db: Sql, record: Record, previous?: Running) {
       : sql`json_type(${SessionTable.metadata}, ${`$.${KEY}`}) IS NULL`))
       .returning({ id: SessionTable.id }).all().pipe(Effect.orDie)
     if (changed.length !== 1) return yield* failure("engagement-owner-lost", "durable compare-and-set refused")
+  })
+}
+
+function writeFix(db: Sql, record: FixRecord, previous?: FixRunning) {
+  return Effect.gen(function* () {
+    const { state, ...rest } = record
+    const data = state === "terminal"
+      ? (() => { const { terminal, ...value } = rest; return { ...value, state, output: terminal.text } })()
+      : { ...rest, state }
+    const changed = yield* db.update(SessionTable).set({
+      metadata: sql`json_set(coalesce(${SessionTable.metadata}, '{}'), ${`$.${KEY}`}, json(${JSON.stringify(data)}))`,
+      time_updated: sql`${SessionTable.time_updated}`,
+    }).where(and(eq(SessionTable.id, record.identity.leadID),
+      sql`(${SessionTable.metadata} IS NULL OR json_type(${SessionTable.metadata}) = 'object')`, previous
+      ? and(sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.owner`}) = ${previous.owner}`,
+        sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.state`}) = 'running'`,
+        sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.schema`}) = 'review-engagement-state-v4'`)
+      : sql`json_type(${SessionTable.metadata}, ${`$.${KEY}`}) IS NULL`))
+      .returning({ id: SessionTable.id }).all().pipe(Effect.orDie)
+    if (changed.length !== 1) return yield* failure("engagement-owner-lost", "durable fix compare-and-set refused")
   })
 }
 
