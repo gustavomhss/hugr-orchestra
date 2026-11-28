@@ -12,6 +12,8 @@
 mod chan;
 mod diag;
 mod exits;
+#[cfg(target_os = "linux")]
+mod executable_policy;
 mod footprint;
 mod fork;
 #[cfg(target_os = "linux")]
@@ -78,6 +80,8 @@ struct Sup {
     trees: Trees,
     #[cfg(target_os = "linux")]
     isolation: Option<isolated::Isolation>,
+    #[cfg(target_os = "linux")]
+    executable_policy: Option<executable_policy::ExecutablePolicy>,
     observation: Observation,
     out: Vec<Msg>,
     /// Set at host death: exit by then even if a tree cannot be confirmed gone.
@@ -95,6 +99,8 @@ impl Sup {
         let isolation = isolated::Isolation::load()?;
         #[cfg(target_os = "linux")]
         let watch = peer::host_watch(args, isolation.as_ref())?;
+        #[cfg(target_os = "linux")]
+        let executable_policy = args.isolated_peer_uid.map(|_| executable_policy::ExecutablePolicy::load()).transpose()?;
         #[cfg(not(target_os = "linux"))]
         let watch = HostWatch::arm(i32::try_from(args.host_pid).map_err(std::io::Error::other)?);
         let chan = Chan::new(take_channel()?)?;
@@ -115,6 +121,8 @@ impl Sup {
             trees: Trees::new(pidfd),
             #[cfg(target_os = "linux")]
             isolation,
+            #[cfg(target_os = "linux")]
+            executable_policy,
             observation: Observation::default(),
             out: Vec::new(),
             exit_by: None,
