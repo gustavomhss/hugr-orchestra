@@ -45,6 +45,7 @@ use chan::{Chan, Closed};
 use diag::Diag;
 use observe::Observation;
 use setup::{drain, signals, take_channel};
+use sys::pollfd;
 use trees::Trees;
 use watch::HostWatch;
 
@@ -395,8 +396,4 @@ struct Ready {
     chan: bool,
     host: bool,
     execs: Vec<u64>,
-}
-
-fn pollfd(fd: libc::c_int, events: libc::c_short) -> libc::pollfd {
-    libc::pollfd { fd, events, revents: 0 }
 }
