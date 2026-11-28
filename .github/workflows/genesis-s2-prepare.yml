@@ -1,0 +1,59 @@
+name: genesis-s2-prepare
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["genesis-interfaces-resume"]
+    paths:
+      - ".github/workflows/genesis-s2-prepare.yml"
+      - "script/genesis-s2/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-s2-prepare-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Create the exact runtime worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/genesis-s2-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "S2_ROOT=$ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$ROOT/evidence"
+          git cat-file -e '9b0188b2be5ea69638dff8a44e3e931b4d6d8b10^{commit}'
+          git worktree add --detach "$ROOT/runtime" 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
+          test "$(git -C "$ROOT/runtime" rev-parse HEAD)" = 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
+      - name: Install Atlas dependencies
+        working-directory: ${{ env.S2_ROOT }}/runtime/modules/atlas
+        run: npm ci
+      - name: Build and typecheck runtime
+        working-directory: ${{ env.S2_ROOT }}/runtime/modules/atlas
+        run: bun typecheck
+      - name: Materialize and guard the original prepare CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 script/genesis-s2/prepare.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --runtime "$S2_ROOT/runtime" \
+            --output "$S2_ROOT/evidence/run"
+      - name: Preserve evidence even on failure
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s2-prepare-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ env.S2_ROOT }}/evidence
+          retention-days: 30
