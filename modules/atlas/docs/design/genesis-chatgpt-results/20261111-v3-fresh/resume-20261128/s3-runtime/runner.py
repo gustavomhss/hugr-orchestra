@@ -147,7 +147,7 @@ def data_worktree(repo, root):
     if (root / ".atlas").exists():
         shutil.move(root / ".atlas", root.parent / "baseline-atlas-history")
     history = root.parent / "baseline-atlas-history"
-    write_json(root.parent / "baseline-state-separation.json", {"source_revision": SOURCE, "omitted_runtime_directory": ".atlas", "preserved_at": str(history), "durable_original": "Git source revision, unchanged", "history_files": inventory(history) if history.exists() else [], "git_index_unchanged": True, "historical_source_not_replayed": True})
+    write_json(root.parent / "baseline-state-separation.json", {"source_revision": SOURCE, "omitted_runtime_directory": ".atlas", "preserved_at": str(history), "durable_original": "Git source revision, unchanged", "history_files": inventory(history) if history.exists() else [], "initial_git_index_matches_source": True, "subsequent_index_overlay": "Only exact pinned protocol-tree entries; independently recorded and restored before native observation", "historical_source_not_replayed": True})
 
 
 def overlay(root, path, raw):
@@ -160,6 +160,30 @@ def overlay(root, path, raw):
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(raw)
     return {"path": path, "before": before, "after": file_receipt(target)}
+
+
+def pin_membership_index(root, prefix, files):
+    """Track only real pinned protocol blobs so inherited ignores cannot omit them.
+
+    This deliberately augments the isolated worktree index; HEAD stays SOURCE.
+    It neither edits ignore rules nor replaces/deletes any existing source entry.
+    """
+    before = git(root, "ls-files", "--stage", "-z")
+    existing = git(root, "ls-files", "--stage", "-z", "--", ":(literal)" + prefix)
+    expected = {f"{row['mode']} {row['git_blob_sha']} 0\t{row['path']}".encode() for row in files}
+    existing_records = set(existing.split(b"\0")) - {b""}
+    require(not existing_records or existing_records == expected, "Protocol index already contains unrelated or mismatched entries")
+    ignored = command(["git", "-C", str(root), "check-ignore", "-v", "--", *[row["path"] for row in files]], root)
+    require(ignored.returncode in (0, 1) and ignored.stderr == b"", "Cannot inspect protocol ignore rules")
+    for row in files:
+        git(root, "update-index", "--add", "--cacheinfo", f"{row['mode']},{row['git_blob_sha']},{row['path']}")
+    after = git(root, "ls-files", "--stage", "-z")
+    after_protocol = set(git(root, "ls-files", "--stage", "-z", "--", ":(literal)" + prefix).split(b"\0")) - {b""}
+    before_records = set(before.split(b"\0")) - {b""}
+    after_records = set(after.split(b"\0")) - {b""}
+    require(after_protocol == expected and after_records == before_records | expected, "Protocol index overlay changed an unrelated source entry")
+    require(git(root, "rev-parse", "HEAD").decode().strip() == SOURCE, "Protocol index overlay changed HEAD")
+    return {"kind": "explicit-pinned-protocol-index-overlay", "prefix": prefix, "file_count": len(files), "added_entries": len(after_records - before_records), "head": SOURCE, "before_index_sha256": digest(before), "after_index_sha256": digest(after), "source_entries_removed_or_replaced": False, "ignore_rules_changed": False, "prior_ignore_stdout": ignored.stdout.decode(), "prior_ignore_exit_code": ignored.returncode, "entries": [{key: row[key] for key in ("path", "mode", "git_blob_sha", "commit", "sha256")} for row in files]}
 
 
 def materialize_membership_trees(args, root, declarations, missing_prefixes):
@@ -207,7 +231,8 @@ def materialize_membership_trees(args, root, declarations, missing_prefixes):
             verified.append({**ref, "sha256_state": "VERIFIED_BEFORE_PREPARE"})
         actual_paths = {p.relative_to(root).as_posix() for p in (root / relative(prefix)).rglob("*") if p.is_file() or p.is_symlink()}
         require(actual_paths == set(expected), "Membership materialization has missing or extra files")
-        observed.append({"input_key": "members:" + prefix, "prefix": prefix, "commit": commit, "git_tree_sha": tree_sha, "complete_tree": True, "tree_truncated": False, "file_count": len(verified), "files": verified, "source_prefix_absent": True})
+        index_overlay = pin_membership_index(root, prefix, verified)
+        observed.append({"input_key": "members:" + prefix, "prefix": prefix, "commit": commit, "git_tree_sha": tree_sha, "complete_tree": True, "tree_truncated": False, "file_count": len(verified), "files": verified, "source_prefix_absent": True, "index_overlay": index_overlay})
     return observed
 
 
@@ -261,7 +286,7 @@ def materialize(args, plan, package, root):
         require(prefix not in materialized_members or set(names) == materialized_members[prefix], "Effective Git membership differs from the complete materialized tree")
         membership.append({"key": "members:" + prefix, "paths": names, "enumeration_sha256": digest(result.stdout)})
     write_json(args.output / "input-lock.observed.json", {**lock, "declared_lock_ref": plan["input_lock"], "measurement_completed_before_prepare": True, "files": observed_files, "membership_materializations": tree_materializations})
-    write_json(args.output / "materialization.json", {"observed_head": SOURCE, "root": str(root), "source_checkout": "complete real source checkout, immutable-reference overlays, historical .atlas separated outside the served root", "source_git_index_unchanged": True, "overlays": overlays, "files": observed_files, "observed_lock": file_receipt(args.output / "input-lock.observed.json"), "memberships": membership, "membership_materializations": tree_materializations})
+    write_json(args.output / "materialization.json", {"observed_head": SOURCE, "root": str(root), "source_checkout": "complete real source checkout, immutable-reference overlays, historical .atlas separated outside the served root", "source_git_index_unchanged": not bool(tree_materializations), "index_change_scope": "Only exact pinned protocol-tree entries; original source index entries and ignore rules unchanged", "overlays": overlays, "files": observed_files, "observed_lock": file_receipt(args.output / "input-lock.observed.json"), "memberships": membership, "membership_materializations": tree_materializations})
 
 
 def restore(args, plan, root, prepared_path):
@@ -289,11 +314,15 @@ def restore(args, plan, root, prepared_path):
     require(state is not None and state["repo_root"] == str(root) and state["runtime_revision"] == plan["runtime"]["revision"], "Restored runtime/root mismatch")
     require(state["package_sha256"] == plan["package"]["sha256"] and state["source_revision"] == SOURCE, "Restored package/source mismatch")
     require(state["files"] == inventory(root), "Restored files differ from preserved complete inventory")
+    lock = json.loads(read_ref(args.repository, plan["input_lock"]))
+    trees = lock.get("membership_materializations", [])
+    restored_indexes = materialize_membership_trees(args, root, trees, {row["prefix"] for row in trees})
+    require(state["git_index_sha256"] == digest(git(root, "ls-files", "--stage", "-z")), "Restored Git index differs from the pinned source/protocol index")
     prepared = json.loads(prepared_path.read_bytes())
     require(prepared["candidate_id"] == state["candidate_id"] == plan["restore"]["candidate_id"], "Restored candidate identity mismatch")
     if plan["operation"] == "read":
         require(state["ownership_manifest"] == pin(plan["restore"]["ownership_manifest"], 64), "Read requires the published manifest")
-    write_json(args.output / "restoration.json", {"archive": file_receipt(archive), "state": state, "source_git_head": SOURCE, "git_metadata_recreated_from_real_commit": True})
+    write_json(args.output / "restoration.json", {"archive": file_receipt(archive), "state": state, "source_git_head": SOURCE, "git_metadata_recreated_from_real_commit": True, "protocol_index_restored": restored_indexes})
     return state
 
 
@@ -330,7 +359,7 @@ def preserve(args, plan, root, prepared_path, manifest, publication_attempted):
     prepared = json.loads(prepared_path.read_bytes()) if prepared_path.exists() else None
     if prepared is not None:
         require(prepared["candidate"]["repo_root"] == str(root) and prepared["candidate"]["observed_head"] == SOURCE, "Candidate root/HEAD differs")
-    state = {"schema": "genesis-s3-state/v1", "repo_root": str(root), "source_revision": SOURCE, "runtime_revision": plan["runtime"]["revision"], "release_ref": plan["runtime"]["release"], "package_sha256": plan["package"]["sha256"], "candidate_id": prepared["candidate_id"] if prepared else None, "ownership_manifest": manifest, "publication_attempted": publication_attempted, "last_operation": plan["operation"], "files": inventory(root)}
+    state = {"schema": "genesis-s3-state/v1", "repo_root": str(root), "source_revision": SOURCE, "runtime_revision": plan["runtime"]["revision"], "release_ref": plan["runtime"]["release"], "package_sha256": plan["package"]["sha256"], "candidate_id": prepared["candidate_id"] if prepared else None, "ownership_manifest": manifest, "publication_attempted": publication_attempted, "last_operation": plan["operation"], "git_index_sha256": digest(git(root, "ls-files", "--stage", "-z")), "files": inventory(root)}
     write_json(args.output / "state.json", state)
     with tarfile.open(args.output / "state.tar.gz", "w:gz", dereference=False) as bundle:
         for row in state["files"]:

@@ -61,11 +61,11 @@
     "actor": "/root",
     "ratifier": "/root",
     "authorization": {
-      "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+      "commit": "f266bc060a1fb42296edd6bfb683729dd33490d3",
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/authorization.md",
-      "sha256": "14b0442c916cfc2123435a7d227c663eea0bb85447928db0c9e3c795833f07c4",
-      "git_blob_sha": "47db98f5a5a8c517ae112319fb8a9ed3a6bdd2e7",
-      "byte_length": 2320
+      "sha256": "dcb87bcee2e4d806ca13e915d2d63255f2aa450abb0ad641e41a0680f996d954",
+      "git_blob_sha": "4f675cf88690a3f4eeb11c6ba433ee1f5bf72a47",
+      "byte_length": 2660
     },
     "policy": {
       "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
