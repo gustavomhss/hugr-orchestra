@@ -111,7 +111,8 @@ function loadBodies(storage: ReviewEvidenceCollectorV2.Storage, receipt: ReviewF
       return bytes
     }
     const prior = yield* checked(() => ReviewEvidenceSchemaV2.json(body(receipt.prior.authorityArtifactID, "fix-prior-authority")))
-    const view = yield* ReviewEngagementStoreV2.readPriorAuthority(prior)
+    const view = yield* ReviewEngagementStoreV2.readPriorAuthority(prior).pipe(
+      Effect.mapError((error) => failure("corrupt", error.message)))
     const findings = yield* ReviewFixPriorV2.preflight(view, value.profile, authority.input.fixReview?.findingIDs ?? [])
       .pipe(Effect.mapError((error) => failure("corrupt", error.message)))
     yield* checked(() => {

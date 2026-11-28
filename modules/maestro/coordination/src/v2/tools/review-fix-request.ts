@@ -26,6 +26,7 @@ import { ReviewFixAuthorityV2 } from "../workflow/review-fix-authority"
 import { ReviewFixExecuteV2 } from "../workflow/review-fix-execute"
 import { ReviewFixJudgmentV2 } from "../workflow/review-fix-judgment"
 import { ReviewFixPriorV2 } from "../workflow/review-fix-prior"
+import type { ReviewFixSchemaV2 } from "../workflow/review-fix-schema"
 import { ReviewFixRetestV2 } from "../workflow/review-fix-retest"
 import { ReviewVariantSchemaV2 } from "../workflow/review-variant-schema"
 import { ReviewBindingV2 } from "./review-binding"
@@ -37,6 +38,9 @@ import { MaestroReviewEvidenceTools } from "./review-engagement-evidence"
 type Request = ReviewEngagementPolicyV2.Input
 type Fix = NonNullable<Request["fixReview"]>
 type Input = ReviewEngagementRequestV2.Input
+type Performed =
+  | { readonly terminal: string }
+  | { readonly result: ReviewFixSchemaV2.Stored; readonly evidence: ReviewFixSchemaV2.Sealed }
 const { failure } = ReviewFixAuthorityV2
 
 export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Request, fix: Fix, input: Input,
@@ -65,7 +69,8 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
     if (existing?.state === "running") {
       const stopped = yield* store.finishFix({ identity: id, owner: existing.owner },
         { status: "failed", reason: "engagement-interrupted" })
-      return stopped.terminal.text
+      if (stopped.terminal.value.status === "expired") return stopped.terminal.text
+      return yield* failure("engagement-interrupted", "unfinished fix review has no live process owner")
     }
     const view = yield* store.lookup(parent, fix.reportID)
     if (!view) {
@@ -93,7 +98,7 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
         yield* Effect.yieldNow
         return yield* perform(input, parent, sessions, execution, store, ticket, admitted.budget, repository, view, findings, children)
       }).pipe(Effect.scoped, Effect.timeoutOption(Duration.millis(remaining)))
-      const result = yield* (remaining > 0 ? restore(work) : Effect.succeed(Option.none<string>())).pipe(Effect.exit)
+      const result = yield* (remaining > 0 ? restore(work) : Effect.succeed(Option.none<Performed>())).pipe(Effect.exit)
       const cleaned = yield* Effect.forEach([...children], (child) => execution.interrupt(child, { discardPending: true }),
         { concurrency: "unbounded", discard: true }).pipe(Effect.exit)
       if (Exit.isFailure(result) || Exit.isFailure(cleaned)) {
@@ -112,8 +117,10 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
           return stopped.value.terminal.text
         return yield* Effect.failCause(cause)
       }
-      if (Option.isSome(result.value)) return result.value.value
-      return (yield* store.finishFix(ticket, { status: "expired" })).terminal.text
+      if (Option.isNone(result.value)) return (yield* store.finishFix(ticket, { status: "expired" })).terminal.text
+      const done = result.value.value
+      if ("terminal" in done) return done.terminal
+      return (yield* store.finishFix(ticket, { status: "completed", ...done })).terminal.text
     }))
   }))
 })
@@ -127,14 +134,14 @@ function perform(input: Input, parent: SessionSchema.Info, sessions: SessionV2.I
     const params = (yield* running(store, ticket)).input
     const previous = yield* ReviewFixPriorV2.load(repository, view, identity.inputHash, findings)
     const bound = yield* store.bindFixPrior(ticket, previous.binding)
-    if (bound.state === "terminal") return bound.terminal.text
+    if (bound.state === "terminal") return { terminal: bound.terminal.text }
     const git = input.services.atlas.git
     const worktree = yield* ReviewEngagementRuntimeV2.root(git, parent.location.directory)
     const source = yield* ReviewFixRetestV2.capture(git, { worktree, requiredFiles: previous.binding.requiredFiles,
       ...(params.revision === undefined ? {} : { revision: params.revision }),
       ...(params.paths === undefined ? {} : { paths: params.paths }) })
     const captured = yield* store.captureFix(ticket, source)
-    if (captured.state === "terminal") return captured.terminal.text
+    if (captured.state === "terminal") return { terminal: captured.terminal.text }
     const batches = yield* ReviewPrecisionStore.history().pipe(Effect.provideService(Database.Service, input.database),
       Effect.mapError(() => failure("engagement-fix-catalog-incompatible", "precision history is unavailable")))
     const catalog = yield* Effect.try({
@@ -209,8 +216,7 @@ function perform(input: Input, parent: SessionSchema.Info, sessions: SessionV2.I
     }), catch: (error) => failure("engagement-report-invalid", String(error)) })
     const evidence = yield* ReviewFixArtifactsV2.publish(repository, { authority: current, report, previous,
       snapshot: yield* collector.snapshot(), ...facts })
-    const finished = yield* store.finishFix(ticket, { status: "completed", result: report, evidence })
-    return finished.terminal.text
+    return { result: report, evidence }
   })
 }
 

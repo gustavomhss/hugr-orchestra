@@ -1,6 +1,7 @@
 export * as ReviewFixPriorV2 from "./review-fix-prior"
 
 import { Effect, Schema } from "effect"
+import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEngagementStoreV2 } from "../tools/review-engagement-store"
 import { ReviewEngagementArtifactsV2 } from "./review-engagement-artifacts"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
@@ -45,7 +46,8 @@ export function load(repository: ReviewEngagementArtifactsV2.Repository, view: R
     const data = yield* repository.priorData(view)
     const prepared = yield* Effect.try({ try: () => prepare(view, inputHash, findings, data),
       catch: (error) => ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
-    const imported = mergeArtifacts(prepared.artifacts, [])
+    const imported = yield* Effect.try({ try: () => mergeArtifacts(prepared.artifacts, []),
+      catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
     const binding = ReviewFixAuthorityV2.validatedPrior(prepared.binding)
     for (const wrapper of prepared.wrappers) {
       const sha256 = yield* repository.storage.publish(wrapper.bytes, wrapper.descriptor.mime)
