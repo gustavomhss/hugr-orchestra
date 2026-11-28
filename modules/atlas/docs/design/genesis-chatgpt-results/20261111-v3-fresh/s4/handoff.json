@@ -13,7 +13,7 @@
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "observed_branch_head": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
   "artifact_revision": "88f1ce893b933fb5e7370b5dc248644e45def68e",
-  "candidate_revision": null,
+  "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
   "candidate_status": "NO_RUNTIME_CONSUMED_BY_THIS_KNOWLEDGE_RESUMPTION",
   "package": {
     "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
@@ -122,21 +122,10 @@
   ],
   "local_obligations_open": [
     {
-      "id": "S4-K-RUNTIME",
-      "state": "BLOCKED_ON_EXTERNAL_RELEASE",
-      "owner": "Runtime S4 session",
-      "operation": "Deliver an immutable compatible release; current discovery file remains historical r3",
-      "evidence": {
-        "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/runtime-dependency.json",
-        "sha256": "6933593e638deeaab2b5d2993db632c5dd6921686e3a18a292b41452660e543c"
-      }
-    },
-    {
       "id": "S4-K-BINDING",
-      "state": "BLOCKED_ON_RUNTIME_RELEASE",
+      "state": "PENDING_INDEPENDENT_RUNTIME_BINDING",
       "owner": "Knowledge S4",
-      "operation": "Select compatible driver, derive sorted protocol/driver inputs for all15, full prepare and exact independent runtime binding; source materialization is complete"
+      "operation": "Obtain two exact runtime-import-binding decisions for the prepared full15 candidate and contract; no publication before the pair and governing authority are verified."
     },
     {
       "id": "S4-K-PUBLISH",
@@ -349,5 +338,41 @@
     "kind": "verified_composite_reconstruction",
     "runtime_execution": false
   },
-  "background_work_after_response": "NONE"
+  "background_work_after_response": "NONE",
+  "supersedes_handoff": {
+    "commit": "19ec1613ba367c78a2edfa929e1db29075848b07",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json"
+  },
+  "runtime_prepare": {
+    "state": "PROVEN",
+    "runtime_candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+    "native_candidate_id": "10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+    "run_id": 46157343932,
+    "artifacts": 15,
+    "observations": 251,
+    "prepared": {
+      "commit": "f4cfb1171db8674534edf06ac89e259ac5653830",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46157343932/prepared.json",
+      "sha256": "e6831efca8f63c3e0aeac092d7f4c14ffd0882b5e7d101683c3cf4773f8ba257",
+      "byte_length": 192283
+    },
+    "inputs": {
+      "commit": "f4cfb1171db8674534edf06ac89e259ac5653830",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46157343932/inputs.json",
+      "sha256": "c225459315334c3b95feb42c4923b2fcf98a96e73159995a578997baf2e5e2d7",
+      "byte_length": 784
+    },
+    "operation": {
+      "commit": "f4cfb1171db8674534edf06ac89e259ac5653830",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46157343932/operation.json",
+      "sha256": "e42d29cb0f6a6ee6255e4a9eadc0da7f7c3bd63a92766e6bae7f10a07d1db996",
+      "byte_length": 649
+    },
+    "artifact": {
+      "commit": "f4cfb1171db8674534edf06ac89e259ac5653830",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46157343932/artifact-receipt.json",
+      "sha256": "c2126123d3a651f1c00415b03681491181024fd62da2b70fdc1665c3a0fa3a7e",
+      "byte_length": 18065
+    }
+  }
 }
