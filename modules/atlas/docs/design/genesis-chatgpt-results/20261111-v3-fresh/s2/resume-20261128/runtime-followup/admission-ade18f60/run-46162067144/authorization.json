@@ -1,0 +1,39 @@
+{
+  "governance_policy": {
+    "t0Heuristic": {
+      "keywords": [
+        "auth",
+        "payments",
+        "secrets",
+        "kms",
+        "crypto",
+        "billing"
+      ]
+    },
+    "authz": {
+      "scopes": {
+        "orchestra.interfaces": [
+          "/root"
+        ]
+      },
+      "anchors": {
+        ".": "orchestra.interfaces"
+      }
+    }
+  },
+  "evaluation_policy": {
+    "schema": "ownership-evaluation-policy/v1",
+    "root": "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/corpus",
+    "evaluationPlan": "da5f06f6a2978cb641263900027b9d4770a607c22c6b422e04cb3490db817585",
+    "obligationSet": "4c76c66cedd2f82c650e6aaee4d486cbd530091f98c90d137fbff11693900059",
+    "evaluationCandidate": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+    "generation": "146c26228238c2ff0f4b274c1b0cc43b573df54b2529fcb68859820950f805ac",
+    "scope": "orchestra.interfaces",
+    "actor": "/root",
+    "operations": [
+      "admit"
+    ],
+    "consumer": null
+  },
+  "identity_limit": "nominal local actor, not authenticated identity"
+}

@@ -1,0 +1,14 @@
+{
+  "argv": [
+    "bun",
+    "scripts/genesis-evaluation.ts",
+    "init-store",
+    "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/corpus",
+    "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/prepared.json",
+    "146c26228238c2ff0f4b274c1b0cc43b573df54b2529fcb68859820950f805ac"
+  ],
+  "actor": null,
+  "exit_code": 0,
+  "stdout_sha256": "8e47c003b08da93676d1371d5ad514b0f47634f4b7650d77346b7a5ce24f3cf7",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}
