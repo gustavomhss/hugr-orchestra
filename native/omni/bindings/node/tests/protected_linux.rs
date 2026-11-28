@@ -2,7 +2,7 @@
 #![cfg(target_os = "linux")]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 use hugr_omni::binding::quarantine_protected_linux as protected_linux;
-use std::os::unix::fs::{symlink, PermissionsExt};
+use std::os::unix::fs::{PermissionsExt, symlink};
 
 #[test]
 #[ignore = "requires a root-owned fixture on a supported Linux filesystem"]
@@ -39,6 +39,14 @@ fn protected_quarantine() {
     assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id));
     symlink(&destination, &source).unwrap();
     assert!(protected_linux::inspect(&root, &source).is_err());
-    assert_eq!(protected_linux::rename(&root, &source, &format!("{root}/quarantine/q-{}", "b".repeat(64)), "0:0"), "refused");
+    assert_eq!(
+        protected_linux::rename(
+            &root,
+            &source,
+            &format!("{root}/quarantine/q-{}", "b".repeat(64)),
+            "0:0"
+        ),
+        "refused"
+    );
     std::fs::remove_dir_all(base).unwrap();
 }

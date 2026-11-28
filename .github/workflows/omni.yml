@@ -25,7 +25,7 @@ on:
         type: boolean
         default: false
       desktop_activity_arm:
-        description: Run the Linux Desktop live object proof and native quarantine approval
+        description: Run Linux Desktop live object proof, native quarantine approval and protected Apply
         type: boolean
         default: false
       test_filter:
@@ -187,6 +187,13 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/omni-binaries
+      - name: Prove native protected quarantine on the runner filesystem
+        working-directory: native/omni
+        run: |
+          cargo test --release -p hugr-omni-node --test protected_linux --no-run --message-format=json > "$RUNNER_TEMP/omni-protected-test.jsonl"
+          test_bin="$(jq -er 'select(.reason == "compiler-artifact" and .target.name == "protected_linux" and .profile.test) | .executable' "$RUNNER_TEMP/omni-protected-test.jsonl")"
+          test -x "$test_bin"
+          sudo "$test_bin" --exact protected_quarantine --ignored
       - name: Install Electron and X11 tools
         working-directory: apps/desktop
         run: |

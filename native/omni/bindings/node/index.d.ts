@@ -174,8 +174,3 @@ export class OmniError extends Error {
   /** What `run()` collected, on `ABORTED` / `OUTPUT_LIMIT` / `IO`. */
   readonly result?: RunResult;
 }
-
-/** Available only to a separately provisioned privileged Linux sidecar. */
-export function quarantineProtectedAvailable(root: string): Promise<boolean>;
-export function quarantineProtectedInspect(root: string, path: string): Promise<string | null>;
-export function quarantineProtectedRename(root: string, source: string, destination: string, expected: string): Promise<"accepted" | "refused" | "unknown">;
