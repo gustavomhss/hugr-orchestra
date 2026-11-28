@@ -8,12 +8,16 @@ import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
-import { Effect, Option, Schema } from "effect"
+import { Effect, Option } from "effect"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import type { Readable } from "node:stream"
 import type { HttpExtension } from "./http-extensions"
 
-const decodeInspect = Schema.decodeUnknownOption(Schema.Struct({}), { onExcessProperty: "error" })
+function decodeInspect(body: unknown) {
+  return body !== null && typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 0
+    ? Option.some({})
+    : Option.none()
+}
 
 /** Acquired only by the desktop-owned server before any listener or installation starts. */
 export async function acquire(

@@ -1,8 +1,9 @@
 export * as ActivityArmProof from "./activity-arm-proof"
 
 import { createHash } from "node:crypto"
+import { constants } from "node:fs"
 import type { BigIntStats } from "node:fs"
-import { lstat, opendir, readFile, readlink, realpath, stat } from "node:fs/promises"
+import { lstat, open, opendir, readFile, readlink, realpath, stat } from "node:fs/promises"
 import path from "node:path"
 import { ActivityObjectProof } from "./activity-object-proof"
 
@@ -21,7 +22,11 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
     const root = await lstat(worktree, { bigint: true })
     const tree = await captureTree(object, root, BigInt(uid), signal)
     if (!tree) return undefined
-    const use = await captureUse(worktree, object, tree.inodes, signal)
+    const scan = () => captureUse(worktree, object, tree.inodes, tree.lockPids, signal).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
+      return undefined
+    })
+    const use = await scan() ?? await scan() ?? await scan()
     if (!use) return undefined
     if (!tree.matches(await lstat(worktree, { bigint: true }))) return undefined
     for (const [file, signature] of tree.entries) {
@@ -56,6 +61,7 @@ async function captureTree(object: string, root: BigIntStats, uid: bigint, signa
   const entries = new Map<string, string>()
   const inodes = new Set<string>()
   const directories = [object]
+  const lockPids = new Set<string>()
   let lock = false
   while (directories.length) {
     signal?.throwIfAborted()
@@ -73,17 +79,34 @@ async function captureTree(object: string, root: BigIntStats, uid: bigint, signa
         directories.push(path.join(file, item.name))
       }
     }
-    // Unknown application lock formats cannot prove idleness. Kernel locks are checked separately.
-    lock ||= /(^|[.\-_])(lock|lck)([.\-_]|$)/i.test(path.basename(file))
+    if (/(^|[.\-_])(lock|lck|pid)([.\-_]|$)/i.test(path.basename(file))) {
+      // A simple PID lock can be old. An opaque lock still needs review.
+      const pid = entry.isFile() && entry.size <= 32n ? await lockPID(file, entry) : undefined
+      if (pid) lockPids.add(pid)
+      else lock = true
+    }
   }
   const rootIdentity = identity(root)
   const hash = createHash("sha256").update(rootIdentity)
   for (const [file, signature] of [...entries].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
     hash.update(JSON.stringify([path.relative(object, file), signature]))
-  return { fingerprint: hash.digest("hex"), entries, inodes, lock, matches: (current: BigIntStats) => identity(current) === rootIdentity }
+  return { fingerprint: hash.digest("hex"), entries, inodes, lock, lockPids, matches: (current: BigIntStats) => identity(current) === rootIdentity }
 }
 
-async function captureUse(worktree: string, object: string, inodes: ReadonlySet<string>, signal?: AbortSignal) {
+async function lockPID(file: string, entry: BigIntStats) {
+  const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
+  try {
+    if (identity(await handle.stat({ bigint: true })) !== identity(entry)) throw new Error("Lock identity changed")
+    const content = Buffer.alloc(32)
+    const { bytesRead } = await handle.read(content)
+    const pid = content.toString("utf8", 0, bytesRead).trim()
+    return BigInt(bytesRead) === entry.size && /^[1-9][0-9]{0,7}$/.test(pid) ? pid : undefined
+  } finally {
+    await handle.close()
+  }
+}
+
+async function captureUse(worktree: string, object: string, inodes: ReadonlySet<string>, lockPids: ReadonlySet<string>, signal?: AbortSignal) {
   const proc = (await readFile("/proc/self/mountinfo", "utf8")).split("\n")
     .find((line) => line.split(" ")[4] === "/proc")
   if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
@@ -97,6 +120,7 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
     const base = `/proc/${pid}`
     const first = await processStat(base)
     if (first.state === "Z" || first.state === "X" || (first.flags & kernelThread) !== 0) continue
+    usage.lock ||= lockPids.has(pid)
     const threads = await numbers(`${base}/task`)
     tasks += threads.length
     if (!threads.length || tasks > 4096) return undefined
@@ -135,7 +159,7 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
   }
   if (!sameIDs(pids, await numbers("/proc"))) return undefined
   const locks = await readFile("/proc/locks", "utf8")
-  usage.lock = locks.split("\n").filter(Boolean).some((line) => {
+  usage.lock ||= locks.split("\n").filter(Boolean).some((line) => {
     const match = line.match(/\b([0-9a-f]+):([0-9a-f]+):(\d+)\b/i)
     if (!match) throw new Error("Unrecognized kernel lock")
     return inodes.has(deviceInode(match))
